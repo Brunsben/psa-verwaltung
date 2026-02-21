@@ -1,0 +1,16 @@
+# Secrets und generierte Dateien – niemals committen
+setup/.env
+setup/nginx.conf
+setup/.nocodb_table_ids
+
+# Claude Code / MCP
+.claude/
+.mcp.json
+
+# Betriebssystem
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+*.swp

@@ -1,0 +1,1132 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PSA-Verwaltung – FF Wietmarschen</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { darkMode: 'class' };
+    if (localStorage.getItem('darkMode') === 'true') document.documentElement.classList.add('dark');
+  </script>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+  <style>
+    [v-cloak] { display: none; }
+    .fade-enter-active, .fade-leave-active { transition: opacity .2s; }
+    .fade-enter-from, .fade-leave-to { opacity: 0; }
+
+    .modal-backdrop {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.55);
+      backdrop-filter: blur(3px);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 50; padding: 1rem;
+    }
+    .modal-box {
+      background: white;
+      border-radius: 1rem;
+      box-shadow: 0 25px 60px -12px rgba(0,0,0,0.3);
+      width: 100%; max-width: 32rem;
+      padding: 1.5rem;
+      max-height: 90vh; overflow-y: auto;
+    }
+    .dark .modal-box {
+      background: #1f2937;
+      color: #f9fafb;
+      box-shadow: 0 25px 60px -12px rgba(0,0,0,0.6);
+    }
+    .modal-box::-webkit-scrollbar { width: 5px; }
+    .modal-box::-webkit-scrollbar-track { background: transparent; }
+    .modal-box::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 3px; }
+    .dark .modal-box::-webkit-scrollbar-thumb { background: #4b5563; }
+
+    .input {
+      display: block; width: 100%;
+      border: 1px solid #d1d5db;
+      border-radius: 0.5rem;
+      padding: 0.5rem 0.75rem;
+      font-size: 0.875rem;
+      background: white; color: #111827;
+      transition: border-color .15s, box-shadow .15s;
+    }
+    .input:focus { outline: none; border-color: #ef4444; box-shadow: 0 0 0 3px rgba(239,68,68,0.15); }
+    .dark .input { background: #374151; border-color: #4b5563; color: #f9fafb; }
+    .dark .input::placeholder { color: #9ca3af; }
+    .dark .input:focus { border-color: #ef4444; box-shadow: 0 0 0 3px rgba(239,68,68,0.2); }
+
+    .label {
+      display: block; font-size: 0.7rem; font-weight: 700;
+      color: #6b7280; margin-bottom: 0.3rem;
+      text-transform: uppercase; letter-spacing: 0.06em;
+    }
+    .dark .label { color: #9ca3af; }
+
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: 0.35rem;
+      background: linear-gradient(135deg, #dc2626, #b91c1c);
+      color: white; padding: 0.5rem 1.25rem;
+      border-radius: 0.5rem; font-size: 0.875rem; font-weight: 600;
+      cursor: pointer; border: none;
+      box-shadow: 0 1px 3px rgba(185,28,28,0.35);
+      transition: all .15s;
+    }
+    .btn-primary:hover { background: linear-gradient(135deg, #b91c1c, #991b1b); box-shadow: 0 4px 12px rgba(185,28,28,0.4); transform: translateY(-1px); }
+    .btn-primary:active { transform: translateY(0); box-shadow: none; }
+
+    .btn-secondary {
+      display: inline-flex; align-items: center; gap: 0.35rem;
+      background: #f9fafb; color: #374151; padding: 0.5rem 1.25rem;
+      border-radius: 0.5rem; font-size: 0.875rem; font-weight: 600;
+      cursor: pointer; border: 1px solid #e5e7eb; transition: all .15s;
+    }
+    .btn-secondary:hover { background: #f3f4f6; border-color: #d1d5db; }
+    .dark .btn-secondary { background: #374151; color: #e5e7eb; border-color: #4b5563; }
+    .dark .btn-secondary:hover { background: #4b5563; }
+  </style>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-100 font-sans antialiased transition-colors duration-200">
+
+<div id="app" v-cloak>
+
+  <!-- ── Navbar ─────────────────────────────────────────── -->
+  <nav class="bg-gradient-to-r from-red-800 to-red-700 shadow-lg sticky top-0 z-30">
+    <div class="max-w-7xl mx-auto px-4 flex items-center justify-between h-14">
+      <div class="flex items-center gap-2">
+        <span class="text-xl">🔥</span>
+        <span class="font-bold text-white text-sm tracking-wide hidden sm:block">FF Wietmarschen</span>
+        <span class="text-red-300 hidden sm:block">·</span>
+        <span class="font-medium text-red-100 text-sm hidden sm:block">PSA-Verwaltung</span>
+      </div>
+      <div class="flex items-center gap-1">
+        <div class="flex gap-0.5">
+          <button v-for="p in pages" :key="p.id"
+            @click="page = p.id"
+            :class="['px-3 py-1.5 rounded-lg transition-all duration-150 text-sm font-medium',
+              page === p.id
+                ? 'bg-white text-red-700 shadow-sm'
+                : 'text-red-100 hover:bg-red-600/50 hover:text-white']">
+            {{ p.label }}
+          </button>
+        </div>
+        <!-- Dark mode toggle -->
+        <button @click="toggleDark"
+          class="ml-2 p-2 rounded-lg text-red-100 hover:bg-red-600/50 hover:text-white transition-all duration-150"
+          :title="darkMode ? 'Helles Design' : 'Dunkles Design'">
+          <svg v-if="darkMode" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707M17.657 17.657l-.707-.707M6.343 6.343l-.707-.707M12 7a5 5 0 100 10 5 5 0 000-10z" />
+          </svg>
+          <svg v-else class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ── Toast ─────────────────────────────────────────── -->
+  <transition name="fade">
+    <div v-if="toast.show"
+      :class="['fixed top-4 right-4 z-50 px-4 py-3 rounded-xl shadow-2xl text-white text-sm font-medium max-w-xs flex items-center gap-2',
+        toast.type === 'error' ? 'bg-red-600' : 'bg-emerald-600']">
+      <span>{{ toast.type === 'error' ? '⚠️' : '✓' }}</span>
+      {{ toast.msg }}
+    </div>
+  </transition>
+
+  <!-- ── Loader ─────────────────────────────────────────── -->
+  <div v-if="loading" class="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-40">
+    <div class="bg-white dark:bg-gray-800 rounded-xl px-6 py-4 shadow-2xl text-gray-600 dark:text-gray-300 text-sm flex items-center gap-3">
+      <svg class="w-5 h-5 animate-spin text-red-600" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+      </svg>
+      Lade…
+    </div>
+  </div>
+
+  <main class="max-w-7xl mx-auto px-4 py-6">
+
+    <!-- ══ DASHBOARD ══════════════════════════════════════ -->
+    <section v-if="page === 'dashboard'">
+      <h1 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">Dashboard</h1>
+
+      <!-- Statistik-Kacheln -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div class="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm border border-gray-100 dark:border-gray-700 text-center">
+          <div class="text-3xl font-bold text-red-600 dark:text-red-400">{{ stats.kameraden }}</div>
+          <div class="text-xs font-semibold text-gray-400 dark:text-gray-500 mt-1.5 uppercase tracking-wide">Kameraden aktiv</div>
+        </div>
+        <div class="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm border border-gray-100 dark:border-gray-700 text-center">
+          <div class="text-3xl font-bold text-blue-600 dark:text-blue-400">{{ stats.ausruestung }}</div>
+          <div class="text-xs font-semibold text-gray-400 dark:text-gray-500 mt-1.5 uppercase tracking-wide">Ausrüstungsstücke</div>
+        </div>
+        <div class="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm border border-gray-100 dark:border-gray-700 text-center">
+          <div class="text-3xl font-bold text-orange-500 dark:text-orange-400">{{ stats.pruefungFaellig }}</div>
+          <div class="text-xs font-semibold text-gray-400 dark:text-gray-500 mt-1.5 uppercase tracking-wide">Prüfungen ≤ 30 Tage</div>
+        </div>
+        <div class="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm border border-gray-100 dark:border-gray-700 text-center">
+          <div class="text-3xl font-bold text-indigo-600 dark:text-indigo-400">{{ stats.ausgegeben }}</div>
+          <div class="text-xs font-semibold text-gray-400 dark:text-gray-500 mt-1.5 uppercase tracking-wide">Ausgegeben</div>
+        </div>
+      </div>
+
+      <!-- Warnungen -->
+      <div v-if="warnungen.length" class="mb-6">
+        <h2 class="text-base font-semibold mb-3 text-gray-700 dark:text-gray-300">Handlungsbedarf</h2>
+        <div class="space-y-2">
+          <div v-for="w in warnungen" :key="w.id"
+            :class="['flex items-start gap-3 bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-700 border-l-4',
+              w.prio === 'rot' ? 'border-l-red-500' : w.prio === 'orange' ? 'border-l-orange-400' : 'border-l-yellow-400']">
+            <span class="text-lg flex-shrink-0">{{ w.prio === 'rot' ? '🔴' : w.prio === 'orange' ? '🟠' : '🟡' }}</span>
+            <div>
+              <div class="font-semibold text-sm text-gray-800 dark:text-gray-100">{{ w.titel }}</div>
+              <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{ w.detail }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div v-else class="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-xl p-4 text-emerald-700 dark:text-emerald-400 text-sm flex items-center gap-2">
+        <span class="text-lg">✅</span>
+        Keine dringenden Meldungen
+      </div>
+    </section>
+
+    <!-- ══ KAMERADEN ══════════════════════════════════════ -->
+    <section v-if="page === 'kameraden'">
+      <div class="flex items-center justify-between mb-5">
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Kameraden</h1>
+        <button @click="openKameradenForm()" class="btn-primary">+ Neu</button>
+      </div>
+
+      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b border-gray-100 dark:border-gray-700">
+              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Name</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Jacke</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Hose</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Stiefel</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Status</th>
+              <th class="px-4 py-3"></th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-50 dark:divide-gray-700">
+            <tr v-for="k in kameraden" :key="k.Id" class="hover:bg-gray-50 dark:hover:bg-gray-700/40 transition-colors">
+              <td class="px-4 py-3 font-semibold text-gray-800 dark:text-gray-200">{{ k.Vorname }} {{ k.Name }}</td>
+              <td class="px-4 py-3 text-gray-600 dark:text-gray-400">{{ k.Jacke_Groesse || '–' }}</td>
+              <td class="px-4 py-3 text-gray-600 dark:text-gray-400">{{ k.Hose_Groesse || '–' }}</td>
+              <td class="px-4 py-3 text-gray-600 dark:text-gray-400">{{ k.Stiefel_Groesse || '–' }}</td>
+              <td class="px-4 py-3">
+                <span :class="k.Aktiv
+                  ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400'
+                  : 'bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500'"
+                  class="px-2 py-0.5 rounded-full text-xs font-semibold">
+                  {{ k.Aktiv ? 'Aktiv' : 'Inaktiv' }}
+                </span>
+              </td>
+              <td class="px-4 py-3 text-right whitespace-nowrap">
+                <button @click="openKameradenForm(k)" class="text-blue-600 dark:text-blue-400 hover:underline text-xs font-medium mr-3">Bearbeiten</button>
+                <button @click="deleteKamerad(k)" class="text-red-500 dark:text-red-400 hover:underline text-xs font-medium">Löschen</button>
+              </td>
+            </tr>
+            <tr v-if="!kameraden.length">
+              <td colspan="6" class="px-4 py-10 text-center text-gray-400 dark:text-gray-500 text-sm">Noch keine Kameraden eingetragen</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ══ AUSRÜSTUNG ══════════════════════════════════════ -->
+    <section v-if="page === 'ausruestung'">
+      <div class="flex items-center justify-between mb-5">
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Ausrüstung</h1>
+        <button @click="openAusruestungForm()" class="btn-primary">+ Neu</button>
+      </div>
+
+      <!-- Filter -->
+      <div class="flex gap-3 mb-4 flex-wrap">
+        <input v-model="filterAusruestung" placeholder="Suche…"
+          class="border border-gray-200 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-500
+                 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-400 focus:border-transparent"
+          style="width:12rem" />
+        <select v-model="filterStatus"
+          class="border border-gray-200 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100
+                 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-400 focus:border-transparent">
+          <option value="">Alle Status</option>
+          <option>Lager</option><option>Ausgegeben</option>
+          <option>Reinigung</option><option>Außer Dienst</option><option>Ausgesondert</option>
+        </select>
+      </div>
+
+      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b border-gray-100 dark:border-gray-700">
+              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Seriennr.</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Typ</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Kamerad</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Status</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Nächste Prüfung</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Lebensende</th>
+              <th class="px-4 py-3"></th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-50 dark:divide-gray-700">
+            <tr v-for="a in ausruestungFiltered" :key="a.Id" class="hover:bg-gray-50 dark:hover:bg-gray-700/40 transition-colors">
+              <td class="px-4 py-3 font-mono text-xs text-gray-500 dark:text-gray-400">{{ a.Seriennummer || '–' }}</td>
+              <td class="px-4 py-3 font-medium text-gray-800 dark:text-gray-200">{{ typLabel(a.Ausruestungstyp) }}</td>
+              <td class="px-4 py-3 text-gray-600 dark:text-gray-400">{{ a.Kamerad || '–' }}</td>
+              <td class="px-4 py-3">
+                <span :class="statusBadge(a.Status)">{{ a.Status }}</span>
+              </td>
+              <td class="px-4 py-3 text-sm" :class="datePriority(a.Naechste_Pruefung)">{{ fmtDate(a.Naechste_Pruefung) }}</td>
+              <td class="px-4 py-3 text-sm" :class="datePriority(a.Lebensende_Datum)">{{ fmtDate(a.Lebensende_Datum) }}</td>
+              <td class="px-4 py-3 text-right whitespace-nowrap space-x-2">
+                <button @click="openAusgabe(a)" class="text-blue-600 dark:text-blue-400 hover:underline text-xs font-medium">Ausgabe</button>
+                <button @click="openPruefung(a)" class="text-orange-500 dark:text-orange-400 hover:underline text-xs font-medium">Prüfung</button>
+                <button @click="openWaesche(a)" class="text-teal-600 dark:text-teal-400 hover:underline text-xs font-medium">Wäsche</button>
+                <button @click="openAusruestungForm(a)" class="text-gray-500 dark:text-gray-400 hover:underline text-xs font-medium">Edit</button>
+                <button @click="deleteAusruestung(a)" class="text-red-500 dark:text-red-400 hover:underline text-xs font-medium">Löschen</button>
+              </td>
+            </tr>
+            <tr v-if="!ausruestungFiltered.length">
+              <td colspan="7" class="px-4 py-10 text-center text-gray-400 dark:text-gray-500 text-sm">Keine Ausrüstung gefunden</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ══ TYPEN ══════════════════════════════════════════ -->
+    <section v-if="page === 'typen'">
+      <div class="flex items-center justify-between mb-5">
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Ausrüstungstypen</h1>
+        <button @click="openTypenForm()" class="btn-primary">+ Neu</button>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-4">
+        <div v-for="t in typen" :key="t.Id"
+          class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-5 hover:shadow-md transition-shadow">
+          <div class="flex justify-between items-start">
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span v-if="t.Typ" class="text-xs bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 px-2 py-0.5 rounded-full font-semibold">{{ t.Typ }}</span>
+                <span class="font-bold text-gray-800 dark:text-gray-100">{{ t.Bezeichnung }}</span>
+              </div>
+              <div class="text-sm text-gray-500 dark:text-gray-400 mt-1">{{ t.Hersteller || '–' }}</div>
+              <div v-if="t.Norm" class="text-xs text-gray-400 dark:text-gray-500 mt-0.5 font-mono">{{ t.Norm }}</div>
+            </div>
+            <div class="flex gap-3 ml-4 flex-shrink-0">
+              <button @click="openTypenForm(t)" class="text-blue-600 dark:text-blue-400 text-xs hover:underline font-medium">Edit</button>
+              <button @click="deleteTyp(t)" class="text-red-500 dark:text-red-400 text-xs hover:underline font-medium">Löschen</button>
+            </div>
+          </div>
+          <div class="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700 flex gap-5 text-xs text-gray-500 dark:text-gray-400">
+            <span>⏱ <strong class="text-gray-700 dark:text-gray-300">{{ t.Max_Lebensdauer_Jahre || '–' }}</strong> J. Lebensdauer</span>
+            <span>🔍 <strong class="text-gray-700 dark:text-gray-300">{{ t.Pruefintervall_Monate || '–' }}</strong> Mon. Prüfintervall</span>
+          </div>
+          <div v-if="t.Beschreibung" class="mt-2 text-xs text-gray-400 dark:text-gray-500 italic">{{ t.Beschreibung }}</div>
+        </div>
+        <div v-if="!typen.length" class="col-span-2 text-center text-gray-400 dark:text-gray-500 text-sm py-10">
+          Noch keine Typen angelegt
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ══ MODALS ══════════════════════════════════════════ -->
+
+  <!-- Kamerad Form Modal -->
+  <div v-if="modal.kameradenForm" class="modal-backdrop" @click.self="modal.kameradenForm = false">
+    <div class="modal-box">
+      <h2 class="text-lg font-bold mb-5">{{ form.kamerad.Id ? 'Kamerad bearbeiten' : 'Neuer Kamerad' }}</h2>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="label">Vorname</label>
+          <input v-model="form.kamerad.Vorname" class="input" placeholder="Max" />
+        </div>
+        <div>
+          <label class="label">Name</label>
+          <input v-model="form.kamerad.Name" class="input" placeholder="Mustermann" />
+        </div>
+        <div>
+          <label class="label">Jacke</label>
+          <input v-model="form.kamerad.Jacke_Groesse" placeholder="z.B. 52" class="input" />
+        </div>
+        <div>
+          <label class="label">Hose</label>
+          <input v-model="form.kamerad.Hose_Groesse" placeholder="z.B. 52" class="input" />
+        </div>
+        <div>
+          <label class="label">Stiefel (EU)</label>
+          <input v-model="form.kamerad.Stiefel_Groesse" type="number" class="input" />
+        </div>
+        <div>
+          <label class="label">Handschuh</label>
+          <input v-model="form.kamerad.Handschuh_Groesse" placeholder="z.B. L" class="input" />
+        </div>
+        <div class="col-span-2 flex items-center gap-2 mt-1">
+          <input type="checkbox" v-model="form.kamerad.Aktiv" id="aktiv" class="w-4 h-4 accent-red-600 cursor-pointer" />
+          <label for="aktiv" class="text-sm text-gray-700 dark:text-gray-300 cursor-pointer">Aktives Mitglied</label>
+        </div>
+      </div>
+      <div class="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-100 dark:border-gray-700">
+        <button @click="modal.kameradenForm = false" class="btn-secondary">Abbrechen</button>
+        <button @click="saveKamerad" class="btn-primary">Speichern</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ausrüstung Form Modal -->
+  <div v-if="modal.ausruestungForm" class="modal-backdrop" @click.self="modal.ausruestungForm = false">
+    <div class="modal-box">
+      <h2 class="text-lg font-bold mb-5">{{ form.ausruestung.Id ? 'Ausrüstung bearbeiten' : 'Neues Ausrüstungsstück' }}</h2>
+      <div class="grid grid-cols-2 gap-3">
+        <div class="col-span-2">
+          <label class="label">Typ</label>
+          <select v-model="form.ausruestung.Ausruestungstyp" class="input" @change="autoFillAusruestungDaten">
+            <option value="">– Typ wählen –</option>
+            <option v-for="t in typen" :key="t.Id" :value="t.Bezeichnung">
+              {{ t.Typ ? t.Typ + ': ' : '' }}{{ t.Bezeichnung }}{{ t.Hersteller ? ' – ' + t.Hersteller : '' }}
+            </option>
+          </select>
+        </div>
+        <div class="col-span-2">
+          <label class="label">Kamerad</label>
+          <select v-model="form.ausruestung.Kamerad" class="input">
+            <option value="">– (kein / Lager) –</option>
+            <option v-for="k in kameradenliste" :key="k.Id" :value="k.label">{{ k.label }}</option>
+          </select>
+        </div>
+        <div>
+          <label class="label">Seriennummer</label>
+          <input v-model="form.ausruestung.Seriennummer" class="input" />
+        </div>
+        <div>
+          <label class="label">QR-Code</label>
+          <input v-model="form.ausruestung.QR_Code" class="input" />
+        </div>
+        <div>
+          <label class="label">Herstellungsdatum</label>
+          <input v-model="form.ausruestung.Herstellungsdatum" type="date" class="input" @change="autoFillLebensdauer" />
+        </div>
+        <div>
+          <label class="label">Lebensende</label>
+          <input v-model="form.ausruestung.Lebensende_Datum" type="date" class="input" />
+        </div>
+        <div>
+          <label class="label">Nächste Prüfung</label>
+          <input v-model="form.ausruestung.Naechste_Pruefung" type="date" class="input" />
+        </div>
+        <div>
+          <label class="label">Status</label>
+          <select v-model="form.ausruestung.Status" class="input">
+            <option>Lager</option><option>Ausgegeben</option>
+            <option>Reinigung</option><option>Außer Dienst</option><option>Ausgesondert</option>
+          </select>
+        </div>
+        <div class="col-span-2">
+          <label class="label">Notizen</label>
+          <textarea v-model="form.ausruestung.Notizen" rows="2" class="input resize-none"></textarea>
+        </div>
+      </div>
+      <div class="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-100 dark:border-gray-700">
+        <button @click="modal.ausruestungForm = false" class="btn-secondary">Abbrechen</button>
+        <button @click="saveAusruestung" class="btn-primary">Speichern</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Typen Form Modal -->
+  <div v-if="modal.typForm" class="modal-backdrop" @click.self="modal.typForm = false">
+    <div class="modal-box">
+      <h2 class="text-lg font-bold mb-5">{{ form.typ.Id ? 'Typ bearbeiten' : 'Neuer Typ' }}</h2>
+      <div class="grid gap-3">
+        <div>
+          <label class="label">Kategorie</label>
+          <select v-model="form.typ.Typ" class="input" @change="onTypChange">
+            <option value="">– Typ wählen –</option>
+            <option>Helm</option>
+            <option>Jacke</option>
+            <option>Hose</option>
+            <option>Stiefel</option>
+            <option>Handschuh</option>
+            <option>Flammschutzhaube</option>
+          </select>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="label">Bezeichnung / Modell</label>
+            <input v-model="form.typ.Bezeichnung" class="input" placeholder="z.B. F130" />
+          </div>
+          <div>
+            <label class="label">Hersteller</label>
+            <input v-model="form.typ.Hersteller" class="input" placeholder="z.B. Schubert" />
+          </div>
+        </div>
+        <div>
+          <label class="label">Norm</label>
+          <div v-if="normenFuerAktuellenTyp.length">
+            <select v-model="form.typ._normWahl" class="input" @change="onNormSelected">
+              <option value="">– Norm wählen –</option>
+              <option v-for="n in normenFuerAktuellenTyp" :key="n.norm" :value="n.norm">
+                {{ n.norm }}
+              </option>
+              <option value="__frei__">Freie Eingabe…</option>
+            </select>
+            <input v-if="form.typ._normWahl === '__frei__'"
+              v-model="form.typ.Norm" class="input mt-2" placeholder="Norm eingeben…" />
+            <div v-if="form.typ._normHinweis" class="text-xs text-amber-600 dark:text-amber-400 mt-1.5 bg-amber-50 dark:bg-amber-900/20 p-2 rounded-lg">
+              ℹ️ {{ form.typ._normHinweis }}
+            </div>
+          </div>
+          <input v-else v-model="form.typ.Norm" class="input" placeholder="z.B. DIN EN 469" />
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="label">Max. Lebensdauer (Jahre)</label>
+            <input v-model.number="form.typ.Max_Lebensdauer_Jahre" type="number" class="input" />
+          </div>
+          <div>
+            <label class="label">Prüfintervall (Monate)</label>
+            <input v-model.number="form.typ.Pruefintervall_Monate" type="number" class="input" />
+          </div>
+        </div>
+        <div>
+          <label class="label">Beschreibung</label>
+          <textarea v-model="form.typ.Beschreibung" rows="2" class="input resize-none"></textarea>
+        </div>
+      </div>
+      <div class="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-100 dark:border-gray-700">
+        <button @click="modal.typForm = false" class="btn-secondary">Abbrechen</button>
+        <button @click="saveTyp" class="btn-primary">Speichern</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ausgabe Modal -->
+  <div v-if="modal.ausgabe" class="modal-backdrop" @click.self="modal.ausgabe = false">
+    <div class="modal-box max-w-md">
+      <h2 class="text-lg font-bold mb-1">Ausgabe / Rückgabe</h2>
+      <div class="text-sm text-gray-500 dark:text-gray-400 mb-5">{{ form.aktion.Seriennummer }} – {{ form.aktion.Ausruestungstyp }}</div>
+      <div class="grid gap-3">
+        <div>
+          <label class="label">Kamerad</label>
+          <select v-model="form.ausgabe.kamerad" class="input">
+            <option value="">– Rückgabe (kein Kamerad) –</option>
+            <option v-for="k in kameradenliste" :key="k.Id" :value="k.label">{{ k.label }}</option>
+          </select>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="label">Ausgabedatum</label>
+            <input v-model="form.ausgabe.datum" type="date" class="input" />
+          </div>
+          <div>
+            <label class="label">Rückgabedatum</label>
+            <input v-model="form.ausgabe.rueckgabe" type="date" class="input" />
+          </div>
+        </div>
+        <div>
+          <label class="label">Notizen</label>
+          <textarea v-model="form.ausgabe.notizen" rows="2" class="input resize-none"></textarea>
+        </div>
+      </div>
+      <div class="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-100 dark:border-gray-700">
+        <button @click="modal.ausgabe = false" class="btn-secondary">Abbrechen</button>
+        <button @click="saveAusgabe" class="btn-primary">Speichern</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Prüfung Modal -->
+  <div v-if="modal.pruefung" class="modal-backdrop" @click.self="modal.pruefung = false">
+    <div class="modal-box max-w-md">
+      <h2 class="text-lg font-bold mb-1">Prüfung erfassen</h2>
+      <div class="text-sm text-gray-500 dark:text-gray-400 mb-5">{{ form.aktion.Seriennummer }} – {{ form.aktion.Ausruestungstyp }}</div>
+      <div class="grid gap-3">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="label">Datum</label>
+            <input v-model="form.pruefung.datum" type="date" class="input" />
+          </div>
+          <div>
+            <label class="label">Ergebnis</label>
+            <select v-model="form.pruefung.ergebnis" class="input">
+              <option>Bestanden</option>
+              <option>Nicht bestanden</option>
+              <option>Eingeschränkt</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <label class="label">Prüfer</label>
+          <input v-model="form.pruefung.pruefer" class="input" placeholder="Name des Prüfers" />
+        </div>
+        <div>
+          <label class="label">Nächste Prüfung</label>
+          <input v-model="form.pruefung.naechste" type="date" class="input" />
+        </div>
+        <div>
+          <label class="label">Notizen</label>
+          <textarea v-model="form.pruefung.notizen" rows="2" class="input resize-none"></textarea>
+        </div>
+      </div>
+      <div class="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-100 dark:border-gray-700">
+        <button @click="modal.pruefung = false" class="btn-secondary">Abbrechen</button>
+        <button @click="savePruefung" class="btn-primary">Speichern</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Wäsche Modal -->
+  <div v-if="modal.waesche" class="modal-backdrop" @click.self="modal.waesche = false">
+    <div class="modal-box max-w-md">
+      <h2 class="text-lg font-bold mb-1">Wäsche erfassen</h2>
+      <div class="text-sm text-gray-500 dark:text-gray-400 mb-5">{{ form.aktion.Seriennummer }} – {{ form.aktion.Ausruestungstyp }}</div>
+      <div class="grid gap-3">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="label">Datum</label>
+            <input v-model="form.waesche.datum" type="date" class="input" />
+          </div>
+          <div>
+            <label class="label">Art</label>
+            <select v-model="form.waesche.art" class="input">
+              <option>Normal</option>
+              <option>Spezialreinigung</option>
+              <option>Dekontamination</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <label class="label">Notizen</label>
+          <textarea v-model="form.waesche.notizen" rows="2" class="input resize-none"></textarea>
+        </div>
+      </div>
+      <div class="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-100 dark:border-gray-700">
+        <button @click="modal.waesche = false" class="btn-secondary">Abbrechen</button>
+        <button @click="saveWaesche" class="btn-primary">Speichern</button>
+      </div>
+    </div>
+  </div>
+
+</div><!-- #app -->
+
+
+<script>
+const { createApp, ref, reactive, computed, onMounted } = Vue;
+
+const API = '/api/v1/db/data/noco/p962d7ujd8wbfvi';
+
+const TABLES = {
+  Kameraden:          'm1ky1mz0xyfth5m',
+  Ausruestungstypen:  'murbf56gzv4ii0u',
+  Ausruestungstuecke: 'mhskteevunob1r0',
+  Ausgaben:           'mrwlggxzb88opar',
+  Pruefungen:         'mkb11hw0mzcib6y',
+  Waesche:            'm38ul9qugdihrhx',
+};
+const T = (name) => TABLES[name] || name;
+
+// Bekannte Normen mit Prüfintervallen und Lebensdauer (Stand DGUV V49 / Herstellerempfehlungen)
+const NORMS_DB = {
+  Helm: [
+    { norm: 'DIN EN 443:2008', intervall: 12, lebensdauer: 10,
+      hinweis: 'Jahresprüfung; Lebensdauer nach Hersteller, typ. 10 J. ab Herstellung' },
+  ],
+  Jacke: [
+    { norm: 'DIN EN 469:2020', intervall: 12, lebensdauer: 10,
+      hinweis: 'Hitzeschutzkleidung; jährl. Sichtprüfung, max. 10 J. Nutzungsdauer' },
+    { norm: 'DIN EN ISO 11612:2015', intervall: 12, lebensdauer: null,
+      hinweis: 'Schutzkleidung gegen Hitze und Flammen (allgemein)' },
+  ],
+  Hose: [
+    { norm: 'DIN EN 469:2020', intervall: 12, lebensdauer: 10,
+      hinweis: 'Hitzeschutzkleidung; jährl. Sichtprüfung, max. 10 J. Nutzungsdauer' },
+  ],
+  Stiefel: [
+    { norm: 'DIN EN 15090:2012', intervall: 12, lebensdauer: 10,
+      hinweis: 'Stiefel für die Feuerwehr; jährl. Prüfung, ca. 10 J. Lebensdauer' },
+  ],
+  Handschuh: [
+    { norm: 'DIN EN 659:2003+A1:2008', intervall: 12, lebensdauer: 5,
+      hinweis: 'Schutzhandschuhe Feuerwehr; jährl. Prüfung, Herstellerempfehlung 5 J.' },
+    { norm: 'DIN EN 388:2016', intervall: 12, lebensdauer: null,
+      hinweis: 'Schutzhandschuhe gegen mechanische Risiken' },
+  ],
+  Flammschutzhaube: [
+    { norm: 'DIN EN 13911:2004', intervall: 12, lebensdauer: 10,
+      hinweis: 'Flammschutzhauben für die Feuerwehr; jährl. Prüfung' },
+  ],
+};
+
+async function api(method, path, body) {
+  const r = await fetch(path, {
+    method,
+    headers: { 'Content-Type': 'application/json' },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  if (!r.ok) {
+    const body = await r.json().catch(() => ({}));
+    throw new Error(`${r.status}: ${body.message || body.msg || JSON.stringify(body)}`);
+  }
+  if (r.status === 204) return null;
+  return r.json();
+}
+
+const get  = (p, q='') => api('GET', `${API}/${T(p)}?limit=1000${q}`);
+const post = (p, b)    => api('POST', `${API}/${T(p)}`, b);
+const patch= (p, id, b)=> api('PATCH', `${API}/${T(p)}/${id}`, b);
+const del  = (p, id)   => api('DELETE', `${API}/${T(p)}/${id}`);
+
+createApp({
+  setup() {
+    const page    = ref('dashboard');
+    const loading = ref(false);
+    const toast   = reactive({ show: false, msg: '', type: 'ok' });
+
+    // Dark mode
+    const darkMode = ref(document.documentElement.classList.contains('dark'));
+    function toggleDark() {
+      darkMode.value = !darkMode.value;
+      document.documentElement.classList.toggle('dark', darkMode.value);
+      localStorage.setItem('darkMode', darkMode.value);
+    }
+
+    const pages = [
+      { id: 'dashboard', label: 'Dashboard' },
+      { id: 'kameraden', label: 'Kameraden' },
+      { id: 'ausruestung', label: 'Ausrüstung' },
+      { id: 'typen', label: 'Typen' },
+    ];
+
+    // Data
+    const kameraden   = ref([]);
+    const ausruestung = ref([]);
+    const typen       = ref([]);
+    const ausgaben    = ref([]);
+
+    // Filter
+    const filterAusruestung = ref('');
+    const filterStatus      = ref('');
+
+    // Modal state
+    const modal = reactive({
+      kameradenForm: false, ausruestungForm: false,
+      typForm: false, ausgabe: false, pruefung: false, waesche: false
+    });
+
+    // Form state
+    const form = reactive({
+      kamerad: {},
+      ausruestung: {},
+      typ: {},
+      aktion: {},
+      ausgabe: {},
+      pruefung: {},
+      waesche: {},
+    });
+
+    function showToast(msg, type = 'ok') {
+      toast.msg = msg; toast.type = type; toast.show = true;
+      setTimeout(() => toast.show = false, 3000);
+    }
+
+    async function load(fn) {
+      loading.value = true;
+      try { await fn(); }
+      catch (e) { showToast(e.message, 'error'); }
+      finally { loading.value = false; }
+    }
+
+    // ── Fetch ──
+    async function fetchAll() {
+      await load(async () => {
+        const [k, a, t, au] = await Promise.all([
+          get('Kameraden'),
+          get('Ausruestungstuecke'),
+          get('Ausruestungstypen'),
+          get('Ausgaben'),
+        ]);
+        kameraden.value   = k.list  || [];
+        ausruestung.value = a.list  || [];
+        typen.value       = t.list  || [];
+        ausgaben.value    = au.list || [];
+      });
+    }
+
+    // ── Computed ──
+    const kameradenliste = computed(() =>
+      kameraden.value
+        .filter(k => k.Aktiv)
+        .map(k => ({ Id: k.Id, label: `${k.Vorname} ${k.Name}` }))
+    );
+
+    const ausruestungFiltered = computed(() => {
+      let list = ausruestung.value;
+      if (filterStatus.value) list = list.filter(a => a.Status === filterStatus.value);
+      if (filterAusruestung.value) {
+        const q = filterAusruestung.value.toLowerCase();
+        list = list.filter(a =>
+          (a.Seriennummer||'').toLowerCase().includes(q) ||
+          (a.Ausruestungstyp||'').toLowerCase().includes(q) ||
+          (a.Kamerad||'').toLowerCase().includes(q)
+        );
+      }
+      return list;
+    });
+
+    const today = new Date();
+    const in30  = new Date(today); in30.setDate(today.getDate() + 30);
+    const in180 = new Date(today); in180.setDate(today.getDate() + 180);
+
+    const stats = computed(() => ({
+      kameraden:    kameraden.value.filter(k => k.Aktiv).length,
+      ausruestung:  ausruestung.value.length,
+      ausgegeben:   ausruestung.value.filter(a => a.Status === 'Ausgegeben').length,
+      pruefungFaellig: ausruestung.value.filter(a => {
+        if (!a.Naechste_Pruefung) return false;
+        const d = new Date(a.Naechste_Pruefung);
+        return d <= in30;
+      }).length,
+    }));
+
+    const warnungen = computed(() => {
+      const w = [];
+      ausruestung.value.forEach(a => {
+        if (a.Naechste_Pruefung) {
+          const d = new Date(a.Naechste_Pruefung);
+          if (d < today) {
+            w.push({ id: `p-${a.Id}`, prio: 'rot',
+              titel: `Prüfung überfällig: ${a.Ausruestungstyp||'?'} (${a.Seriennummer||''})`,
+              detail: `Kamerad: ${a.Kamerad||'–'} · Fällig: ${fmtDate(a.Naechste_Pruefung)}` });
+          } else if (d <= in30) {
+            w.push({ id: `p2-${a.Id}`, prio: 'orange',
+              titel: `Prüfung bald fällig: ${a.Ausruestungstyp||'?'} (${a.Seriennummer||''})`,
+              detail: `Kamerad: ${a.Kamerad||'–'} · Fällig: ${fmtDate(a.Naechste_Pruefung)}` });
+          }
+        }
+        if (a.Lebensende_Datum) {
+          const d = new Date(a.Lebensende_Datum);
+          if (d < today) {
+            w.push({ id: `l-${a.Id}`, prio: 'rot',
+              titel: `Lebensende überschritten: ${a.Ausruestungstyp||'?'} (${a.Seriennummer||''})`,
+              detail: `Kamerad: ${a.Kamerad||'–'} · Lebensende: ${fmtDate(a.Lebensende_Datum)}` });
+          } else if (d <= in180) {
+            w.push({ id: `l2-${a.Id}`, prio: 'gelb',
+              titel: `Lebensende in < 6 Monaten: ${a.Ausruestungstyp||'?'} (${a.Seriennummer||''})`,
+              detail: `Kamerad: ${a.Kamerad||'–'} · Lebensende: ${fmtDate(a.Lebensende_Datum)}` });
+          }
+        }
+      });
+      return w.sort((a,b) => {
+        const rank = { rot: 0, orange: 1, gelb: 2 };
+        return rank[a.prio] - rank[b.prio];
+      });
+    });
+
+    // ── Helpers ──
+    function fmtDate(d) {
+      if (!d) return '–';
+      return new Date(d).toLocaleDateString('de-DE');
+    }
+
+    function datePriority(d) {
+      if (!d) return 'text-gray-500 dark:text-gray-400';
+      const date = new Date(d);
+      if (date < today) return 'text-red-600 dark:text-red-400 font-semibold';
+      if (date <= in30) return 'text-orange-500 dark:text-orange-400 font-semibold';
+      return 'text-gray-600 dark:text-gray-300';
+    }
+
+    function typLabel(bezeichnung) {
+      if (!bezeichnung) return '–';
+      const t = typen.value.find(x => x.Bezeichnung === bezeichnung);
+      return t?.Typ ? `${t.Typ}: ${bezeichnung}` : bezeichnung;
+    }
+
+    function statusBadge(s) {
+      const map = {
+        'Lager':        'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300',
+        'Ausgegeben':   'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400',
+        'Reinigung':    'bg-teal-100 dark:bg-teal-900/30 text-teal-700 dark:text-teal-400',
+        'Außer Dienst': 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400',
+        'Ausgesondert': 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400',
+      };
+      return `px-2 py-0.5 rounded-full text-xs font-semibold ${map[s] || 'bg-gray-100 dark:bg-gray-700 text-gray-600'}`;
+    }
+
+    // ── Kameraden CRUD ──
+    function openKameradenForm(k = {}) {
+      form.kamerad = { Aktiv: true, ...k };
+      modal.kameradenForm = true;
+    }
+
+    async function saveKamerad() {
+      await load(async () => {
+        const { Id } = form.kamerad;
+        const payload = {
+          Vorname:           form.kamerad.Vorname           || null,
+          Name:              form.kamerad.Name              || null,
+          Jacke_Groesse:     form.kamerad.Jacke_Groesse     || null,
+          Hose_Groesse:      form.kamerad.Hose_Groesse      || null,
+          Stiefel_Groesse:   form.kamerad.Stiefel_Groesse   || null,
+          Handschuh_Groesse: form.kamerad.Handschuh_Groesse || null,
+          Aktiv:             form.kamerad.Aktiv             ?? true,
+        };
+        if (Id) await patch('Kameraden', Id, payload);
+        else    await post('Kameraden', payload);
+        modal.kameradenForm = false;
+        showToast('Kamerad gespeichert');
+        await fetchAll();
+      });
+    }
+
+    async function deleteKamerad(k) {
+      if (!confirm(`${k.Vorname} ${k.Name} wirklich löschen?`)) return;
+      await load(async () => {
+        await del('Kameraden', k.Id);
+        showToast('Gelöscht');
+        await fetchAll();
+      });
+    }
+
+    // ── Ausrüstung CRUD ──
+    function autoFillAusruestungDaten() {
+      const typ = typen.value.find(t => t.Bezeichnung === form.ausruestung.Ausruestungstyp);
+      if (!typ) return;
+      if (form.ausruestung.Herstellungsdatum && typ.Max_Lebensdauer_Jahre) {
+        const d = new Date(form.ausruestung.Herstellungsdatum);
+        d.setFullYear(d.getFullYear() + typ.Max_Lebensdauer_Jahre);
+        form.ausruestung.Lebensende_Datum = d.toISOString().split('T')[0];
+      }
+      if (typ.Pruefintervall_Monate && !form.ausruestung.Naechste_Pruefung) {
+        const d = new Date();
+        d.setMonth(d.getMonth() + typ.Pruefintervall_Monate);
+        form.ausruestung.Naechste_Pruefung = d.toISOString().split('T')[0];
+      }
+    }
+
+    function autoFillLebensdauer() {
+      const typ = typen.value.find(t => t.Bezeichnung === form.ausruestung.Ausruestungstyp);
+      if (!typ || !typ.Max_Lebensdauer_Jahre || !form.ausruestung.Herstellungsdatum) return;
+      const d = new Date(form.ausruestung.Herstellungsdatum);
+      d.setFullYear(d.getFullYear() + typ.Max_Lebensdauer_Jahre);
+      form.ausruestung.Lebensende_Datum = d.toISOString().split('T')[0];
+    }
+
+    function openAusruestungForm(a = {}) {
+      form.ausruestung = {
+        Status: 'Lager',
+        ...a,
+        Ausruestungstyp: a.Ausruestungstyp || '',
+        Kamerad:         a.Kamerad         || '',
+      };
+      modal.ausruestungForm = true;
+    }
+
+    async function saveAusruestung() {
+      await load(async () => {
+        const { Id } = form.ausruestung;
+        const payload = {
+          Ausruestungstyp:   form.ausruestung.Ausruestungstyp   || null,
+          Kamerad:           form.ausruestung.Kamerad            || null,
+          Seriennummer:      form.ausruestung.Seriennummer       || null,
+          QR_Code:           form.ausruestung.QR_Code            || null,
+          Herstellungsdatum: form.ausruestung.Herstellungsdatum  || null,
+          Lebensende_Datum:  form.ausruestung.Lebensende_Datum   || null,
+          Naechste_Pruefung: form.ausruestung.Naechste_Pruefung  || null,
+          Status:            form.ausruestung.Status             || 'Lager',
+          Notizen:           form.ausruestung.Notizen            || null,
+        };
+        if (Id) await patch('Ausruestungstuecke', Id, payload);
+        else    await post('Ausruestungstuecke', payload);
+        modal.ausruestungForm = false;
+        showToast('Ausrüstung gespeichert');
+        await fetchAll();
+      });
+    }
+
+    async function deleteAusruestung(a) {
+      if (!confirm(`Ausrüstungsstück "${a.Seriennummer || a.Id}" wirklich löschen?`)) return;
+      await load(async () => {
+        await del('Ausruestungstuecke', a.Id);
+        showToast('Gelöscht');
+        await fetchAll();
+      });
+    }
+
+    // ── Normen-Logik ──
+    const normenFuerAktuellenTyp = computed(() => NORMS_DB[form.typ.Typ] || []);
+
+    function onTypChange() {
+      form.typ._normWahl = '';
+      form.typ._normHinweis = '';
+      form.typ.Norm = '';
+    }
+
+    function onNormSelected() {
+      const wahl = form.typ._normWahl;
+      if (!wahl || wahl === '__frei__') {
+        if (wahl !== '__frei__') form.typ.Norm = '';
+        form.typ._normHinweis = '';
+        return;
+      }
+      const n = (NORMS_DB[form.typ.Typ] || []).find(x => x.norm === wahl);
+      if (n) {
+        form.typ.Norm = n.norm;
+        if (n.intervall)   form.typ.Pruefintervall_Monate   = n.intervall;
+        if (n.lebensdauer) form.typ.Max_Lebensdauer_Jahre   = n.lebensdauer;
+        form.typ._normHinweis = n.hinweis || '';
+      }
+    }
+
+    // ── Typen CRUD ──
+    function openTypenForm(t = {}) {
+      const knownNorm = t.Norm && (NORMS_DB[t.Typ] || []).find(n => n.norm === t.Norm);
+      form.typ = {
+        ...t,
+        _normWahl:    knownNorm ? t.Norm : (t.Norm ? '__frei__' : ''),
+        _normHinweis: knownNorm ? knownNorm.hinweis : '',
+      };
+      modal.typForm = true;
+    }
+
+    async function saveTyp() {
+      await load(async () => {
+        const { Id } = form.typ;
+        const payload = {
+          Typ:                   form.typ.Typ                   || null,
+          Bezeichnung:           form.typ.Bezeichnung            || null,
+          Hersteller:            form.typ.Hersteller             || null,
+          Norm:                  form.typ.Norm                   || null,
+          Max_Lebensdauer_Jahre: form.typ.Max_Lebensdauer_Jahre  || null,
+          Pruefintervall_Monate: form.typ.Pruefintervall_Monate  || null,
+          Beschreibung:          form.typ.Beschreibung           || null,
+        };
+        if (Id) await patch('Ausruestungstypen', Id, payload);
+        else    await post('Ausruestungstypen', payload);
+        modal.typForm = false;
+        showToast('Typ gespeichert');
+        await fetchAll();
+      });
+    }
+
+    async function deleteTyp(t) {
+      if (!confirm(`Typ "${t.Bezeichnung}" wirklich löschen?`)) return;
+      await load(async () => {
+        await del('Ausruestungstypen', t.Id);
+        showToast('Gelöscht');
+        await fetchAll();
+      });
+    }
+
+    // ── Aktionen (Ausgabe / Prüfung / Wäsche) ──
+    function openAusgabe(a) {
+      form.aktion = a;
+      form.ausgabe = { kamerad: a.Kamerad || '', datum: todayStr(), rueckgabe: '', notizen: '' };
+      modal.ausgabe = true;
+    }
+
+    async function saveAusgabe() {
+      await load(async () => {
+        await post('Ausgaben', {
+          Ausgabedatum:   form.ausgabe.datum,
+          Rueckgabedatum: form.ausgabe.rueckgabe || null,
+          Notizen:        form.ausgabe.notizen,
+        });
+        const newStatus = form.ausgabe.kamerad ? 'Ausgegeben' : 'Lager';
+        await patch('Ausruestungstuecke', form.aktion.Id, {
+          Kamerad: form.ausgabe.kamerad || '',
+          Status:  newStatus,
+        });
+        modal.ausgabe = false;
+        showToast(`Ausgabe gespeichert · Status: ${newStatus}`);
+        await fetchAll();
+      });
+    }
+
+    function openPruefung(a) {
+      form.aktion = a;
+      let naechste = '';
+      const typ = typen.value.find(t => t.Bezeichnung === a.Ausruestungstyp);
+      if (typ && typ.Pruefintervall_Monate) {
+        const d = new Date();
+        d.setMonth(d.getMonth() + typ.Pruefintervall_Monate);
+        naechste = d.toISOString().split('T')[0];
+      }
+      form.pruefung = { datum: todayStr(), ergebnis: 'Bestanden', pruefer: '', naechste, notizen: '' };
+      modal.pruefung = true;
+    }
+
+    async function savePruefung() {
+      await load(async () => {
+        await post('Pruefungen', {
+          Datum:            form.pruefung.datum,
+          Ergebnis:         form.pruefung.ergebnis,
+          Pruefer:          form.pruefung.pruefer,
+          Naechste_Pruefung: form.pruefung.naechste,
+          Notizen:          form.pruefung.notizen,
+        });
+        const update = { Naechste_Pruefung: form.pruefung.naechste };
+        if (form.pruefung.ergebnis === 'Nicht bestanden') update.Status = 'Außer Dienst';
+        await patch('Ausruestungstuecke', form.aktion.Id, update);
+        modal.pruefung = false;
+        showToast('Prüfung gespeichert');
+        await fetchAll();
+      });
+    }
+
+    function openWaesche(a) {
+      form.aktion = a;
+      form.waesche = { datum: todayStr(), art: 'Normal', notizen: '' };
+      modal.waesche = true;
+    }
+
+    async function saveWaesche() {
+      await load(async () => {
+        await post('Waesche', {
+          Datum:     form.waesche.datum,
+          Waescheart: form.waesche.art,
+          Notizen:   form.waesche.notizen,
+        });
+        if (form.aktion.Status === 'Lager') {
+          await patch('Ausruestungstuecke', form.aktion.Id, { Status: 'Reinigung' });
+        }
+        modal.waesche = false;
+        showToast('Wäsche erfasst');
+        await fetchAll();
+      });
+    }
+
+    function todayStr() {
+      return new Date().toISOString().split('T')[0];
+    }
+
+    onMounted(fetchAll);
+
+    return {
+      page, pages, loading, toast,
+      darkMode, toggleDark,
+      kameraden, ausruestung, typen,
+      filterAusruestung, filterStatus,
+      modal, form,
+      kameradenliste, ausruestungFiltered, stats, warnungen,
+      fmtDate, datePriority, statusBadge, typLabel,
+      openKameradenForm, saveKamerad, deleteKamerad,
+      autoFillAusruestungDaten, autoFillLebensdauer,
+      openAusruestungForm, saveAusruestung, deleteAusruestung,
+      normenFuerAktuellenTyp, onTypChange, onNormSelected,
+      openTypenForm, saveTyp, deleteTyp,
+      openAusgabe, saveAusgabe,
+      openPruefung, savePruefung,
+      openWaesche, saveWaesche,
+    };
+  }
+}).mount('#app');
+</script>
+</body>
+</html>
