@@ -54,57 +54,23 @@ cd psa-verwaltung
 ### 2. Installationsskript ausführen
 
 ```bash
-cd setup
-bash install.sh
+bash setup/install.sh
 ```
 
-Das Skript:
-- Prüft alle Voraussetzungen
-- Erzeugt `.env` mit automatisch generierten Passwörtern
-- Generiert `nginx.conf` aus dem Template
-- Startet alle Docker-Container
+Das Skript erledigt alles automatisch:
 
-### 3. NocoDB einrichten
+1. Prüft alle Voraussetzungen
+2. Erzeugt `.env` mit zufällig generierten Passwörtern
+3. Startet alle Docker-Container
+4. Wartet bis NocoDB bereit ist
+5. **Fragt interaktiv nach dem API-Token** (einmaliger manueller Schritt)
+6. Erstellt alle 6 Datenbank-Tabellen
+7. Schreibt die Konfiguration in `frontend/config.js`
 
-Öffne die NocoDB-Oberfläche (Standard: `http://SERVER-IP:8181`) und:
+> **Einziger manueller Schritt:** Das Skript pausiert und zeigt die NocoDB-URL an.
+> Öffne diese, erstelle ein Admin-Konto, erzeuge einen API-Token und füge ihn im Terminal ein.
 
-1. Erstelle ein **Admin-Konto**
-2. Gehe zu **Profilbild → Team & Settings → API Tokens**
-3. Erstelle einen neuen Token und kopiere ihn
-
-### 4. API-Token eintragen
-
-```bash
-nano setup/.env
-# XC_TOKEN=dein-token-hier
-```
-
-Danach nginx.conf neu generieren und Container neu starten:
-
-```bash
-cd setup
-bash install.sh          # generiert nginx.conf neu
-docker compose restart frontend
-```
-
-### 5. Datenbank-Tabellen erstellen
-
-```bash
-bash setup/nocodb-setup.sh
-```
-
-Das Skript erstellt alle 6 Tabellen in NocoDB. Sollte das Skript mit deiner NocoDB-Version nicht funktionieren, erstelle die Tabellen manuell (siehe Abschnitt **Tabellen manuell anlegen**).
-
-### 6. Frontend konfigurieren
-
-Nach der Tabellenerstellung:
-
-```bash
-bash setup/configure-frontend.sh
-docker compose -f setup/docker-compose.yml restart frontend
-```
-
-Die App ist jetzt erreichbar unter `http://SERVER-IP:8182`.
+Die App ist danach erreichbar unter `http://SERVER-IP:8182`.
 
 ---
 
@@ -170,28 +136,14 @@ Falls `nocodb-setup.sh` nicht funktioniert, erstelle die Tabellen in der NocoDB 
 | Waescheart | Single Line Text |
 | Notizen | Long Text |
 
-### Danach: IDs in `frontend/index.html` eintragen
+### Danach: `configure-frontend.sh` ausführen
 
-Öffne in der NocoDB-URL die Tabelle. Die Projekt-ID (Base-ID) und Tabellen-ID stehen in der URL:
-
-```
-http://SERVER:8181/nc/BASE-ID/TABLE-ID
+```bash
+bash setup/configure-frontend.sh
 ```
 
-Trage die Werte in `frontend/index.html` ein:
-
-```javascript
-const API = '/api/v1/db/data/noco/DEINE-BASE-ID';
-
-const TABLES = {
-  Kameraden:          'TABELLEN-ID-KAMERADEN',
-  Ausruestungstypen:  'TABELLEN-ID-TYPEN',
-  Ausruestungstuecke: 'TABELLEN-ID-STUECKE',
-  Ausgaben:           'TABELLEN-ID-AUSGABEN',
-  Pruefungen:         'TABELLEN-ID-PRUEFUNGEN',
-  Waesche:            'TABELLEN-ID-WAESCHE',
-};
-```
+Das Skript liest die IDs aus `setup/.nocodb_table_ids` (automatisch von `nocodb-setup.sh` erstellt)
+und schreibt sie in `frontend/config.js`. nginx muss dafür nicht neu gestartet werden.
 
 ---
 

@@ -4,16 +4,19 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>PSA-Verwaltung – FF Wietmarschen</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/vendor/tailwind.cdn.js"></script>
   <script>
     tailwind.config = { darkMode: 'class' };
     if (localStorage.getItem('darkMode') === 'true') document.documentElement.classList.add('dark');
   </script>
-  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+  <script src="/vendor/vue.global.prod.js"></script>
+  <script src="/config.js"></script>
   <style>
     [v-cloak] { display: none; }
-    .fade-enter-active, .fade-leave-active { transition: opacity .2s; }
-    .fade-enter-from, .fade-leave-to { opacity: 0; }
+    .fade-enter-active { transition: opacity .15s ease, transform .15s ease; }
+    .fade-leave-active { transition: opacity .1s ease; }
+    .fade-enter-from { opacity: 0; transform: translateY(8px); }
+    .fade-leave-to { opacity: 0; }
 
     .modal-backdrop {
       position: fixed; inset: 0;
@@ -63,15 +66,14 @@
 
     .btn-primary {
       display: inline-flex; align-items: center; gap: 0.35rem;
-      background: linear-gradient(135deg, #dc2626, #b91c1c);
+      background: #dc2626;
       color: white; padding: 0.5rem 1.25rem;
       border-radius: 0.5rem; font-size: 0.875rem; font-weight: 600;
       cursor: pointer; border: none;
-      box-shadow: 0 1px 3px rgba(185,28,28,0.35);
-      transition: all .15s;
+      transition: background .15s;
     }
-    .btn-primary:hover { background: linear-gradient(135deg, #b91c1c, #991b1b); box-shadow: 0 4px 12px rgba(185,28,28,0.4); transform: translateY(-1px); }
-    .btn-primary:active { transform: translateY(0); box-shadow: none; }
+    .btn-primary:hover { background: #b91c1c; }
+    .btn-primary:active { background: #991b1b; }
 
     .btn-secondary {
       display: inline-flex; align-items: center; gap: 0.35rem;
@@ -82,46 +84,80 @@
     .btn-secondary:hover { background: #f3f4f6; border-color: #d1d5db; }
     .dark .btn-secondary { background: #374151; color: #e5e7eb; border-color: #4b5563; }
     .dark .btn-secondary:hover { background: #4b5563; }
+
+    /* Icon-Buttons in Tabellen */
+    .icon-btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 1.75rem; height: 1.75rem; border-radius: 0.375rem;
+      border: none; background: transparent; cursor: pointer; padding: 0;
+      color: #9ca3af; transition: background .12s, color .12s;
+    }
+    .dark .icon-btn { color: #6b7280; }
+
+    /* Sidebar nav icons (via v-html) */
+    .nav-icon { display: block; width: 1.25rem; height: 1.25rem; flex-shrink: 0; }
+    .nav-icon svg { width: 100%; height: 100%; }
   </style>
 </head>
 <body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-100 font-sans antialiased transition-colors duration-200">
 
 <div id="app" v-cloak>
 
-  <!-- ── Navbar ─────────────────────────────────────────── -->
-  <nav class="bg-gradient-to-r from-red-800 to-red-700 shadow-lg sticky top-0 z-30">
-    <div class="max-w-7xl mx-auto px-4 flex items-center justify-between h-14">
-      <div class="flex items-center gap-2">
-        <span class="text-xl">🔥</span>
-        <span class="font-bold text-white text-sm tracking-wide hidden sm:block">FF Wietmarschen</span>
-        <span class="text-red-300 hidden sm:block">·</span>
-        <span class="font-medium text-red-100 text-sm hidden sm:block">PSA-Verwaltung</span>
-      </div>
-      <div class="flex items-center gap-1">
-        <div class="flex gap-0.5">
-          <button v-for="p in pages" :key="p.id"
-            @click="page = p.id"
-            :class="['px-3 py-1.5 rounded-lg transition-all duration-150 text-sm font-medium',
-              page === p.id
-                ? 'bg-white text-red-700 shadow-sm'
-                : 'text-red-100 hover:bg-red-600/50 hover:text-white']">
-            {{ p.label }}
-          </button>
-        </div>
-        <!-- Dark mode toggle -->
-        <button @click="toggleDark"
-          class="ml-2 p-2 rounded-lg text-red-100 hover:bg-red-600/50 hover:text-white transition-all duration-150"
-          :title="darkMode ? 'Helles Design' : 'Dunkles Design'">
-          <svg v-if="darkMode" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707M17.657 17.657l-.707-.707M6.343 6.343l-.707-.707M12 7a5 5 0 100 10 5 5 0 000-10z" />
-          </svg>
-          <svg v-else class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-          </svg>
-        </button>
+  <!-- ── Sidebar ─────────────────────────────────────────── -->
+  <aside :class="['fixed inset-y-0 left-0 z-40 w-56 bg-white dark:bg-gray-900 border-r border-gray-100 dark:border-gray-700 flex flex-col transition-transform duration-300 ease-in-out',
+    sidebarOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full md:translate-x-0']">
+    <!-- Logo -->
+    <div class="flex items-center gap-3 px-5 py-5 border-b border-gray-100 dark:border-gray-800">
+      <span class="text-xl">🔥</span>
+      <div>
+        <div class="font-bold text-gray-900 dark:text-white text-sm leading-tight">FF Wietmarschen</div>
+        <div class="text-xs text-gray-400 dark:text-gray-500">PSA-Verwaltung</div>
       </div>
     </div>
-  </nav>
+    <!-- Navigation -->
+    <nav class="flex-1 py-3 px-3 space-y-0.5">
+      <button v-for="p in pages" :key="p.id"
+        @click="page = p.id; sidebarOpen = false"
+        :class="['w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors text-sm font-medium text-left',
+          page === p.id
+            ? 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400'
+            : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100']">
+        <span class="nav-icon" v-html="p.icon"></span>
+        {{ p.label }}
+      </button>
+    </nav>
+    <!-- Dark-mode toggle -->
+    <div class="p-3 border-t border-gray-100 dark:border-gray-800">
+      <button @click="toggleDark"
+        class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100 transition-colors">
+        <svg v-if="darkMode" class="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1.5m0 15V21m8.485-8.485l-1.06 1.06M4.575 19.425l-1.06-1.06M21 12h-1.5M4.5 12H3m15.364-6.364l-1.06 1.06M6.696 17.304l-1.06 1.06M12 7.5a4.5 4.5 0 100 9 4.5 4.5 0 000-9z" />
+        </svg>
+        <svg v-else class="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z" />
+        </svg>
+        {{ darkMode ? 'Helles Design' : 'Dunkles Design' }}
+      </button>
+    </div>
+  </aside>
+
+  <!-- Mobile overlay -->
+  <div v-if="sidebarOpen" @click="sidebarOpen = false"
+    class="fixed inset-0 bg-black/50 backdrop-blur-sm z-30 md:hidden"></div>
+
+  <!-- ── Content wrapper (pushes right of sidebar) ─────── -->
+  <div class="md:pl-56 flex flex-col min-h-screen">
+
+    <!-- Mobile header -->
+    <header class="md:hidden sticky top-0 z-20 bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-700 px-4 flex items-center gap-3 h-14">
+      <button @click="sidebarOpen = true"
+        class="p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+        </svg>
+      </button>
+      <span class="font-semibold text-gray-900 dark:text-white text-sm">FF Wietmarschen · PSA</span>
+    </header>
 
   <!-- ── Toast ─────────────────────────────────────────── -->
   <transition name="fade">
@@ -144,29 +180,58 @@
     </div>
   </div>
 
-  <main class="max-w-7xl mx-auto px-4 py-6">
+    <main class="flex-1 px-4 md:px-6 py-6">
+    <transition name="fade" mode="out-in">
+    <div :key="page">
 
     <!-- ══ DASHBOARD ══════════════════════════════════════ -->
     <section v-if="page === 'dashboard'">
-      <h1 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">Dashboard</h1>
+      <div class="mb-7">
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+          <span v-if="warnungen.length" class="text-orange-500 dark:text-orange-400 font-medium">{{ warnungen.length }} Meldung{{ warnungen.length > 1 ? 'en' : '' }}</span>
+          <span v-else class="text-emerald-600 dark:text-emerald-400 font-medium">Alles in Ordnung</span>
+          &nbsp;·&nbsp;{{ stats.kameraden }} aktive Kameraden
+        </p>
+      </div>
 
       <!-- Statistik-Kacheln -->
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        <div class="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm border border-gray-100 dark:border-gray-700 text-center">
-          <div class="text-3xl font-bold text-red-600 dark:text-red-400">{{ stats.kameraden }}</div>
-          <div class="text-xs font-semibold text-gray-400 dark:text-gray-500 mt-1.5 uppercase tracking-wide">Kameraden aktiv</div>
+        <div class="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm border border-gray-100 dark:border-gray-700 flex items-center justify-between gap-3">
+          <div>
+            <div class="text-2xl font-bold text-gray-900 dark:text-white">{{ stats.kameraden }}</div>
+            <div class="text-xs font-medium text-gray-500 dark:text-gray-400 mt-0.5">Kameraden aktiv</div>
+          </div>
+          <div class="w-10 h-10 rounded-xl bg-red-50 dark:bg-red-900/20 flex items-center justify-center flex-shrink-0">
+            <svg class="w-5 h-5 text-red-500 dark:text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" /></svg>
+          </div>
         </div>
-        <div class="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm border border-gray-100 dark:border-gray-700 text-center">
-          <div class="text-3xl font-bold text-blue-600 dark:text-blue-400">{{ stats.ausruestung }}</div>
-          <div class="text-xs font-semibold text-gray-400 dark:text-gray-500 mt-1.5 uppercase tracking-wide">Ausrüstungsstücke</div>
+        <div class="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm border border-gray-100 dark:border-gray-700 flex items-center justify-between gap-3">
+          <div>
+            <div class="text-2xl font-bold text-gray-900 dark:text-white">{{ stats.ausruestung }}</div>
+            <div class="text-xs font-medium text-gray-500 dark:text-gray-400 mt-0.5">Ausrüstungsstücke</div>
+          </div>
+          <div class="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center flex-shrink-0">
+            <svg class="w-5 h-5 text-blue-500 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" /></svg>
+          </div>
         </div>
-        <div class="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm border border-gray-100 dark:border-gray-700 text-center">
-          <div class="text-3xl font-bold text-orange-500 dark:text-orange-400">{{ stats.pruefungFaellig }}</div>
-          <div class="text-xs font-semibold text-gray-400 dark:text-gray-500 mt-1.5 uppercase tracking-wide">Prüfungen ≤ 30 Tage</div>
+        <div class="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm border border-gray-100 dark:border-gray-700 flex items-center justify-between gap-3">
+          <div>
+            <div class="text-2xl font-bold text-gray-900 dark:text-white">{{ stats.pruefungFaellig }}</div>
+            <div class="text-xs font-medium text-gray-500 dark:text-gray-400 mt-0.5">Prüfungen ≤ 30 Tage</div>
+          </div>
+          <div class="w-10 h-10 rounded-xl bg-orange-50 dark:bg-orange-900/20 flex items-center justify-center flex-shrink-0">
+            <svg class="w-5 h-5 text-orange-500 dark:text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+          </div>
         </div>
-        <div class="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm border border-gray-100 dark:border-gray-700 text-center">
-          <div class="text-3xl font-bold text-indigo-600 dark:text-indigo-400">{{ stats.ausgegeben }}</div>
-          <div class="text-xs font-semibold text-gray-400 dark:text-gray-500 mt-1.5 uppercase tracking-wide">Ausgegeben</div>
+        <div class="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm border border-gray-100 dark:border-gray-700 flex items-center justify-between gap-3">
+          <div>
+            <div class="text-2xl font-bold text-gray-900 dark:text-white">{{ stats.ausgegeben }}</div>
+            <div class="text-xs font-medium text-gray-500 dark:text-gray-400 mt-0.5">Ausgegeben</div>
+          </div>
+          <div class="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center flex-shrink-0">
+            <svg class="w-5 h-5 text-indigo-500 dark:text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" /></svg>
+          </div>
         </div>
       </div>
 
@@ -193,8 +258,11 @@
 
     <!-- ══ KAMERADEN ══════════════════════════════════════ -->
     <section v-if="page === 'kameraden'">
-      <div class="flex items-center justify-between mb-5">
-        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Kameraden</h1>
+      <div class="flex items-center justify-between mb-6">
+        <div>
+          <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Kameraden</h1>
+          <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">{{ kameraden.length }} gesamt &nbsp;·&nbsp; {{ stats.kameraden }} aktiv</p>
+        </div>
         <button @click="openKameradenForm()" class="btn-primary">+ Neu</button>
       </div>
 
@@ -202,21 +270,21 @@
         <table class="w-full text-sm">
           <thead>
             <tr class="border-b border-gray-100 dark:border-gray-700">
-              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Name</th>
-              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Jacke</th>
-              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Hose</th>
-              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Stiefel</th>
-              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Status</th>
-              <th class="px-4 py-3"></th>
+              <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Name</th>
+              <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Jacke</th>
+              <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Hose</th>
+              <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Stiefel</th>
+              <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Status</th>
+              <th class="px-4 py-2"></th>
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-50 dark:divide-gray-700">
-            <tr v-for="k in kameraden" :key="k.Id" class="hover:bg-gray-50 dark:hover:bg-gray-700/40 transition-colors">
-              <td class="px-4 py-3 font-semibold text-gray-800 dark:text-gray-200">{{ k.Vorname }} {{ k.Name }}</td>
-              <td class="px-4 py-3 text-gray-600 dark:text-gray-400">{{ k.Jacke_Groesse || '–' }}</td>
-              <td class="px-4 py-3 text-gray-600 dark:text-gray-400">{{ k.Hose_Groesse || '–' }}</td>
-              <td class="px-4 py-3 text-gray-600 dark:text-gray-400">{{ k.Stiefel_Groesse || '–' }}</td>
-              <td class="px-4 py-3">
+            <tr v-for="k in kameraden" :key="k.Id" class="group hover:bg-gray-50 dark:hover:bg-gray-700/40 transition-colors">
+              <td class="px-4 py-2 font-semibold text-gray-800 dark:text-gray-200">{{ k.Vorname }} {{ k.Name }}</td>
+              <td class="px-4 py-2 text-gray-600 dark:text-gray-400">{{ k.Jacke_Groesse || '–' }}</td>
+              <td class="px-4 py-2 text-gray-600 dark:text-gray-400">{{ k.Hose_Groesse || '–' }}</td>
+              <td class="px-4 py-2 text-gray-600 dark:text-gray-400">{{ k.Stiefel_Groesse || '–' }}</td>
+              <td class="px-4 py-2">
                 <span :class="k.Aktiv
                   ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400'
                   : 'bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500'"
@@ -224,9 +292,15 @@
                   {{ k.Aktiv ? 'Aktiv' : 'Inaktiv' }}
                 </span>
               </td>
-              <td class="px-4 py-3 text-right whitespace-nowrap">
-                <button @click="openKameradenForm(k)" class="text-blue-600 dark:text-blue-400 hover:underline text-xs font-medium mr-3">Bearbeiten</button>
-                <button @click="deleteKamerad(k)" class="text-red-500 dark:text-red-400 hover:underline text-xs font-medium">Löschen</button>
+              <td class="px-4 py-2">
+                <div class="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button @click="openKameradenForm(k)" title="Bearbeiten" class="icon-btn hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 dark:hover:text-blue-400">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" /></svg>
+                  </button>
+                  <button @click="deleteKamerad(k)" title="Löschen" class="icon-btn hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 dark:hover:text-red-400">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" /></svg>
+                  </button>
+                </div>
               </td>
             </tr>
             <tr v-if="!kameraden.length">
@@ -240,12 +314,15 @@
     <!-- ══ AUSRÜSTUNG ══════════════════════════════════════ -->
     <section v-if="page === 'ausruestung'">
       <div class="flex items-center justify-between mb-5">
-        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Ausrüstung</h1>
+        <div>
+          <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Ausrüstung</h1>
+          <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">{{ ausruestung.length }} Stücke &nbsp;·&nbsp; {{ stats.ausgegeben }} ausgegeben</p>
+        </div>
         <button @click="openAusruestungForm()" class="btn-primary">+ Neu</button>
       </div>
 
-      <!-- Filter -->
-      <div class="flex gap-3 mb-4 flex-wrap">
+      <!-- Filter + Export -->
+      <div class="flex gap-3 mb-4 flex-wrap items-center">
         <input v-model="filterAusruestung" placeholder="Suche…"
           class="border border-gray-200 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-500
                  rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-400 focus:border-transparent"
@@ -257,37 +334,66 @@
           <option>Lager</option><option>Ausgegeben</option>
           <option>Reinigung</option><option>Außer Dienst</option><option>Ausgesondert</option>
         </select>
+        <button @click="exportCSV" class="btn-secondary ml-auto text-xs">↓ CSV Export</button>
       </div>
 
       <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-x-auto">
         <table class="w-full text-sm">
           <thead>
             <tr class="border-b border-gray-100 dark:border-gray-700">
-              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Seriennr.</th>
-              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Typ</th>
-              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Kamerad</th>
-              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Status</th>
-              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Nächste Prüfung</th>
-              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Lebensende</th>
-              <th class="px-4 py-3"></th>
+              <th @click="sortBy('Seriennummer')" class="px-4 py-2.5 text-left text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider cursor-pointer select-none hover:text-gray-600 dark:hover:text-gray-300">Seriennr. <span v-if="sortAusruestung.field==='Seriennummer'">{{ sortAusruestung.dir==='asc' ? '↑' : '↓' }}</span></th>
+              <th @click="sortBy('Ausruestungstyp')" class="px-4 py-2.5 text-left text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider cursor-pointer select-none hover:text-gray-600 dark:hover:text-gray-300">Typ <span v-if="sortAusruestung.field==='Ausruestungstyp'">{{ sortAusruestung.dir==='asc' ? '↑' : '↓' }}</span></th>
+              <th @click="sortBy('Kamerad')" class="px-4 py-2.5 text-left text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider cursor-pointer select-none hover:text-gray-600 dark:hover:text-gray-300">Kamerad <span v-if="sortAusruestung.field==='Kamerad'">{{ sortAusruestung.dir==='asc' ? '↑' : '↓' }}</span></th>
+              <th @click="sortBy('Status')" class="px-4 py-2.5 text-left text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider cursor-pointer select-none hover:text-gray-600 dark:hover:text-gray-300">Status <span v-if="sortAusruestung.field==='Status'">{{ sortAusruestung.dir==='asc' ? '↑' : '↓' }}</span></th>
+              <th @click="sortBy('Naechste_Pruefung')" class="px-4 py-2.5 text-left text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider cursor-pointer select-none hover:text-gray-600 dark:hover:text-gray-300">Nächste Prüfung <span v-if="sortAusruestung.field==='Naechste_Pruefung'">{{ sortAusruestung.dir==='asc' ? '↑' : '↓' }}</span></th>
+              <th @click="sortBy('Lebensende_Datum')" class="px-4 py-2.5 text-left text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider cursor-pointer select-none hover:text-gray-600 dark:hover:text-gray-300">Lebensende <span v-if="sortAusruestung.field==='Lebensende_Datum'">{{ sortAusruestung.dir==='asc' ? '↑' : '↓' }}</span></th>
+              <th class="px-4 py-2"></th>
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-50 dark:divide-gray-700">
-            <tr v-for="a in ausruestungFiltered" :key="a.Id" class="hover:bg-gray-50 dark:hover:bg-gray-700/40 transition-colors">
-              <td class="px-4 py-3 font-mono text-xs text-gray-500 dark:text-gray-400">{{ a.Seriennummer || '–' }}</td>
-              <td class="px-4 py-3 font-medium text-gray-800 dark:text-gray-200">{{ typLabel(a.Ausruestungstyp) }}</td>
-              <td class="px-4 py-3 text-gray-600 dark:text-gray-400">{{ a.Kamerad || '–' }}</td>
-              <td class="px-4 py-3">
+            <tr v-for="a in ausruestungFiltered" :key="a.Id" class="group hover:bg-gray-50 dark:hover:bg-gray-700/40 transition-colors">
+              <td class="px-4 py-2 font-mono text-xs text-gray-500 dark:text-gray-400">{{ a.Seriennummer || '–' }}</td>
+              <td class="px-4 py-2 font-medium text-gray-800 dark:text-gray-200">{{ typLabel(a.Ausruestungstyp) }}</td>
+              <td class="px-4 py-2 text-gray-600 dark:text-gray-400">{{ a.Kamerad || '–' }}</td>
+              <td class="px-4 py-2">
                 <span :class="statusBadge(a.Status)">{{ a.Status }}</span>
               </td>
-              <td class="px-4 py-3 text-sm" :class="datePriority(a.Naechste_Pruefung)">{{ fmtDate(a.Naechste_Pruefung) }}</td>
-              <td class="px-4 py-3 text-sm" :class="datePriority(a.Lebensende_Datum)">{{ fmtDate(a.Lebensende_Datum) }}</td>
-              <td class="px-4 py-3 text-right whitespace-nowrap space-x-2">
-                <button @click="openAusgabe(a)" class="text-blue-600 dark:text-blue-400 hover:underline text-xs font-medium">Ausgabe</button>
-                <button @click="openPruefung(a)" class="text-orange-500 dark:text-orange-400 hover:underline text-xs font-medium">Prüfung</button>
-                <button @click="openWaesche(a)" class="text-teal-600 dark:text-teal-400 hover:underline text-xs font-medium">Wäsche</button>
-                <button @click="openAusruestungForm(a)" class="text-gray-500 dark:text-gray-400 hover:underline text-xs font-medium">Edit</button>
-                <button @click="deleteAusruestung(a)" class="text-red-500 dark:text-red-400 hover:underline text-xs font-medium">Löschen</button>
+              <td class="px-4 py-2">
+                <template v-for="rel in [fmtDateRel(a.Naechste_Pruefung)]">
+                  <span v-if="!rel" class="text-gray-400 dark:text-gray-500 text-xs">–</span>
+                  <template v-else>
+                    <div :class="[rel.cls, 'text-xs font-semibold leading-tight']">{{ rel.label }}</div>
+                    <div v-if="rel.sub" class="text-xs text-gray-400 dark:text-gray-500 leading-tight">{{ rel.sub }}</div>
+                  </template>
+                </template>
+              </td>
+              <td class="px-4 py-2">
+                <template v-for="rel in [fmtDateRel(a.Lebensende_Datum)]">
+                  <span v-if="!rel" class="text-gray-400 dark:text-gray-500 text-xs">–</span>
+                  <template v-else>
+                    <div :class="[rel.cls, 'text-xs font-semibold leading-tight']">{{ rel.label }}</div>
+                    <div v-if="rel.sub" class="text-xs text-gray-400 dark:text-gray-500 leading-tight">{{ rel.sub }}</div>
+                  </template>
+                </template>
+              </td>
+              <td class="px-4 py-2">
+                <div class="flex items-center justify-end gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button @click="openAusgabe(a)" title="Ausgabe / Rückgabe" class="icon-btn hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 dark:hover:text-blue-400">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" /></svg>
+                  </button>
+                  <button @click="openPruefung(a)" title="Prüfung erfassen" class="icon-btn hover:text-orange-500 hover:bg-orange-50 dark:hover:bg-orange-900/20 dark:hover:text-orange-400">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11.35 3.836c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m8.9-4.414c.376.023.75.05 1.124.08 1.131.094 1.976 1.057 1.976 2.192V16.5A2.25 2.25 0 0118 18.75h-2.25m-7.5-10.5H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V18.75m-7.5-10.5h6.375c.621 0 1.125.504 1.125 1.125v9.375m-8.25-3l1.5 1.5 3-3.75" /></svg>
+                  </button>
+                  <button @click="openWaesche(a)" title="Wäsche erfassen" class="icon-btn hover:text-teal-600 hover:bg-teal-50 dark:hover:bg-teal-900/20 dark:hover:text-teal-400">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" /></svg>
+                  </button>
+                  <button @click="openAusruestungForm(a)" title="Bearbeiten" class="icon-btn hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 dark:hover:text-blue-400">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" /></svg>
+                  </button>
+                  <button @click="deleteAusruestung(a)" title="Löschen" class="icon-btn hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 dark:hover:text-red-400">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" /></svg>
+                  </button>
+                </div>
               </td>
             </tr>
             <tr v-if="!ausruestungFiltered.length">
@@ -301,7 +407,10 @@
     <!-- ══ TYPEN ══════════════════════════════════════════ -->
     <section v-if="page === 'typen'">
       <div class="flex items-center justify-between mb-5">
-        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Ausrüstungstypen</h1>
+        <div>
+          <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Ausrüstungstypen</h1>
+          <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">{{ typen.length }} Typen definiert</p>
+        </div>
         <button @click="openTypenForm()" class="btn-primary">+ Neu</button>
       </div>
 
@@ -317,9 +426,13 @@
               <div class="text-sm text-gray-500 dark:text-gray-400 mt-1">{{ t.Hersteller || '–' }}</div>
               <div v-if="t.Norm" class="text-xs text-gray-400 dark:text-gray-500 mt-0.5 font-mono">{{ t.Norm }}</div>
             </div>
-            <div class="flex gap-3 ml-4 flex-shrink-0">
-              <button @click="openTypenForm(t)" class="text-blue-600 dark:text-blue-400 text-xs hover:underline font-medium">Edit</button>
-              <button @click="deleteTyp(t)" class="text-red-500 dark:text-red-400 text-xs hover:underline font-medium">Löschen</button>
+            <div class="flex gap-1 ml-4 flex-shrink-0">
+              <button @click="openTypenForm(t)" title="Bearbeiten" class="icon-btn hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 dark:hover:text-blue-400">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" /></svg>
+              </button>
+              <button @click="deleteTyp(t)" title="Löschen" class="icon-btn hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 dark:hover:text-red-400">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" /></svg>
+              </button>
             </div>
           </div>
           <div class="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700 flex gap-5 text-xs text-gray-500 dark:text-gray-400">
@@ -334,7 +447,12 @@
       </div>
     </section>
 
-  </main>
+    </div>
+    </transition>
+
+    </main>
+
+  </div><!-- end content wrapper -->
 
   <!-- ══ MODALS ══════════════════════════════════════════ -->
 
@@ -619,16 +737,12 @@
 <script>
 const { createApp, ref, reactive, computed, onMounted } = Vue;
 
-const API = '/api/v1/db/data/noco/p962d7ujd8wbfvi';
+if (!window.CONFIG) {
+  throw new Error('config.js nicht geladen. Bitte setup/configure-frontend.sh ausführen.');
+}
 
-const TABLES = {
-  Kameraden:          'm1ky1mz0xyfth5m',
-  Ausruestungstypen:  'murbf56gzv4ii0u',
-  Ausruestungstuecke: 'mhskteevunob1r0',
-  Ausgaben:           'mrwlggxzb88opar',
-  Pruefungen:         'mkb11hw0mzcib6y',
-  Waesche:            'm38ul9qugdihrhx',
-};
+const API = window.CONFIG.api;
+const TABLES = window.CONFIG.tables;
 const T = (name) => TABLES[name] || name;
 
 // Bekannte Normen mit Prüfintervallen und Lebensdauer (Stand DGUV V49 / Herstellerempfehlungen)
@@ -663,6 +777,7 @@ const NORMS_DB = {
   ],
 };
 
+// ── API-Layer ──────────────────────────────────────────────────────────────
 async function api(method, path, body) {
   const r = await fetch(path, {
     method,
@@ -677,16 +792,31 @@ async function api(method, path, body) {
   return r.json();
 }
 
-const get  = (p, q='') => api('GET', `${API}/${T(p)}?limit=1000${q}`);
-const post = (p, b)    => api('POST', `${API}/${T(p)}`, b);
-const patch= (p, id, b)=> api('PATCH', `${API}/${T(p)}/${id}`, b);
+// Lädt alle Seiten einer Tabelle (NocoDB-Pagination, 100 Einträge pro Seite)
+async function getAll(table, query = '') {
+  const PAGE_SIZE = 100;
+  let offset = 0;
+  let all = [];
+  while (true) {
+    const r = await api('GET', `${API}/${T(table)}?limit=${PAGE_SIZE}&offset=${offset}${query}`);
+    const list = r.list || [];
+    all = all.concat(list);
+    if (all.length >= (r.pageInfo?.totalRows ?? list.length) || list.length < PAGE_SIZE) break;
+    offset += PAGE_SIZE;
+  }
+  return all;
+}
+
+const post = (p, b)    => api('POST',   `${API}/${T(p)}`, b);
+const patch= (p, id, b)=> api('PATCH',  `${API}/${T(p)}/${id}`, b);
 const del  = (p, id)   => api('DELETE', `${API}/${T(p)}/${id}`);
 
 createApp({
   setup() {
-    const page    = ref('dashboard');
-    const loading = ref(false);
-    const toast   = reactive({ show: false, msg: '', type: 'ok' });
+    const page        = ref('dashboard');
+    const sidebarOpen = ref(false);
+    const loading     = ref(false);
+    const toast       = reactive({ show: false, msg: '', type: 'ok' });
 
     // Dark mode
     const darkMode = ref(document.documentElement.classList.contains('dark'));
@@ -697,10 +827,14 @@ createApp({
     }
 
     const pages = [
-      { id: 'dashboard', label: 'Dashboard' },
-      { id: 'kameraden', label: 'Kameraden' },
-      { id: 'ausruestung', label: 'Ausrüstung' },
-      { id: 'typen', label: 'Typen' },
+      { id: 'dashboard',  label: 'Dashboard',
+        icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" /></svg>' },
+      { id: 'kameraden',  label: 'Kameraden',
+        icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" /></svg>' },
+      { id: 'ausruestung', label: 'Ausrüstung',
+        icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" /></svg>' },
+      { id: 'typen',      label: 'Typen',
+        icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" /><path stroke-linecap="round" stroke-linejoin="round" d="M6 6h.008v.008H6V6z" /></svg>' },
     ];
 
     // Data
@@ -709,9 +843,19 @@ createApp({
     const typen       = ref([]);
     const ausgaben    = ref([]);
 
-    // Filter
+    // Filter + Sortierung (Ausrüstungstabelle)
     const filterAusruestung = ref('');
     const filterStatus      = ref('');
+    const sortAusruestung   = reactive({ field: '', dir: 'asc' });
+
+    function sortBy(field) {
+      if (sortAusruestung.field === field) {
+        sortAusruestung.dir = sortAusruestung.dir === 'asc' ? 'desc' : 'asc';
+      } else {
+        sortAusruestung.field = field;
+        sortAusruestung.dir   = 'asc';
+      }
+    }
 
     // Modal state
     const modal = reactive({
@@ -746,15 +890,15 @@ createApp({
     async function fetchAll() {
       await load(async () => {
         const [k, a, t, au] = await Promise.all([
-          get('Kameraden'),
-          get('Ausruestungstuecke'),
-          get('Ausruestungstypen'),
-          get('Ausgaben'),
+          getAll('Kameraden'),
+          getAll('Ausruestungstuecke'),
+          getAll('Ausruestungstypen'),
+          getAll('Ausgaben'),
         ]);
-        kameraden.value   = k.list  || [];
-        ausruestung.value = a.list  || [];
-        typen.value       = t.list  || [];
-        ausgaben.value    = au.list || [];
+        kameraden.value   = k;
+        ausruestung.value = a;
+        typen.value       = t;
+        ausgaben.value    = au;
       });
     }
 
@@ -776,9 +920,19 @@ createApp({
           (a.Kamerad||'').toLowerCase().includes(q)
         );
       }
+      if (sortAusruestung.field) {
+        const f = sortAusruestung.field;
+        const d = sortAusruestung.dir === 'asc' ? 1 : -1;
+        list = [...list].sort((a, b) => {
+          const va = (a[f] ?? '').toString();
+          const vb = (b[f] ?? '').toString();
+          return va.localeCompare(vb, 'de') * d;
+        });
+      }
       return list;
     });
 
+    // Datum-Schwellwerte (einmalig beim App-Start berechnet)
     const today = new Date();
     const in30  = new Date(today); in30.setDate(today.getDate() + 30);
     const in180 = new Date(today); in180.setDate(today.getDate() + 180);
@@ -829,9 +983,65 @@ createApp({
     });
 
     // ── Helpers ──
+    function todayStr() {
+      return new Date().toISOString().split('T')[0];
+    }
+
+    // Pflichtfeld-Prüfung: [[wert, 'Feldname'], ...] → false = Fehler angezeigt
+    function validateFields(pairs) {
+      for (const [val, label] of pairs) {
+        if (!val || (typeof val === 'string' && !val.trim())) {
+          showToast(`„${label}" ist ein Pflichtfeld`, 'error');
+          return false;
+        }
+      }
+      return true;
+    }
+
+    // CSV-Export der aktuell gefilterten Ausrüstungsliste
+    function exportCSV() {
+      const header = 'Seriennummer;Typ;Kamerad;Status;Nächste Prüfung;Lebensende;Notizen';
+      const rows = ausruestungFiltered.value.map(a =>
+        [
+          a.Seriennummer      || '',
+          typLabel(a.Ausruestungstyp),
+          a.Kamerad           || '',
+          a.Status            || '',
+          fmtDate(a.Naechste_Pruefung),
+          fmtDate(a.Lebensende_Datum),
+          (a.Notizen          || '').replace(/"/g, '""'),
+        ].map(v => `"${v}"`).join(';')
+      );
+      const csv  = '\uFEFF' + [header, ...rows].join('\n');  // BOM für Excel
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url  = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href     = url;
+      link.download = `ausruestung_${todayStr()}.csv`;
+      link.click();
+      URL.revokeObjectURL(url);
+    }
+
     function fmtDate(d) {
       if (!d) return '–';
       return new Date(d).toLocaleDateString('de-DE');
+    }
+
+    // Relative Datumsanzeige: gibt { label, sub, cls } oder null zurück
+    function fmtDateRel(d) {
+      if (!d) return null;
+      const date     = new Date(d);
+      const diffDays = Math.round((date - today) / 86400000);
+      if (diffDays < 0) {
+        const abs = Math.abs(diffDays);
+        return { label: 'Überfällig', sub: abs === 1 ? '1 Tag' : `${abs} Tage`, cls: 'text-red-600 dark:text-red-400' };
+      }
+      if (diffDays === 0) return { label: 'Heute', sub: 'fällig', cls: 'text-red-600 dark:text-red-400' };
+      if (diffDays <= 30)  return { label: `${diffDays} Tage`,  sub: fmtDate(d), cls: 'text-orange-500 dark:text-orange-400' };
+      const months = Math.round(diffDays / 30.5);
+      if (months < 24)     return { label: `${months} Mon.`,   sub: fmtDate(d), cls: diffDays <= 180 ? 'text-yellow-600 dark:text-yellow-400' : 'text-gray-600 dark:text-gray-300' };
+      const years  = Math.round(diffDays / 365);
+      return { label: `${years} J.`, sub: fmtDate(d), cls: 'text-gray-500 dark:text-gray-400' };
     }
 
     function datePriority(d) {
@@ -866,8 +1076,13 @@ createApp({
     }
 
     async function saveKamerad() {
+      if (!validateFields([[form.kamerad.Name, 'Name'], [form.kamerad.Vorname, 'Vorname']])) return;
       await load(async () => {
         const { Id } = form.kamerad;
+        const oldK    = Id ? kameraden.value.find(k => k.Id === Id) : null;
+        const oldLabel = oldK ? `${oldK.Vorname} ${oldK.Name}` : null;
+        const newLabel = `${form.kamerad.Vorname} ${form.kamerad.Name}`;
+
         const payload = {
           Vorname:           form.kamerad.Vorname           || null,
           Name:              form.kamerad.Name              || null,
@@ -879,6 +1094,14 @@ createApp({
         };
         if (Id) await patch('Kameraden', Id, payload);
         else    await post('Kameraden', payload);
+
+        // Kaskade: Ausrüstungseinträge bei Namensänderung mitaktualisieren
+        if (Id && oldLabel && oldLabel !== newLabel) {
+          const affected = ausruestung.value.filter(a => a.Kamerad === oldLabel);
+          await Promise.all(affected.map(a => patch('Ausruestungstuecke', a.Id, { Kamerad: newLabel })));
+          if (affected.length) showToast(`${affected.length} Ausrüstungsstück${affected.length > 1 ? 'e' : ''} aktualisiert`);
+        }
+
         modal.kameradenForm = false;
         showToast('Kamerad gespeichert');
         await fetchAll();
@@ -886,7 +1109,12 @@ createApp({
     }
 
     async function deleteKamerad(k) {
-      if (!confirm(`${k.Vorname} ${k.Name} wirklich löschen?`)) return;
+      const label    = `${k.Vorname} ${k.Name}`;
+      const assigned = ausruestung.value.filter(a => a.Kamerad === label).length;
+      const msg = assigned
+        ? `${label} hat noch ${assigned} zugewiesene${assigned > 1 ? ' Ausrüstungsstücke' : 's Ausrüstungsstück'}. Trotzdem löschen?`
+        : `${label} wirklich löschen?`;
+      if (!confirm(msg)) return;
       await load(async () => {
         await del('Kameraden', k.Id);
         showToast('Gelöscht');
@@ -929,6 +1157,10 @@ createApp({
     }
 
     async function saveAusruestung() {
+      if (!validateFields([
+        [form.ausruestung.Ausruestungstyp, 'Typ'],
+        [form.ausruestung.Seriennummer,    'Seriennummer'],
+      ])) return;
       await load(async () => {
         const { Id } = form.ausruestung;
         const payload = {
@@ -996,8 +1228,13 @@ createApp({
     }
 
     async function saveTyp() {
+      if (!validateFields([[form.typ.Bezeichnung, 'Bezeichnung']])) return;
       await load(async () => {
         const { Id } = form.typ;
+        const oldTyp       = Id ? typen.value.find(t => t.Id === Id) : null;
+        const oldBezeichnung = oldTyp?.Bezeichnung ?? null;
+        const newBezeichnung = form.typ.Bezeichnung;
+
         const payload = {
           Typ:                   form.typ.Typ                   || null,
           Bezeichnung:           form.typ.Bezeichnung            || null,
@@ -1009,6 +1246,14 @@ createApp({
         };
         if (Id) await patch('Ausruestungstypen', Id, payload);
         else    await post('Ausruestungstypen', payload);
+
+        // Kaskade: Ausrüstungseinträge bei Bezeichnungsänderung mitaktualisieren
+        if (Id && oldBezeichnung && oldBezeichnung !== newBezeichnung) {
+          const affected = ausruestung.value.filter(a => a.Ausruestungstyp === oldBezeichnung);
+          await Promise.all(affected.map(a => patch('Ausruestungstuecke', a.Id, { Ausruestungstyp: newBezeichnung })));
+          if (affected.length) showToast(`${affected.length} Ausrüstungsstück${affected.length > 1 ? 'e' : ''} aktualisiert`);
+        }
+
         modal.typForm = false;
         showToast('Typ gespeichert');
         await fetchAll();
@@ -1016,7 +1261,11 @@ createApp({
     }
 
     async function deleteTyp(t) {
-      if (!confirm(`Typ "${t.Bezeichnung}" wirklich löschen?`)) return;
+      const inUse = ausruestung.value.filter(a => a.Ausruestungstyp === t.Bezeichnung).length;
+      const msg = inUse
+        ? `Typ "${t.Bezeichnung}" wird noch von ${inUse} Ausrüstungsstück${inUse > 1 ? 'en' : ''} verwendet. Trotzdem löschen?`
+        : `Typ "${t.Bezeichnung}" wirklich löschen?`;
+      if (!confirm(msg)) return;
       await load(async () => {
         await del('Ausruestungstypen', t.Id);
         showToast('Gelöscht');
@@ -1102,20 +1351,17 @@ createApp({
       });
     }
 
-    function todayStr() {
-      return new Date().toISOString().split('T')[0];
-    }
-
     onMounted(fetchAll);
 
     return {
       page, pages, loading, toast,
       darkMode, toggleDark,
+      sidebarOpen,
       kameraden, ausruestung, typen,
-      filterAusruestung, filterStatus,
+      filterAusruestung, filterStatus, sortAusruestung, sortBy,
       modal, form,
       kameradenliste, ausruestungFiltered, stats, warnungen,
-      fmtDate, datePriority, statusBadge, typLabel,
+      fmtDate, fmtDateRel, datePriority, statusBadge, typLabel, exportCSV,
       openKameradenForm, saveKamerad, deleteKamerad,
       autoFillAusruestungDaten, autoFillLebensdauer,
       openAusruestungForm, saveAusruestung, deleteAusruestung,

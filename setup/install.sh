@@ -1,7 +1,8 @@
 #!/bin/bash
 # ─────────────────────────────────────────────────────────────
 #  install.sh – PSA-Verwaltung Installationsskript
-#  Getestet mit: Docker 24+, NocoDB 0.301.x, Ubuntu/Debian/Raspberry Pi OS
+#  Alles in einem Durchlauf: Container starten, Token eingeben,
+#  Tabellen anlegen, Frontend konfigurieren.
 # ─────────────────────────────────────────────────────────────
 set -e
 
@@ -14,7 +15,6 @@ NGINX_CONF="$SCRIPT_DIR/nginx.conf"
 echo ""
 echo "╔══════════════════════════════════════════════════╗"
 echo "║   PSA-Verwaltung – FF Wietmarschen               ║"
-echo "║   Installationsskript                            ║"
 echo "╚══════════════════════════════════════════════════╝"
 echo ""
 
@@ -23,7 +23,7 @@ echo "🔍 Prüfe Voraussetzungen..."
 
 check_cmd() {
   if ! command -v "$1" &> /dev/null; then
-    echo "❌ '$1' ist nicht installiert. Bitte installieren und erneut versuchen."
+    echo "❌ '$1' fehlt. Bitte installieren und erneut versuchen."
     exit 1
   fi
   echo "   ✓ $1"
@@ -33,21 +33,18 @@ check_cmd docker
 check_cmd curl
 check_cmd python3
 
-# Docker Compose (entweder als Plugin oder standalone)
 if docker compose version &>/dev/null 2>&1; then
   COMPOSE="docker compose"
 elif command -v docker-compose &>/dev/null; then
   COMPOSE="docker-compose"
 else
-  echo "❌ 'docker compose' nicht gefunden. Installiere Docker Desktop oder das Compose-Plugin."
+  echo "❌ 'docker compose' nicht gefunden."
   exit 1
 fi
 echo "   ✓ $COMPOSE"
 
-# envsubst für nginx.conf
 if ! command -v envsubst &>/dev/null; then
-  echo "⚠️  'envsubst' nicht gefunden (gettext-Paket)."
-  echo "   Installiere mit: sudo apt install gettext-base"
+  echo "❌ 'envsubst' fehlt. Installiere mit: sudo apt install gettext-base"
   exit 1
 fi
 echo "   ✓ envsubst"
@@ -55,78 +52,105 @@ echo ""
 
 # ── .env erzeugen ─────────────────────────────────────────
 if [ -f "$ENV_FILE" ]; then
-  echo "ℹ️  .env existiert bereits – wird nicht überschrieben."
+  echo "ℹ️  .env existiert – wird nicht überschrieben."
 else
-  echo "📝 Erstelle .env aus Vorlage..."
+  echo "📝 Erstelle .env..."
   cp "$ENV_EXAMPLE" "$ENV_FILE"
-
-  # Passwörter und Secrets automatisch generieren
   PW=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1 || true)
   SECRET=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 48 | head -n 1 || true)
-
   sed -i "s|change-me-strong-password|$PW|g" "$ENV_FILE"
   sed -i "s|change-me-random-secret-at-least-32-chars|$SECRET|g" "$ENV_FILE"
-
-  echo "✅ .env erstellt (Passwörter automatisch generiert)"
-  echo ""
-  echo "⚠️  WICHTIG: Trage nach der NocoDB-Einrichtung den API-Token ein:"
-  echo "   $ENV_FILE → XC_TOKEN=..."
+  echo "✅ .env erstellt"
 fi
 
 # .env laden
 set -a; source "$ENV_FILE"; set +a
 
-# ── nginx.conf generieren ─────────────────────────────────
-echo ""
-echo "🔧 Generiere nginx.conf..."
-if [ -z "$XC_TOKEN" ] || [ "$XC_TOKEN" = "your-nocodb-api-token-here" ]; then
-  echo "ℹ️  XC_TOKEN noch nicht gesetzt – nginx.conf wird mit Platzhalter erstellt."
-  echo "   Führe dieses Skript erneut aus, nachdem du den Token in .env eingetragen hast."
-  XC_TOKEN="PLACEHOLDER_TOKEN"
-fi
-envsubst '${XC_TOKEN}' < "$NGINX_TEMPLATE" > "$NGINX_CONF"
-echo "✅ nginx.conf generiert"
-
-# ── Docker Compose starten ────────────────────────────────
+# ── Docker-Container starten ──────────────────────────────
 echo ""
 echo "🐳 Starte Docker-Container..."
 cd "$SCRIPT_DIR"
+XC_TOKEN="${XC_TOKEN:-PLACEHOLDER_TOKEN}" envsubst '${XC_TOKEN}' < "$NGINX_TEMPLATE" > "$NGINX_CONF"
 $COMPOSE up -d
 
+# ── Warten auf NocoDB ─────────────────────────────────────
 echo ""
-echo "⏳ Warte auf NocoDB (kann 30–60 Sekunden dauern)..."
-for i in $(seq 1 30); do
+echo "⏳ Warte auf NocoDB..."
+for i in $(seq 1 40); do
   STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8181/api/v1/health 2>/dev/null || echo "000")
   if [ "$STATUS" = "200" ]; then
-    echo "✅ NocoDB ist bereit!"
+    echo "✅ NocoDB bereit"
     break
   fi
   printf "."
   sleep 3
 done
-
 echo ""
+
+SERVER_IP=$(hostname -I 2>/dev/null | awk '{print $1}' || echo "localhost")
+
+# ── API-Token einrichten ──────────────────────────────────
+set -a; source "$ENV_FILE"; set +a  # neu laden, falls Token inzwischen gesetzt
+
+if [ -z "$XC_TOKEN" ] || [ "$XC_TOKEN" = "your-nocodb-api-token-here" ]; then
+  echo ""
+  echo "┌─────────────────────────────────────────────────────┐"
+  echo "│  Schritt: NocoDB einrichten                         │"
+  echo "├─────────────────────────────────────────────────────┤"
+  echo "│  1. Öffne:  http://$SERVER_IP:8181                  │"
+  echo "│  2. Erstelle ein Admin-Konto (E-Mail + Passwort)    │"
+  echo "│  3. Klicke rechts oben auf dein Profilbild          │"
+  echo "│     → Team & Settings → API Tokens → Token erstellen│"
+  echo "│  4. Kopiere den Token und füge ihn hier ein.        │"
+  echo "└─────────────────────────────────────────────────────┘"
+  echo ""
+  printf "🔑 NocoDB API-Token: "
+  read -r XC_TOKEN_INPUT
+
+  if [ -z "$XC_TOKEN_INPUT" ]; then
+    echo "❌ Kein Token eingegeben. Abbruch."
+    echo "   Starte das Skript erneut, wenn du einen Token hast."
+    exit 1
+  fi
+
+  # Token in .env speichern
+  sed -i "s|XC_TOKEN=.*|XC_TOKEN=$XC_TOKEN_INPUT|g" "$ENV_FILE"
+  XC_TOKEN="$XC_TOKEN_INPUT"
+  echo "✅ Token gespeichert"
+else
+  echo "ℹ️  XC_TOKEN bereits in .env vorhanden – Token-Schritt übersprungen."
+fi
+
+# ── nginx.conf mit echtem Token neu generieren ────────────
+echo ""
+echo "🔧 Aktualisiere nginx.conf..."
+XC_TOKEN="$XC_TOKEN" envsubst '${XC_TOKEN}' < "$NGINX_TEMPLATE" > "$NGINX_CONF"
+$COMPOSE restart frontend
+echo "✅ nginx neugestartet"
+
+# ── NocoDB-Tabellen anlegen ───────────────────────────────
+IDS_FILE="$SCRIPT_DIR/.nocodb_table_ids"
+
+if [ -f "$IDS_FILE" ] && grep -q "BASE_ID=" "$IDS_FILE"; then
+  echo ""
+  echo "ℹ️  Tabellen-IDs gefunden – nocodb-setup übersprungen."
+else
+  echo ""
+  echo "📋 Erstelle Datenbank-Tabellen..."
+  bash "$SCRIPT_DIR/nocodb-setup.sh"
+fi
+
+# ── Frontend konfigurieren ────────────────────────────────
+echo ""
+echo "⚙️  Konfiguriere Frontend..."
+bash "$SCRIPT_DIR/configure-frontend.sh"
+
+# ── Fertig ────────────────────────────────────────────────
 echo ""
 echo "╔══════════════════════════════════════════════════╗"
 echo "║   ✅ Installation abgeschlossen!                 ║"
 echo "╚══════════════════════════════════════════════════╝"
 echo ""
-echo "🌐 NocoDB UI:  http://$(hostname -I | awk '{print $1}'):8181"
-echo "🌐 PSA-App:    http://$(hostname -I | awk '{print $1}'):8182"
-echo ""
-echo "📋 NÄCHSTE SCHRITTE:"
-echo ""
-echo "1. Öffne die NocoDB UI und erstelle ein Admin-Konto"
-echo "2. Erstelle einen API-Token:"
-echo "   Klicke auf dein Profilbild → Team & Settings → API Tokens"
-echo "3. Trage den Token in .env ein:"
-echo "   nano $ENV_FILE"
-echo "   → XC_TOKEN=dein-token-hier"
-echo "4. Generiere nginx.conf neu und starte die App neu:"
-echo "   cd $SCRIPT_DIR && bash install.sh"
-echo "5. Erstelle die Datenbank-Tabellen:"
-echo "   bash $SCRIPT_DIR/nocodb-setup.sh"
-echo "6. Aktualisiere die Frontend-Konfiguration:"
-echo "   bash $SCRIPT_DIR/configure-frontend.sh"
-echo "   $COMPOSE restart frontend"
+echo "🌐 PSA-App:   http://$SERVER_IP:8182"
+echo "🌐 NocoDB UI: http://$SERVER_IP:8181"
 echo ""

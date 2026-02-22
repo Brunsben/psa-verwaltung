@@ -2,6 +2,8 @@
 setup/.env
 setup/nginx.conf
 setup/.nocodb_table_ids
+frontend/config.js
+setup/backups/
 
 # Claude Code / MCP
 .claude/

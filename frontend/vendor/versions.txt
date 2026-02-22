@@ -1,0 +1,9 @@
+Bibliotheken in diesem Verzeichnis (lokal gespeichert, keine CDN-Abhängigkeit)
+
+vue.global.prod.js      Vue 3.5.28          https://unpkg.com/vue@3.5.28/dist/vue.global.prod.js
+tailwind.cdn.js         Tailwind Play CDN   https://cdn.tailwindcss.com  (Stand: 2026-02-22)
+
+Update-Anleitung:
+  curl -L "https://unpkg.com/vue@3/dist/vue.global.prod.js" -o frontend/vendor/vue.global.prod.js
+  curl -L "https://cdn.tailwindcss.com"                    -o frontend/vendor/tailwind.cdn.js
+  Danach diese Datei mit den neuen Versionen aktualisieren.

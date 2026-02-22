@@ -2,13 +2,13 @@
 # ─────────────────────────────────────────────────────────────
 #  configure-frontend.sh
 #  Liest die NocoDB-Tabellen-IDs aus .nocodb_table_ids und
-#  schreibt sie in frontend/index.html
+#  schreibt sie in frontend/config.js (keine Änderung an index.html).
 # ─────────────────────────────────────────────────────────────
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 IDS_FILE="$SCRIPT_DIR/.nocodb_table_ids"
-INDEX_HTML="$SCRIPT_DIR/../frontend/index.html"
+CONFIG_JS="$SCRIPT_DIR/../frontend/config.js"
 
 if [ ! -f "$IDS_FILE" ]; then
   echo "❌ Tabellen-IDs nicht gefunden. Führe zuerst nocodb-setup.sh aus."
@@ -29,7 +29,7 @@ if [ -z "$BASE_ID" ]; then
   exit 1
 fi
 
-echo "🔧 Aktualisiere frontend/index.html..."
+echo "🔧 Erstelle frontend/config.js..."
 echo "   BASE_ID:              $BASE_ID"
 echo "   Kameraden:            $ID_Kameraden"
 echo "   Ausruestungstypen:    $ID_Ausruestungstypen"
@@ -38,18 +38,25 @@ echo "   Ausgaben:             $ID_Ausgaben"
 echo "   Pruefungen:           $ID_Pruefungen"
 echo "   Waesche:              $ID_Waesche"
 
-# API-Pfad ersetzen
-sed -i "s|/api/v1/db/data/noco/[^']*|/api/v1/db/data/noco/$BASE_ID|g" "$INDEX_HTML"
+cat > "$CONFIG_JS" << EOF
+// PSA-Verwaltung – Laufzeitkonfiguration
+// Automatisch erzeugt von setup/configure-frontend.sh
+// Nicht in Git einchecken (.gitignore).
 
-# Tabellen-IDs ersetzen (jeweils den Wert nach dem ':')
-[ -n "$ID_Kameraden" ]          && sed -i "s|Kameraden:          '[^']*'|Kameraden:          '$ID_Kameraden'|g" "$INDEX_HTML"
-[ -n "$ID_Ausruestungstypen" ]  && sed -i "s|Ausruestungstypen:  '[^']*'|Ausruestungstypen:  '$ID_Ausruestungstypen'|g" "$INDEX_HTML"
-[ -n "$ID_Ausruestungstuecke" ] && sed -i "s|Ausruestungstuecke: '[^']*'|Ausruestungstuecke: '$ID_Ausruestungstuecke'|g" "$INDEX_HTML"
-[ -n "$ID_Ausgaben" ]           && sed -i "s|Ausgaben:           '[^']*'|Ausgaben:           '$ID_Ausgaben'|g" "$INDEX_HTML"
-[ -n "$ID_Pruefungen" ]         && sed -i "s|Pruefungen:         '[^']*'|Pruefungen:         '$ID_Pruefungen'|g" "$INDEX_HTML"
-[ -n "$ID_Waesche" ]            && sed -i "s|Waesche:            '[^']*'|Waesche:            '$ID_Waesche'|g" "$INDEX_HTML"
+window.CONFIG = {
+  api: '/api/v1/db/data/noco/$BASE_ID',
+  tables: {
+    Kameraden:          '$ID_Kameraden',
+    Ausruestungstypen:  '$ID_Ausruestungstypen',
+    Ausruestungstuecke: '$ID_Ausruestungstuecke',
+    Ausgaben:           '$ID_Ausgaben',
+    Pruefungen:         '$ID_Pruefungen',
+    Waesche:            '$ID_Waesche',
+  }
+};
+EOF
 
-echo "✅ frontend/index.html aktualisiert."
+echo "✅ frontend/config.js erstellt."
 echo ""
 echo "🚀 Starte nginx neu, um die Änderungen zu übernehmen:"
 echo "   cd setup && docker compose restart frontend"

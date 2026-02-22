@@ -1,0 +1,15 @@
+// PSA-Verwaltung – Konfigurationsvorlage
+// Kopiere diese Datei als "config.js" und trage deine NocoDB-IDs ein.
+// Oder führe setup/configure-frontend.sh aus – das erledigt es automatisch.
+
+window.CONFIG = {
+  api: '/api/v1/db/data/noco/YOUR_BASE_ID',
+  tables: {
+    Kameraden:          'YOUR_TABLE_ID',
+    Ausruestungstypen:  'YOUR_TABLE_ID',
+    Ausruestungstuecke: 'YOUR_TABLE_ID',
+    Ausgaben:           'YOUR_TABLE_ID',
+    Pruefungen:         'YOUR_TABLE_ID',
+    Waesche:            'YOUR_TABLE_ID',
+  }
+};

@@ -8,6 +8,7 @@ server {
     }
 
     location /api/ {
+        limit_req zone=api burst=60 nodelay;
         proxy_pass http://nocodb:8080/api/;
         proxy_set_header xc-token "${XC_TOKEN}";
         proxy_set_header Host $host;
