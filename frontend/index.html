@@ -275,6 +275,9 @@
               <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Hose</th>
               <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Stiefel</th>
               <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Handschuh</th>
+              <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Hemd</th>
+              <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Poloshirt</th>
+              <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Fleece</th>
               <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Status</th>
               <th class="px-4 py-2"></th>
             </tr>
@@ -286,6 +289,9 @@
               <td class="px-4 py-2 text-gray-600 dark:text-gray-400">{{ k.Hose_Groesse || '–' }}</td>
               <td class="px-4 py-2 text-gray-600 dark:text-gray-400">{{ k.Stiefel_Groesse || '–' }}</td>
               <td class="px-4 py-2 text-gray-600 dark:text-gray-400">{{ k.Handschuh_Groesse || '–' }}</td>
+              <td class="px-4 py-2 text-gray-600 dark:text-gray-400">{{ k.Hemd_Groesse || '–' }}</td>
+              <td class="px-4 py-2 text-gray-600 dark:text-gray-400">{{ k.Poloshirt_Groesse || '–' }}</td>
+              <td class="px-4 py-2 text-gray-600 dark:text-gray-400">{{ k.Fleece_Groesse || '–' }}</td>
               <td class="px-4 py-2">
                 <span :class="k.Aktiv
                   ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400'
@@ -306,7 +312,7 @@
               </td>
             </tr>
             <tr v-if="!kameraden.length">
-              <td colspan="7" class="px-4 py-10 text-center text-gray-400 dark:text-gray-500 text-sm">Noch keine Kameraden eingetragen</td>
+              <td colspan="10" class="px-4 py-10 text-center text-gray-400 dark:text-gray-500 text-sm">Noch keine Kameraden eingetragen</td>
             </tr>
           </tbody>
         </table>
@@ -486,6 +492,18 @@
         <div>
           <label class="label">Handschuh</label>
           <input v-model="form.kamerad.Handschuh_Groesse" placeholder="z.B. L" class="input" />
+        </div>
+        <div>
+          <label class="label">Hemd</label>
+          <input v-model="form.kamerad.Hemd_Groesse" placeholder="z.B. 40/41" class="input" />
+        </div>
+        <div>
+          <label class="label">Poloshirt</label>
+          <input v-model="form.kamerad.Poloshirt_Groesse" placeholder="z.B. L" class="input" />
+        </div>
+        <div>
+          <label class="label">Fleece/Softshell</label>
+          <input v-model="form.kamerad.Fleece_Groesse" placeholder="z.B. L" class="input" />
         </div>
         <div class="col-span-2 flex items-center gap-2 mt-1">
           <input type="checkbox" v-model="form.kamerad.Aktiv" id="aktiv" class="w-4 h-4 accent-red-600 cursor-pointer" />
@@ -1092,6 +1110,9 @@ createApp({
           Hose_Groesse:      form.kamerad.Hose_Groesse      || null,
           Stiefel_Groesse:   form.kamerad.Stiefel_Groesse   || null,
           Handschuh_Groesse: form.kamerad.Handschuh_Groesse || null,
+          Hemd_Groesse:      form.kamerad.Hemd_Groesse      || null,
+          Poloshirt_Groesse: form.kamerad.Poloshirt_Groesse || null,
+          Fleece_Groesse:    form.kamerad.Fleece_Groesse    || null,
           Aktiv:             form.kamerad.Aktiv             ?? true,
         };
         if (Id) await patch('Kameraden', Id, payload);
