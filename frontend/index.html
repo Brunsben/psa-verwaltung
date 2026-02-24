@@ -97,6 +97,31 @@
     /* Sidebar nav icons (via v-html) */
     .nav-icon { display: block; width: 1.25rem; height: 1.25rem; flex-shrink: 0; }
     .nav-icon svg { width: 100%; height: 100%; }
+
+    /* Print styles */
+    @media print {
+      aside, header { display: none !important; }
+      .content-main { padding-left: 0 !important; }
+      .no-print { display: none !important; }
+      .modal-backdrop {
+        position: static !important;
+        background: none !important;
+        display: block !important;
+        padding: 0 !important;
+      }
+      .modal-box {
+        max-width: 100% !important;
+        max-height: none !important;
+        box-shadow: none !important;
+        border-radius: 0 !important;
+        padding: 1rem !important;
+        background: white !important;
+        color: black !important;
+      }
+      body, html { background: white !important; }
+      .print-title { display: block !important; font-size: 1.25rem; font-weight: bold; margin-bottom: 1rem; }
+    }
+    .print-title { display: none; }
   </style>
 </head>
 <body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-100 font-sans antialiased transition-colors duration-200">
@@ -146,7 +171,7 @@
     class="fixed inset-0 bg-black/50 backdrop-blur-sm z-30 md:hidden"></div>
 
   <!-- ── Content wrapper (pushes right of sidebar) ─────── -->
-  <div class="md:pl-56 flex flex-col min-h-screen">
+  <div class="md:pl-56 flex flex-col min-h-screen content-main">
 
     <!-- Mobile header -->
     <header class="md:hidden sticky top-0 z-20 bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-700 px-4 flex items-center gap-3 h-14">
@@ -258,12 +283,24 @@
 
     <!-- ══ KAMERADEN ══════════════════════════════════════ -->
     <section v-if="page === 'kameraden'">
-      <div class="flex items-center justify-between mb-6">
+      <div class="flex items-center justify-between mb-4">
         <div>
           <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Kameraden</h1>
           <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">{{ kameraden.length }} gesamt &nbsp;·&nbsp; {{ stats.kameraden }} aktiv</p>
         </div>
         <button @click="openKameradenForm()" class="btn-primary">+ Neu</button>
+      </div>
+
+      <div class="flex gap-3 mb-4 flex-wrap items-center">
+        <input v-model="filterKameraden" placeholder="Name suchen…"
+          class="border border-gray-200 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-500
+                 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-400 focus:border-transparent"
+          style="width:14rem" />
+        <label class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 ml-2 cursor-pointer select-none">
+          <input type="checkbox" v-model="filterKameradenNurAktiv" class="accent-red-600" />
+          Nur aktive
+        </label>
+        <span class="text-xs text-gray-400 dark:text-gray-500 ml-auto">{{ kameradenFiltered.length }} angezeigt</span>
       </div>
 
       <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-x-auto">
@@ -283,7 +320,9 @@
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-50 dark:divide-gray-700">
-            <tr v-for="k in kameraden" :key="k.Id" class="group hover:bg-gray-50 dark:hover:bg-gray-700/40 transition-colors">
+            <tr v-for="k in kameradenFiltered" :key="k.Id"
+              @click.stop="openKameradenDetail(k)"
+              class="group hover:bg-gray-50 dark:hover:bg-gray-700/40 transition-colors cursor-pointer">
               <td class="px-4 py-2 font-semibold text-gray-800 dark:text-gray-200">{{ k.Vorname }} {{ k.Name }}</td>
               <td class="px-4 py-2 text-gray-600 dark:text-gray-400">{{ k.Jacke_Groesse || '–' }}</td>
               <td class="px-4 py-2 text-gray-600 dark:text-gray-400">{{ k.Hose_Groesse || '–' }}</td>
@@ -302,10 +341,10 @@
               </td>
               <td class="px-4 py-2">
                 <div class="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button @click="openKameradenForm(k)" title="Bearbeiten" class="icon-btn hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 dark:hover:text-blue-400">
+                  <button @click.stop="openKameradenForm(k)" title="Bearbeiten" class="icon-btn hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 dark:hover:text-blue-400">
                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" /></svg>
                   </button>
-                  <button @click="deleteKamerad(k)" title="Löschen" class="icon-btn hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 dark:hover:text-red-400">
+                  <button @click.stop="deleteKamerad(k)" title="Löschen" class="icon-btn hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 dark:hover:text-red-400">
                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" /></svg>
                   </button>
                 </div>
@@ -335,6 +374,12 @@
           class="border border-gray-200 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-500
                  rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-400 focus:border-transparent"
           style="width:12rem" />
+        <select v-model="filterTyp"
+          class="border border-gray-200 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100
+                 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-400 focus:border-transparent">
+          <option value="">Alle Typen</option>
+          <option v-for="kat in typenKategorien" :key="kat" :value="kat">{{ kat }}</option>
+        </select>
         <select v-model="filterStatus"
           class="border border-gray-200 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100
                  rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-400 focus:border-transparent">
@@ -452,6 +497,120 @@
         <div v-if="!typen.length" class="col-span-2 text-center text-gray-400 dark:text-gray-500 text-sm py-10">
           Noch keine Typen angelegt
         </div>
+      </div>
+    </section>
+
+    <!-- ══ VERLAUF ══════════════════════════════════════════ -->
+    <section v-if="page === 'verlauf'">
+      <div class="flex items-center justify-between mb-5">
+        <div>
+          <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Verlauf</h1>
+          <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+            {{ pruefungen.length }} Prüfungen &nbsp;·&nbsp; {{ waescheListe.length }} Wäschen
+          </p>
+        </div>
+      </div>
+
+      <!-- Tabs + Filter -->
+      <div class="flex flex-wrap gap-3 mb-4 items-center">
+        <div class="flex bg-gray-100 dark:bg-gray-800 rounded-lg p-1 gap-1">
+          <button @click="verlaufTab = 'pruefungen'"
+            :class="['px-3 py-1.5 rounded-md text-sm font-medium transition-colors',
+              verlaufTab === 'pruefungen'
+                ? 'bg-white dark:bg-gray-700 text-red-700 dark:text-red-400 shadow-sm'
+                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100']">
+            🔍 Prüfungen ({{ pruefungenFiltered.length }})
+          </button>
+          <button @click="verlaufTab = 'waesche'"
+            :class="['px-3 py-1.5 rounded-md text-sm font-medium transition-colors',
+              verlaufTab === 'waesche'
+                ? 'bg-white dark:bg-gray-700 text-red-700 dark:text-red-400 shadow-sm'
+                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100']">
+            🧺 Wäschen ({{ waescheFiltered.length }})
+          </button>
+        </div>
+        <select v-model="filterVerlaufKamerad"
+          class="border border-gray-200 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-400 focus:border-transparent">
+          <option value="">Alle Kameraden</option>
+          <option v-for="k in kameradenliste" :key="k.Id" :value="k.label">{{ k.label }}</option>
+        </select>
+      </div>
+
+      <!-- Prüfungen Tab -->
+      <div v-if="verlaufTab === 'pruefungen'" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b border-gray-100 dark:border-gray-700">
+              <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Datum</th>
+              <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Kamerad</th>
+              <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Ausrüstung</th>
+              <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Ergebnis</th>
+              <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Prüfer</th>
+              <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Nächste Prüfung</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-50 dark:divide-gray-700">
+            <tr v-for="p in pruefungenFiltered" :key="p.Id" class="hover:bg-gray-50 dark:hover:bg-gray-700/40 transition-colors">
+              <td class="px-4 py-2.5 font-medium text-gray-800 dark:text-gray-200">{{ fmtDate(p.Datum) }}</td>
+              <td class="px-4 py-2.5 text-gray-600 dark:text-gray-400">{{ p.Kamerad || '–' }}</td>
+              <td class="px-4 py-2.5 text-gray-600 dark:text-gray-400">
+                <div class="font-medium text-gray-800 dark:text-gray-200">{{ p.Ausruestungstyp || '–' }}</div>
+                <div v-if="p.Seriennummer" class="text-xs text-gray-400 dark:text-gray-500 font-mono mt-0.5">{{ p.Seriennummer }}</div>
+              </td>
+              <td class="px-4 py-2.5">
+                <span :class="p.Ergebnis === 'Bestanden'
+                  ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400'
+                  : p.Ergebnis === 'Nicht bestanden'
+                  ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
+                  : 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400'"
+                  class="px-2 py-0.5 rounded-full text-xs font-semibold">
+                  {{ p.Ergebnis || '–' }}
+                </span>
+              </td>
+              <td class="px-4 py-2.5 text-gray-600 dark:text-gray-400">{{ p.Pruefer || '–' }}</td>
+              <td class="px-4 py-2.5 text-gray-500 dark:text-gray-400 text-xs">{{ fmtDate(p.Naechste_Pruefung) }}</td>
+            </tr>
+            <tr v-if="!pruefungenFiltered.length">
+              <td colspan="6" class="px-4 py-10 text-center text-gray-400 dark:text-gray-500 text-sm">
+                <div class="font-medium mb-1">Keine Prüfungen vorhanden</div>
+                <div class="text-xs">Prüfungen werden beim Erfassen automatisch hier eingetragen</div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Wäschen Tab -->
+      <div v-if="verlaufTab === 'waesche'" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b border-gray-100 dark:border-gray-700">
+              <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Datum</th>
+              <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Kamerad</th>
+              <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Ausrüstung</th>
+              <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Art</th>
+              <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Notizen</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-50 dark:divide-gray-700">
+            <tr v-for="w in waescheFiltered" :key="w.Id" class="hover:bg-gray-50 dark:hover:bg-gray-700/40 transition-colors">
+              <td class="px-4 py-2.5 font-medium text-gray-800 dark:text-gray-200">{{ fmtDate(w.Datum) }}</td>
+              <td class="px-4 py-2.5 text-gray-600 dark:text-gray-400">{{ w.Kamerad || '–' }}</td>
+              <td class="px-4 py-2.5 text-gray-600 dark:text-gray-400">
+                <div class="font-medium text-gray-800 dark:text-gray-200">{{ w.Ausruestungstyp || '–' }}</div>
+                <div v-if="w.Seriennummer" class="text-xs text-gray-400 dark:text-gray-500 font-mono mt-0.5">{{ w.Seriennummer }}</div>
+              </td>
+              <td class="px-4 py-2.5 text-gray-600 dark:text-gray-400">{{ w.Waescheart || '–' }}</td>
+              <td class="px-4 py-2.5 text-gray-500 dark:text-gray-400 text-xs">{{ w.Notizen || '' }}</td>
+            </tr>
+            <tr v-if="!waescheFiltered.length">
+              <td colspan="5" class="px-4 py-10 text-center text-gray-400 dark:text-gray-500 text-sm">
+                <div class="font-medium mb-1">Keine Wäschen vorhanden</div>
+                <div class="text-xs">Wäschen werden beim Erfassen automatisch hier eingetragen</div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </section>
 
@@ -659,6 +818,10 @@
             <option value="">– Rückgabe (kein Kamerad) –</option>
             <option v-for="k in kameradenliste" :key="k.Id" :value="k.label">{{ k.label }}</option>
           </select>
+          <div v-if="ausruestungGroesseHint" class="mt-1.5 flex items-center gap-1.5 text-xs bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 px-3 py-1.5 rounded-lg">
+            <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            Bekannte Größe ({{ ausruestungGroesseHint.label }}): <strong>{{ ausruestungGroesseHint.val || '–' }}</strong>
+          </div>
         </div>
         <div class="grid grid-cols-2 gap-3">
           <div>
@@ -754,6 +917,106 @@
     </div>
   </div>
 
+  <!-- Kamerad Detail Modal -->
+  <div v-if="modal.kameradenDetail" class="modal-backdrop" @click.self="modal.kameradenDetail = false">
+    <div class="modal-box" style="max-width: 54rem;">
+
+      <!-- Print-Header (nur sichtbar beim Drucken) -->
+      <div class="print-title">PSA-Nachweis – {{ selectedKamerad.Vorname }} {{ selectedKamerad.Name }}</div>
+
+      <!-- Header -->
+      <div class="flex items-start justify-between mb-5 no-print">
+        <div>
+          <h2 class="text-xl font-bold text-gray-900 dark:text-white">{{ selectedKamerad.Vorname }} {{ selectedKamerad.Name }}</h2>
+          <span :class="selectedKamerad.Aktiv
+            ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400'
+            : 'bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500'"
+            class="inline-block mt-1 px-2 py-0.5 rounded-full text-xs font-semibold">
+            {{ selectedKamerad.Aktiv ? 'Aktiv' : 'Inaktiv' }}
+          </span>
+        </div>
+        <div class="flex gap-2">
+          <button @click="window.print()" class="btn-secondary text-xs no-print">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0110.56 0m-10.56 0L6.75 19.5m.72-5.671L6.75 19.5m0 0a42.417 42.417 0 0110.5 0m0 0L17.25 13.829m0 5.671a42.417 42.417 0 00-10.5 0"/>
+            </svg>
+            Drucken
+          </button>
+        </div>
+      </div>
+
+      <!-- Name für Print -->
+      <h2 class="hidden print:block text-lg font-bold mb-3 text-gray-900">{{ selectedKamerad.Vorname }} {{ selectedKamerad.Name }}</h2>
+
+      <!-- Größen -->
+      <div class="mb-5">
+        <h3 class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3">Größen</h3>
+        <div class="grid grid-cols-4 sm:grid-cols-7 gap-2">
+          <div v-for="g in kameradenGroessen(selectedKamerad)" :key="g.label"
+            class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-2.5 text-center border border-gray-100 dark:border-gray-600">
+            <div class="text-xs text-gray-400 dark:text-gray-500 mb-0.5">{{ g.label }}</div>
+            <div class="font-bold text-gray-800 dark:text-gray-100 text-sm">{{ g.wert || '–' }}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Ausrüstung -->
+      <div>
+        <h3 class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3">
+          Zugewiesene Ausrüstung ({{ ausruestungFuerKamerad(selectedKamerad).length }})
+        </h3>
+        <div v-if="ausruestungFuerKamerad(selectedKamerad).length" class="space-y-2">
+          <div v-for="a in ausruestungFuerKamerad(selectedKamerad)" :key="a.Id"
+            class="bg-gray-50 dark:bg-gray-700/40 rounded-xl p-4 border border-gray-100 dark:border-gray-600">
+            <div class="flex items-start justify-between gap-3">
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2 flex-wrap mb-2">
+                  <span class="font-semibold text-gray-800 dark:text-gray-100 text-sm">{{ typLabel(a.Ausruestungstyp) }}</span>
+                  <span v-if="a.Seriennummer" class="text-xs font-mono text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 rounded">{{ a.Seriennummer }}</span>
+                  <span :class="statusBadge(a.Status)">{{ a.Status }}</span>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-xs">
+                  <div class="flex items-center gap-2">
+                    <span class="text-gray-400 dark:text-gray-500 w-28 flex-shrink-0">Letzte Prüfung:</span>
+                    <span v-if="letzteAktion(a.Id, 'pruefung')" class="font-medium text-gray-700 dark:text-gray-300">
+                      {{ fmtDate(letzteAktion(a.Id, 'pruefung').Datum) }}
+                      <span :class="letzteAktion(a.Id, 'pruefung').Ergebnis === 'Bestanden' ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'">
+                        · {{ letzteAktion(a.Id, 'pruefung').Ergebnis }}
+                      </span>
+                    </span>
+                    <span v-else class="text-gray-400 italic">nicht erfasst</span>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <span class="text-gray-400 dark:text-gray-500 w-28 flex-shrink-0">Letzte Wäsche:</span>
+                    <span v-if="letzteAktion(a.Id, 'waesche')" class="font-medium text-gray-700 dark:text-gray-300">
+                      {{ fmtDate(letzteAktion(a.Id, 'waesche').Datum) }}
+                      <span class="text-gray-400 dark:text-gray-500">· {{ letzteAktion(a.Id, 'waesche').Waescheart }}</span>
+                    </span>
+                    <span v-else class="text-gray-400 italic">nicht erfasst</span>
+                  </div>
+                  <div v-if="a.Naechste_Pruefung" class="flex items-center gap-2">
+                    <span class="text-gray-400 dark:text-gray-500 w-28 flex-shrink-0">Nächste Prüfung:</span>
+                    <span :class="fmtDateRel(a.Naechste_Pruefung)?.cls || 'text-gray-600'" class="font-medium">
+                      {{ fmtDate(a.Naechste_Pruefung) }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div v-else class="text-sm text-gray-400 dark:text-gray-500 text-center py-6 bg-gray-50 dark:bg-gray-700/30 rounded-xl">
+          Keine Ausrüstung zugeordnet
+        </div>
+      </div>
+
+      <div class="flex justify-between gap-3 mt-6 pt-4 border-t border-gray-100 dark:border-gray-700 no-print">
+        <button @click="openKameradenForm(selectedKamerad); modal.kameradenDetail = false" class="btn-secondary">Bearbeiten</button>
+        <button @click="modal.kameradenDetail = false" class="btn-primary">Schließen</button>
+      </div>
+    </div>
+  </div>
+
 </div><!-- #app -->
 
 
@@ -841,6 +1104,14 @@ createApp({
     const loading     = ref(false);
     const toast       = reactive({ show: false, msg: '', type: 'ok' });
 
+    // Verlauf + Filter
+    const filterKameraden        = ref('');
+    const filterKameradenNurAktiv = ref(false);
+    const filterTyp              = ref('');
+    const filterVerlaufKamerad   = ref('');
+    const verlaufTab             = ref('pruefungen');
+    const selectedKamerad        = ref({});
+
     // Dark mode
     const darkMode = ref(document.documentElement.classList.contains('dark'));
     function toggleDark() {
@@ -858,13 +1129,17 @@ createApp({
         icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" /></svg>' },
       { id: 'typen',      label: 'Typen',
         icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" /><path stroke-linecap="round" stroke-linejoin="round" d="M6 6h.008v.008H6V6z" /></svg>' },
+      { id: 'verlauf',    label: 'Verlauf',
+        icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" /></svg>' },
     ];
 
     // Data
-    const kameraden   = ref([]);
-    const ausruestung = ref([]);
-    const typen       = ref([]);
-    const ausgaben    = ref([]);
+    const kameraden    = ref([]);
+    const ausruestung  = ref([]);
+    const typen        = ref([]);
+    const ausgaben     = ref([]);
+    const pruefungen   = ref([]);
+    const waescheListe = ref([]);
 
     // Filter + Sortierung (Ausrüstungstabelle)
     const filterAusruestung = ref('');
@@ -883,7 +1158,8 @@ createApp({
     // Modal state
     const modal = reactive({
       kameradenForm: false, ausruestungForm: false,
-      typForm: false, ausgabe: false, pruefung: false, waesche: false
+      typForm: false, ausgabe: false, pruefung: false, waesche: false,
+      kameradenDetail: false,
     });
 
     // Form state
@@ -912,16 +1188,20 @@ createApp({
     // ── Fetch ──
     async function fetchAll() {
       await load(async () => {
-        const [k, a, t, au] = await Promise.all([
+        const [k, a, t, au, p, w] = await Promise.all([
           getAll('Kameraden'),
           getAll('Ausruestungstuecke'),
           getAll('Ausruestungstypen'),
           getAll('Ausgaben'),
+          getAll('Pruefungen'),
+          getAll('Waesche'),
         ]);
-        kameraden.value   = k;
-        ausruestung.value = a;
-        typen.value       = t;
-        ausgaben.value    = au;
+        kameraden.value    = k;
+        ausruestung.value  = a;
+        typen.value        = t;
+        ausgaben.value     = au;
+        pruefungen.value   = p;
+        waescheListe.value = w;
       });
     }
 
@@ -932,9 +1212,29 @@ createApp({
         .map(k => ({ Id: k.Id, label: `${k.Vorname} ${k.Name}` }))
     );
 
+    const kameradenFiltered = computed(() => {
+      let list = kameraden.value;
+      if (filterKameradenNurAktiv.value) list = list.filter(k => k.Aktiv);
+      if (filterKameraden.value) {
+        const q = filterKameraden.value.toLowerCase();
+        list = list.filter(k => (`${k.Vorname} ${k.Name}`).toLowerCase().includes(q));
+      }
+      return list;
+    });
+
+    const typenKategorien = computed(() =>
+      [...new Set(typen.value.map(t => t.Typ).filter(Boolean))].sort()
+    );
+
     const ausruestungFiltered = computed(() => {
       let list = ausruestung.value;
       if (filterStatus.value) list = list.filter(a => a.Status === filterStatus.value);
+      if (filterTyp.value) {
+        list = list.filter(a => {
+          const typ = typen.value.find(t => t.Bezeichnung === a.Ausruestungstyp);
+          return typ?.Typ === filterTyp.value;
+        });
+      }
       if (filterAusruestung.value) {
         const q = filterAusruestung.value.toLowerCase();
         list = list.filter(a =>
@@ -953,6 +1253,58 @@ createApp({
         });
       }
       return list;
+    });
+
+    const pruefungenByAusruestung = computed(() => {
+      const map = new Map();
+      pruefungen.value.forEach(p => {
+        const id = p.Ausruestungstueck_Id;
+        if (!id) return;
+        if (!map.has(id)) map.set(id, []);
+        map.get(id).push(p);
+      });
+      return map;
+    });
+
+    const waescheByAusruestung = computed(() => {
+      const map = new Map();
+      waescheListe.value.forEach(w => {
+        const id = w.Ausruestungstueck_Id;
+        if (!id) return;
+        if (!map.has(id)) map.set(id, []);
+        map.get(id).push(w);
+      });
+      return map;
+    });
+
+    const pruefungenFiltered = computed(() => {
+      let list = [...pruefungen.value].sort((a, b) => new Date(b.Datum||0) - new Date(a.Datum||0));
+      if (filterVerlaufKamerad.value) list = list.filter(p => p.Kamerad === filterVerlaufKamerad.value);
+      return list;
+    });
+
+    const waescheFiltered = computed(() => {
+      let list = [...waescheListe.value].sort((a, b) => new Date(b.Datum||0) - new Date(a.Datum||0));
+      if (filterVerlaufKamerad.value) list = list.filter(w => w.Kamerad === filterVerlaufKamerad.value);
+      return list;
+    });
+
+    const ausruestungGroesseHint = computed(() => {
+      if (!form.ausgabe.kamerad) return null;
+      const k = kameraden.value.find(x => `${x.Vorname} ${x.Name}` === form.ausgabe.kamerad);
+      if (!k) return null;
+      const typ = typen.value.find(t => t.Bezeichnung === form.aktion.Ausruestungstyp);
+      const kat = typ?.Typ;
+      const map = {
+        'Jacke':          { label: 'Jacke',        val: k.Jacke_Groesse },
+        'Hose':           { label: 'Hose',          val: k.Hose_Groesse },
+        'Stiefel':        { label: 'Stiefel (EU)',  val: k.Stiefel_Groesse },
+        'Handschuh':      { label: 'Handschuh',     val: k.Handschuh_Groesse },
+        'Hemd':           { label: 'Hemd',          val: k.Hemd_Groesse },
+        'Poloshirt':      { label: 'Poloshirt',     val: k.Poloshirt_Groesse },
+        'Fleece/Softshell': { label: 'Fleece',      val: k.Fleece_Groesse },
+      };
+      return map[kat] || null;
     });
 
     // Datum-Schwellwerte (einmalig beim App-Start berechnet)
@@ -1340,11 +1692,15 @@ createApp({
     async function savePruefung() {
       await load(async () => {
         await post('Pruefungen', {
-          Datum:            form.pruefung.datum,
-          Ergebnis:         form.pruefung.ergebnis,
-          Pruefer:          form.pruefung.pruefer,
-          Naechste_Pruefung: form.pruefung.naechste,
-          Notizen:          form.pruefung.notizen,
+          Datum:                form.pruefung.datum,
+          Ergebnis:             form.pruefung.ergebnis,
+          Pruefer:              form.pruefung.pruefer,
+          Naechste_Pruefung:    form.pruefung.naechste,
+          Notizen:              form.pruefung.notizen,
+          Ausruestungstueck_Id: form.aktion.Id,
+          Kamerad:              form.aktion.Kamerad      || null,
+          Ausruestungstyp:      form.aktion.Ausruestungstyp || null,
+          Seriennummer:         form.aktion.Seriennummer  || null,
         });
         const update = { Naechste_Pruefung: form.pruefung.naechste };
         if (form.pruefung.ergebnis === 'Nicht bestanden') update.Status = 'Außer Dienst';
@@ -1364,9 +1720,13 @@ createApp({
     async function saveWaesche() {
       await load(async () => {
         await post('Waesche', {
-          Datum:     form.waesche.datum,
-          Waescheart: form.waesche.art,
-          Notizen:   form.waesche.notizen,
+          Datum:                form.waesche.datum,
+          Waescheart:           form.waesche.art,
+          Notizen:              form.waesche.notizen,
+          Ausruestungstueck_Id: form.aktion.Id,
+          Kamerad:              form.aktion.Kamerad      || null,
+          Ausruestungstyp:      form.aktion.Ausruestungstyp || null,
+          Seriennummer:         form.aktion.Seriennummer  || null,
         });
         if (form.aktion.Status === 'Lager') {
           await patch('Ausruestungstuecke', form.aktion.Id, { Status: 'Reinigung' });
@@ -1377,18 +1737,56 @@ createApp({
       });
     }
 
+    // ── Kamerad-Detail ──
+    function openKameradenDetail(k) {
+      selectedKamerad.value = k;
+      modal.kameradenDetail = true;
+    }
+
+    function ausruestungFuerKamerad(k) {
+      const label = `${k.Vorname} ${k.Name}`;
+      return ausruestung.value.filter(a => a.Kamerad === label);
+    }
+
+    function letzteAktion(ausruestungId, typ) {
+      const list = (typ === 'pruefung'
+        ? pruefungenByAusruestung.value.get(ausruestungId)
+        : waescheByAusruestung.value.get(ausruestungId)) || [];
+      if (!list.length) return null;
+      return list.reduce((a, b) => new Date(a.Datum) > new Date(b.Datum) ? a : b);
+    }
+
+    function kameradenGroessen(k) {
+      return [
+        { label: 'Jacke',     wert: k.Jacke_Groesse },
+        { label: 'Hose',      wert: k.Hose_Groesse },
+        { label: 'Stiefel',   wert: k.Stiefel_Groesse },
+        { label: 'Handschuh', wert: k.Handschuh_Groesse },
+        { label: 'Hemd',      wert: k.Hemd_Groesse },
+        { label: 'Poloshirt', wert: k.Poloshirt_Groesse },
+        { label: 'Fleece',    wert: k.Fleece_Groesse },
+      ];
+    }
+
     onMounted(fetchAll);
 
     return {
       page, pages, loading, toast,
       darkMode, toggleDark,
       sidebarOpen,
-      kameraden, ausruestung, typen,
+      kameraden, ausruestung, typen, pruefungen, waescheListe,
+      filterKameraden, filterKameradenNurAktiv, filterTyp,
+      filterVerlaufKamerad, verlaufTab,
       filterAusruestung, filterStatus, sortAusruestung, sortBy,
       modal, form,
-      kameradenliste, ausruestungFiltered, stats, warnungen,
+      selectedKamerad,
+      kameradenliste, kameradenFiltered, typenKategorien,
+      ausruestungFiltered, stats, warnungen,
+      pruefungenFiltered, waescheFiltered, ausruestungGroesseHint,
+      pruefungenByAusruestung, waescheByAusruestung,
       fmtDate, fmtDateRel, datePriority, statusBadge, typLabel, exportCSV,
       openKameradenForm, saveKamerad, deleteKamerad,
+      openKameradenDetail, ausruestungFuerKamerad, letzteAktion, kameradenGroessen,
       autoFillAusruestungDaten, autoFillLebensdauer,
       openAusruestungForm, saveAusruestung, deleteAusruestung,
       normenFuerAktuellenTyp, onTypChange, onNormSelected,
@@ -1396,6 +1794,7 @@ createApp({
       openAusgabe, saveAusgabe,
       openPruefung, savePruefung,
       openWaesche, saveWaesche,
+      window,
     };
   }
 }).mount('#app');
