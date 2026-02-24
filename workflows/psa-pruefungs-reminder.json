@@ -1,0 +1,111 @@
+{
+  "name": "PSA-Verwaltung – Prüfungs-Reminder",
+  "settings": { "executionOrder": "v1", "timezone": "Europe/Berlin" },
+  "nodes": [
+    {
+      "id": "trigger",
+      "name": "Montag 08:00 Uhr",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [240, 300],
+      "parameters": {
+        "rule": {
+          "interval": [{
+            "field": "weeks",
+            "weeksInterval": 1,
+            "triggerAtDay": [1],
+            "triggerAtHour": 8,
+            "triggerAtMinute": 0
+          }]
+        }
+      }
+    },
+    {
+      "id": "fetch_ausruestung",
+      "name": "Ausrüstung von NocoDB laden",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [460, 300],
+      "parameters": {
+        "method": "GET",
+        "url": "https://nocodb.brunsben.org/api/v1/db/data/noco/p962d7ujd8wbfvi/mhskteevunob1r0",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [{ "name": "xc-token", "value": "bsI_4ApQe_kBggcvb5V44SPE875OfCSg0BFV6WUy" }]
+        },
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            { "name": "limit", "value": "500" },
+            { "name": "where", "value": "(Naechste_Pruefung,lte,{{ $today.plus(30, 'days').toISODate() }})" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "check_empty",
+      "name": "Gibt es Ergebnisse?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [680, 300],
+      "parameters": {
+        "conditions": {
+          "conditions": [{
+            "leftValue": "={{ $json.pageInfo.totalRows }}",
+            "rightValue": 0,
+            "operator": { "type": "number", "operation": "gt" }
+          }],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "prepare_message",
+      "name": "E-Mail-Text aufbereiten",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 240],
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst list = items[0].json.list || [];\n\nconst today = new Date();\n\nconst rows = list.map(a => {\n  const pruefDatum = a.Naechste_Pruefung ? new Date(a.Naechste_Pruefung) : null;\n  const diffDays = pruefDatum ? Math.round((pruefDatum - today) / 86400000) : null;\n  const statusEmoji = diffDays !== null && diffDays < 0 ? '🔴' : diffDays !== null && diffDays <= 7 ? '🟠' : '🟡';\n  const datumStr = pruefDatum ? pruefDatum.toLocaleDateString('de-DE') : '–';\n  const diffStr = diffDays !== null ? (diffDays < 0 ? `${Math.abs(diffDays)} Tage überfällig` : `in ${diffDays} Tagen`) : '';\n  return `${statusEmoji} ${a.Ausruestungstyp || '–'} | Nr: ${a.Seriennummer || '–'} | Kamerad: ${a.Kamerad || 'Lager'} | Prüfung: ${datumStr} (${diffStr})`;\n}).join('\\n');\n\nconst subject = `PSA-Prüfung: ${list.length} fällige${list.length === 1 ? 's' : ''} Ausrüstungsstück${list.length === 1 ? '' : 'e'}`;\nconst body = `Hallo,\\n\\nfolgende PSA-Ausrüstungsstücke haben eine Prüfung innerhalb der nächsten 30 Tage oder sind bereits überfällig:\\n\\n${rows}\\n\\nBitte die Prüfungen zeitnah durchführen und in der PSA-Verwaltung dokumentieren.\\n\\n→ https://psa.ofwietmarschen.org\\n\\nGrüße,\\nPSA-Verwaltung FF Wietmarschen`;\n\nreturn [{ json: { subject, body, count: list.length } }];"
+      }
+    },
+    {
+      "id": "send_email",
+      "name": "E-Mail senden",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [1120, 240],
+      "parameters": {
+        "toEmail": "wart@ofwietmarschen.org",
+        "subject": "={{ $json.subject }}",
+        "emailType": "text",
+        "message": "={{ $json.body }}"
+      }
+    },
+    {
+      "id": "no_action",
+      "name": "Keine fälligen Prüfungen",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [900, 400],
+      "parameters": {}
+    }
+  ],
+  "connections": {
+    "Montag 08:00 Uhr": {
+      "main": [[{ "node": "Ausrüstung von NocoDB laden", "type": "main", "index": 0 }]]
+    },
+    "Ausrüstung von NocoDB laden": {
+      "main": [[{ "node": "Gibt es Ergebnisse?", "type": "main", "index": 0 }]]
+    },
+    "Gibt es Ergebnisse?": {
+      "main": [
+        [{ "node": "E-Mail-Text aufbereiten", "type": "main", "index": 0 }],
+        [{ "node": "Keine fälligen Prüfungen", "type": "main", "index": 0 }]
+      ]
+    },
+    "E-Mail-Text aufbereiten": {
+      "main": [[{ "node": "E-Mail senden", "type": "main", "index": 0 }]]
+    }
+  }
+}

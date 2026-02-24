@@ -8,7 +8,7 @@ This is an n8n workflow automation workspace. It uses the **n8n-mcp** MCP server
 
 ## Connected n8n Instance
 
-- **URL:** `https://n8n.srv916589.hstgr.cloud`
+- **URL:** `https://n8n.brunsben.org`
 - **API Key:** configured in `.mcp.json`
 - **API Key expiry:** 2026-03-19 — renew in n8n → Settings → API → Create API Key, then update `.mcp.json`
 
