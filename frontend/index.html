@@ -1261,7 +1261,7 @@ createApp({
     // ── Fetch ──
     async function fetchAll() {
       await load(async () => {
-        const [k, a, t, au, p, w, n] = await Promise.all([
+        const results = await Promise.allSettled([
           getAll('Kameraden'),
           getAll('Ausruestungstuecke'),
           getAll('Ausruestungstypen'),
@@ -1270,13 +1270,14 @@ createApp({
           getAll('Waesche'),
           getAll('Normen'),
         ]);
-        kameraden.value    = k;
-        ausruestung.value  = a;
-        typen.value        = t;
-        ausgaben.value     = au;
-        pruefungen.value   = p;
-        waescheListe.value = w;
-        normen.value       = n;
+        const val = (i) => results[i].status === 'fulfilled' ? results[i].value : [];
+        kameraden.value    = val(0);
+        ausruestung.value  = val(1);
+        typen.value        = val(2);
+        ausgaben.value     = val(3);
+        pruefungen.value   = val(4);
+        waescheListe.value = val(5);
+        normen.value       = val(6);
       });
     }
 
