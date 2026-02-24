@@ -488,9 +488,12 @@
               </button>
             </div>
           </div>
-          <div class="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700 flex gap-5 text-xs text-gray-500 dark:text-gray-400">
+          <div class="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700 flex gap-5 text-xs text-gray-500 dark:text-gray-400 flex-wrap">
             <span>⏱ <strong class="text-gray-700 dark:text-gray-300">{{ t.Max_Lebensdauer_Jahre || '–' }}</strong> J. Lebensdauer</span>
             <span>🔍 <strong class="text-gray-700 dark:text-gray-300">{{ t.Pruefintervall_Monate || '–' }}</strong> Mon. Prüfintervall</span>
+            <span v-if="t.Typ && normenFuerTyp(t.Typ).length" class="text-blue-500 dark:text-blue-400">
+              📋 <strong>{{ normenFuerTyp(t.Typ).length }}</strong> Norm{{ normenFuerTyp(t.Typ).length > 1 ? 'en' : '' }}
+            </span>
           </div>
           <div v-if="t.Beschreibung" class="mt-2 text-xs text-gray-400 dark:text-gray-500 italic">{{ t.Beschreibung }}</div>
         </div>
@@ -608,6 +611,65 @@
                 <div class="font-medium mb-1">Keine Wäschen vorhanden</div>
                 <div class="text-xs">Wäschen werden beim Erfassen automatisch hier eingetragen</div>
               </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ══ NORMEN ══════════════════════════════════════════ -->
+    <section v-if="page === 'normen'">
+      <div class="flex items-center justify-between mb-5">
+        <div>
+          <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Normen</h1>
+          <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">{{ normen.length }} Normen hinterlegt</p>
+        </div>
+        <button @click="openNormenForm()" class="btn-primary">+ Neu</button>
+      </div>
+
+      <!-- Filter -->
+      <div class="mb-4">
+        <select v-model="filterNormKategorie" class="input max-w-xs">
+          <option value="">Alle Kategorien</option>
+          <option v-for="k in normenKategorien" :key="k" :value="k">{{ k }}</option>
+        </select>
+      </div>
+
+      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead class="bg-gray-50 dark:bg-gray-700/50">
+            <tr>
+              <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Norm</th>
+              <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Kategorie</th>
+              <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Prüfintervall</th>
+              <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Lebensdauer</th>
+              <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Beschreibung</th>
+              <th class="px-4 py-2.5"></th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-50 dark:divide-gray-700">
+            <tr v-for="n in normenFiltered" :key="n.Id" class="hover:bg-gray-50 dark:hover:bg-gray-700/40 transition-colors">
+              <td class="px-4 py-3 font-mono font-medium text-gray-800 dark:text-gray-200">{{ n.Bezeichnung }}</td>
+              <td class="px-4 py-3">
+                <span v-if="n.Ausruestungstyp_Kategorie" class="text-xs bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 px-2 py-0.5 rounded-full font-semibold">{{ n.Ausruestungstyp_Kategorie }}</span>
+                <span v-else class="text-gray-400">–</span>
+              </td>
+              <td class="px-4 py-3 text-gray-600 dark:text-gray-400">{{ n.Pruefintervall_Monate ? n.Pruefintervall_Monate + ' Mon.' : '–' }}</td>
+              <td class="px-4 py-3 text-gray-600 dark:text-gray-400">{{ n.Max_Lebensdauer_Jahre ? n.Max_Lebensdauer_Jahre + ' J.' : '–' }}</td>
+              <td class="px-4 py-3 text-gray-500 dark:text-gray-400 text-xs max-w-xs">{{ n.Beschreibung || '' }}</td>
+              <td class="px-4 py-3">
+                <div class="flex gap-1 justify-end">
+                  <button @click="openNormenForm(n)" title="Bearbeiten" class="icon-btn hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 dark:hover:text-blue-400">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" /></svg>
+                  </button>
+                  <button @click="deleteNorm(n)" title="Löschen" class="icon-btn hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 dark:hover:text-red-400">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" /></svg>
+                  </button>
+                </div>
+              </td>
+            </tr>
+            <tr v-if="!normenFiltered.length">
+              <td colspan="6" class="px-4 py-10 text-center text-gray-400 dark:text-gray-500 text-sm">Keine Normen vorhanden</td>
             </tr>
           </tbody>
         </table>
@@ -1017,6 +1079,44 @@
     </div>
   </div>
 
+  <!-- Normen Form Modal -->
+  <div v-if="modal.normenForm" class="modal-backdrop" @click.self="modal.normenForm = false">
+    <div class="modal-box max-w-lg">
+      <h2 class="text-lg font-bold mb-5">{{ form.norm.Id ? 'Norm bearbeiten' : 'Neue Norm' }}</h2>
+      <div class="grid gap-3">
+        <div>
+          <label class="label">Normbezeichnung *</label>
+          <input v-model="form.norm.Bezeichnung" class="input font-mono" placeholder="z.B. DIN EN 469:2020" />
+        </div>
+        <div>
+          <label class="label">Kategorie (Ausrüstungstyp)</label>
+          <select v-model="form.norm.Ausruestungstyp_Kategorie" class="input">
+            <option value="">– keine Zuordnung –</option>
+            <option v-for="k in normenKategorien" :key="k" :value="k">{{ k }}</option>
+          </select>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="label">Prüfintervall (Monate)</label>
+            <input v-model.number="form.norm.Pruefintervall_Monate" type="number" min="1" class="input" placeholder="12" />
+          </div>
+          <div>
+            <label class="label">Max. Lebensdauer (Jahre)</label>
+            <input v-model.number="form.norm.Max_Lebensdauer_Jahre" type="number" min="1" class="input" placeholder="10" />
+          </div>
+        </div>
+        <div>
+          <label class="label">Beschreibung / Hinweis</label>
+          <textarea v-model="form.norm.Beschreibung" rows="3" class="input resize-none" placeholder="Geltungsbereich, Besonderheiten..."></textarea>
+        </div>
+      </div>
+      <div class="flex justify-end gap-3 mt-5 pt-4 border-t border-gray-100 dark:border-gray-700">
+        <button @click="modal.normenForm = false" class="btn-secondary">Abbrechen</button>
+        <button @click="saveNorm" class="btn-primary">Speichern</button>
+      </div>
+    </div>
+  </div>
+
 </div><!-- #app -->
 
 
@@ -1031,37 +1131,6 @@ const API = window.CONFIG.api;
 const TABLES = window.CONFIG.tables;
 const T = (name) => TABLES[name] || name;
 
-// Bekannte Normen mit Prüfintervallen und Lebensdauer (Stand DGUV V49 / Herstellerempfehlungen)
-const NORMS_DB = {
-  Helm: [
-    { norm: 'DIN EN 443:2008', intervall: 12, lebensdauer: 10,
-      hinweis: 'Jahresprüfung; Lebensdauer nach Hersteller, typ. 10 J. ab Herstellung' },
-  ],
-  Jacke: [
-    { norm: 'DIN EN 469:2020', intervall: 12, lebensdauer: 10,
-      hinweis: 'Hitzeschutzkleidung; jährl. Sichtprüfung, max. 10 J. Nutzungsdauer' },
-    { norm: 'DIN EN ISO 11612:2015', intervall: 12, lebensdauer: null,
-      hinweis: 'Schutzkleidung gegen Hitze und Flammen (allgemein)' },
-  ],
-  Hose: [
-    { norm: 'DIN EN 469:2020', intervall: 12, lebensdauer: 10,
-      hinweis: 'Hitzeschutzkleidung; jährl. Sichtprüfung, max. 10 J. Nutzungsdauer' },
-  ],
-  Stiefel: [
-    { norm: 'DIN EN 15090:2012', intervall: 12, lebensdauer: 10,
-      hinweis: 'Stiefel für die Feuerwehr; jährl. Prüfung, ca. 10 J. Lebensdauer' },
-  ],
-  Handschuh: [
-    { norm: 'DIN EN 659:2003+A1:2008', intervall: 12, lebensdauer: 5,
-      hinweis: 'Schutzhandschuhe Feuerwehr; jährl. Prüfung, Herstellerempfehlung 5 J.' },
-    { norm: 'DIN EN 388:2016', intervall: 12, lebensdauer: null,
-      hinweis: 'Schutzhandschuhe gegen mechanische Risiken' },
-  ],
-  Flammschutzhaube: [
-    { norm: 'DIN EN 13911:2004', intervall: 12, lebensdauer: 10,
-      hinweis: 'Flammschutzhauben für die Feuerwehr; jährl. Prüfung' },
-  ],
-};
 
 // ── API-Layer ──────────────────────────────────────────────────────────────
 async function api(method, path, body) {
@@ -1131,6 +1200,8 @@ createApp({
         icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" /><path stroke-linecap="round" stroke-linejoin="round" d="M6 6h.008v.008H6V6z" /></svg>' },
       { id: 'verlauf',    label: 'Verlauf',
         icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" /></svg>' },
+      { id: 'normen',     label: 'Normen',
+        icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z" /></svg>' },
     ];
 
     // Data
@@ -1140,6 +1211,7 @@ createApp({
     const ausgaben     = ref([]);
     const pruefungen   = ref([]);
     const waescheListe = ref([]);
+    const normen       = ref([]);
 
     // Filter + Sortierung (Ausrüstungstabelle)
     const filterAusruestung = ref('');
@@ -1159,7 +1231,7 @@ createApp({
     const modal = reactive({
       kameradenForm: false, ausruestungForm: false,
       typForm: false, ausgabe: false, pruefung: false, waesche: false,
-      kameradenDetail: false,
+      kameradenDetail: false, normenForm: false,
     });
 
     // Form state
@@ -1171,6 +1243,7 @@ createApp({
       ausgabe: {},
       pruefung: {},
       waesche: {},
+      norm: {},
     });
 
     function showToast(msg, type = 'ok') {
@@ -1188,13 +1261,14 @@ createApp({
     // ── Fetch ──
     async function fetchAll() {
       await load(async () => {
-        const [k, a, t, au, p, w] = await Promise.all([
+        const [k, a, t, au, p, w, n] = await Promise.all([
           getAll('Kameraden'),
           getAll('Ausruestungstuecke'),
           getAll('Ausruestungstypen'),
           getAll('Ausgaben'),
           getAll('Pruefungen'),
           getAll('Waesche'),
+          getAll('Normen'),
         ]);
         kameraden.value    = k;
         ausruestung.value  = a;
@@ -1202,6 +1276,7 @@ createApp({
         ausgaben.value     = au;
         pruefungen.value   = p;
         waescheListe.value = w;
+        normen.value       = n;
       });
     }
 
@@ -1225,6 +1300,16 @@ createApp({
     const typenKategorien = computed(() =>
       [...new Set(typen.value.map(t => t.Typ).filter(Boolean))].sort()
     );
+
+    const filterNormKategorie = ref('');
+    const normenKategorien = computed(() =>
+      [...new Set(normen.value.map(n => n.Ausruestungstyp_Kategorie).filter(Boolean))].sort()
+    );
+    const normenFiltered = computed(() => {
+      let list = [...normen.value].sort((a, b) => (a.Ausruestungstyp_Kategorie || '').localeCompare(b.Ausruestungstyp_Kategorie || '') || (a.Bezeichnung || '').localeCompare(b.Bezeichnung || ''));
+      if (filterNormKategorie.value) list = list.filter(n => n.Ausruestungstyp_Kategorie === filterNormKategorie.value);
+      return list;
+    });
 
     const ausruestungFiltered = computed(() => {
       let list = ausruestung.value;
@@ -1570,7 +1655,12 @@ createApp({
     }
 
     // ── Normen-Logik ──
-    const normenFuerAktuellenTyp = computed(() => NORMS_DB[form.typ.Typ] || []);
+    const normenFuerAktuellenTyp = computed(() =>
+      normen.value.filter(n => n.Ausruestungstyp_Kategorie === form.typ.Typ)
+    );
+
+    const normenFuerTyp = (kategorie) =>
+      normen.value.filter(n => n.Ausruestungstyp_Kategorie === kategorie);
 
     function onTypChange() {
       form.typ._normWahl = '';
@@ -1585,22 +1675,56 @@ createApp({
         form.typ._normHinweis = '';
         return;
       }
-      const n = (NORMS_DB[form.typ.Typ] || []).find(x => x.norm === wahl);
+      const n = normenFuerAktuellenTyp.value.find(x => x.Bezeichnung === wahl);
       if (n) {
-        form.typ.Norm = n.norm;
-        if (n.intervall)   form.typ.Pruefintervall_Monate   = n.intervall;
-        if (n.lebensdauer) form.typ.Max_Lebensdauer_Jahre   = n.lebensdauer;
-        form.typ._normHinweis = n.hinweis || '';
+        form.typ.Norm = n.Bezeichnung;
+        if (n.Pruefintervall_Monate)   form.typ.Pruefintervall_Monate   = n.Pruefintervall_Monate;
+        if (n.Max_Lebensdauer_Jahre)   form.typ.Max_Lebensdauer_Jahre   = n.Max_Lebensdauer_Jahre;
+        form.typ._normHinweis = n.Beschreibung || '';
       }
+    }
+
+    // ── Normen CRUD ──
+    function openNormenForm(n = {}) {
+      form.norm = { ...n };
+      modal.normenForm = true;
+    }
+
+    async function saveNorm() {
+      if (!validateFields([[form.norm.Bezeichnung, 'Bezeichnung']])) return;
+      await load(async () => {
+        const { Id } = form.norm;
+        const payload = {
+          Bezeichnung:               form.norm.Bezeichnung              || null,
+          Ausruestungstyp_Kategorie: form.norm.Ausruestungstyp_Kategorie || null,
+          Pruefintervall_Monate:     form.norm.Pruefintervall_Monate    || null,
+          Max_Lebensdauer_Jahre:     form.norm.Max_Lebensdauer_Jahre    || null,
+          Beschreibung:              form.norm.Beschreibung             || null,
+        };
+        if (Id) await patch('Normen', Id, payload);
+        else    await post('Normen', payload);
+        modal.normenForm = false;
+        showToast('Norm gespeichert');
+        await fetchAll();
+      });
+    }
+
+    async function deleteNorm(n) {
+      if (!confirm(`Norm "${n.Bezeichnung}" wirklich löschen?`)) return;
+      await load(async () => {
+        await del('Normen', n.Id);
+        showToast('Gelöscht');
+        await fetchAll();
+      });
     }
 
     // ── Typen CRUD ──
     function openTypenForm(t = {}) {
-      const knownNorm = t.Norm && (NORMS_DB[t.Typ] || []).find(n => n.norm === t.Norm);
+      const knownNorm = t.Norm && normen.value.find(n => n.Bezeichnung === t.Norm);
       form.typ = {
         ...t,
         _normWahl:    knownNorm ? t.Norm : (t.Norm ? '__frei__' : ''),
-        _normHinweis: knownNorm ? knownNorm.hinweis : '',
+        _normHinweis: knownNorm ? knownNorm.Beschreibung : '',
       };
       modal.typForm = true;
     }
@@ -1774,7 +1898,7 @@ createApp({
       page, pages, loading, toast,
       darkMode, toggleDark,
       sidebarOpen,
-      kameraden, ausruestung, typen, pruefungen, waescheListe,
+      kameraden, ausruestung, typen, pruefungen, waescheListe, normen,
       filterKameraden, filterKameradenNurAktiv, filterTyp,
       filterVerlaufKamerad, verlaufTab,
       filterAusruestung, filterStatus, sortAusruestung, sortBy,
@@ -1789,7 +1913,9 @@ createApp({
       openKameradenDetail, ausruestungFuerKamerad, letzteAktion, kameradenGroessen,
       autoFillAusruestungDaten, autoFillLebensdauer,
       openAusruestungForm, saveAusruestung, deleteAusruestung,
-      normenFuerAktuellenTyp, onTypChange, onNormSelected,
+      normenFuerAktuellenTyp, normenFuerTyp, onTypChange, onNormSelected,
+      filterNormKategorie, normenKategorien, normenFiltered,
+      openNormenForm, saveNorm, deleteNorm,
       openTypenForm, saveTyp, deleteTyp,
       openAusgabe, saveAusgabe,
       openPruefung, savePruefung,
