@@ -242,11 +242,11 @@
         </div>
         <div class="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm border border-gray-100 dark:border-gray-700 flex items-center justify-between gap-3">
           <div>
-            <div class="text-2xl font-bold text-gray-900 dark:text-white">{{ stats.ausgegeben }}</div>
-            <div class="text-xs font-medium text-gray-500 dark:text-gray-400 mt-0.5">Ausgegeben</div>
+            <div :class="warnungen.length > 0 ? 'text-2xl font-bold text-red-600 dark:text-red-400' : 'text-2xl font-bold text-green-600 dark:text-green-400'">{{ warnungen.length }}</div>
+            <div class="text-xs font-medium text-gray-500 dark:text-gray-400 mt-0.5">Aktive Warnungen</div>
           </div>
-          <div class="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center flex-shrink-0">
-            <i class="ph ph-sign-out text-xl text-indigo-500 dark:text-indigo-400"></i>
+          <div :class="warnungen.length > 0 ? 'w-10 h-10 rounded-xl bg-red-50 dark:bg-red-900/20 flex items-center justify-center flex-shrink-0' : 'w-10 h-10 rounded-xl bg-green-50 dark:bg-green-900/20 flex items-center justify-center flex-shrink-0'">
+            <i :class="warnungen.length > 0 ? 'ph ph-bell-ringing text-xl text-red-500 dark:text-red-400' : 'ph ph-check-circle text-xl text-green-500 dark:text-green-400'"></i>
           </div>
         </div>
       </div>
