@@ -4,6 +4,7 @@
 
 window.CONFIG = {
   api: '/api/v1/db/data/noco/YOUR_BASE_ID',
+  // Token wird serverseitig von nginx injiziert – NICHT hier eintragen!
   tables: {
     Kameraden:          'YOUR_TABLE_ID',
     Ausruestungstypen:  'YOUR_TABLE_ID',

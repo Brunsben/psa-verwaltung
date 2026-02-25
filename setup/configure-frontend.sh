@@ -42,6 +42,7 @@ cat > "$CONFIG_JS" << EOF
 // PSA-Verwaltung – Laufzeitkonfiguration
 // Automatisch erzeugt von setup/configure-frontend.sh
 // Nicht in Git einchecken (.gitignore).
+// Token wird serverseitig von nginx injiziert – NICHT hier speichern!
 
 window.CONFIG = {
   api: '/api/v1/db/data/noco/$BASE_ID',
