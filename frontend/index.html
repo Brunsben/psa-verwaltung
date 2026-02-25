@@ -344,6 +344,7 @@
           <thead>
             <tr class="border-b border-gray-100 dark:border-gray-700">
               <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Name</th>
+              <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Dienstgrad</th>
               <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Jacke</th>
               <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Hose</th>
               <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Stiefel</th>
@@ -360,6 +361,7 @@
               @click.stop="openKameradenDetail(k)"
               class="group hover:bg-gray-50 dark:hover:bg-gray-700/40 transition-colors cursor-pointer">
               <td class="px-4 py-2 font-semibold text-gray-800 dark:text-gray-200">{{ k.Vorname }} {{ k.Name }}</td>
+              <td class="px-4 py-2 text-gray-600 dark:text-gray-400 text-xs">{{ k.Dienstgrad || '–' }}</td>
               <td class="px-4 py-2 text-gray-600 dark:text-gray-400">{{ k.Jacke_Groesse || '–' }}</td>
               <td class="px-4 py-2 text-gray-600 dark:text-gray-400">{{ k.Hose_Groesse || '–' }}</td>
               <td class="px-4 py-2 text-gray-600 dark:text-gray-400">{{ k.Stiefel_Groesse || '–' }}</td>
@@ -387,7 +389,7 @@
               </td>
             </tr>
             <tr v-if="!kameraden.length">
-              <td colspan="10" class="px-4 py-10 text-center text-gray-400 dark:text-gray-500 text-sm">Noch keine Kameraden eingetragen</td>
+              <td colspan="11" class="px-4 py-10 text-center text-gray-400 dark:text-gray-500 text-sm">Noch keine Kameraden eingetragen</td>
             </tr>
           </tbody>
         </table>
@@ -823,6 +825,17 @@
           <input v-model="form.kamerad.Name" class="input" placeholder="Mustermann" />
         </div>
         <div>
+          <label class="label">Dienstgrad</label>
+          <select v-model="form.kamerad.Dienstgrad" class="input">
+            <option value="">– Bitte wählen –</option>
+            <option v-for="dg in DIENSTGRADE" :key="dg" :value="dg">{{ dg }}</option>
+          </select>
+        </div>
+        <div>
+          <label class="label">E-Mail</label>
+          <input v-model="form.kamerad.Email" type="email" class="input" placeholder="max@feuerwehr.de" />
+        </div>
+        <div>
           <label class="label">Jacke</label>
           <input v-model="form.kamerad.Jacke_Groesse" placeholder="z.B. 52" class="input" />
         </div>
@@ -886,7 +899,7 @@
       <div class="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 text-xs text-blue-700 dark:text-blue-300 mb-4 leading-relaxed">
         <strong>Format:</strong> Semikolon (<code>;</code>) oder Komma (<code>,</code>) als Trennzeichen, erste Zeile = Spaltentitel.<br>
         <strong>Pflicht:</strong> <code>Vorname</code>, <code>Name</code> &nbsp;·&nbsp;
-        <strong>Optional:</strong> <code>Jacke_Groesse</code>, <code>Hose_Groesse</code>, <code>Stiefel_Groesse</code>, <code>Handschuh_Groesse</code>, <code>Hemd_Groesse</code>, <code>Poloshirt_Groesse</code>, <code>Fleece_Groesse</code>, <code>Aktiv</code> (ja/nein)
+        <strong>Optional:</strong> <code>Dienstgrad</code>, <code>Email</code>, <code>Jacke_Groesse</code>, <code>Hose_Groesse</code>, <code>Stiefel_Groesse</code>, <code>Handschuh_Groesse</code>, <code>Hemd_Groesse</code>, <code>Poloshirt_Groesse</code>, <code>Fleece_Groesse</code>, <code>Aktiv</code> (ja/nein)
       </div>
 
       <!-- Vorschau-Tabelle -->
@@ -1422,6 +1435,7 @@
       <div class="flex items-start justify-between mb-5 no-print">
         <div>
           <h2 class="text-xl font-bold text-gray-900 dark:text-white">{{ selectedKamerad.Vorname }} {{ selectedKamerad.Name }}</h2>
+          <div v-if="selectedKamerad.Dienstgrad" class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">{{ selectedKamerad.Dienstgrad }}</div>
           <span :class="selectedKamerad.Aktiv
             ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400'
             : 'bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500'"
@@ -1576,6 +1590,32 @@ const API = window.CONFIG.api;
 const TABLES = window.CONFIG.tables;
 const T = (name) => TABLES[name] || name;
 
+// Dienstgrade Freiwillige Feuerwehr Niedersachsen (FwVO, Stand April 2025)
+const DIENSTGRADE = [
+  // I. Erste Dienstgradgruppe
+  'Feuerwehrmann-Anwärter/in (FM-A)',
+  'Feuerwehrmann/-frau (FM)',
+  'Oberfeuerwehrmann/-frau (OFM)',
+  'Hauptfeuerwehrmann/-frau (HFM)',
+  'Erster Hauptfeuerwehrmann/-frau (EHFM)',
+  // II. Zweite Dienstgradgruppe
+  'Brandmeister/in (BM)',
+  'Oberbrandmeister/in (OBM)',
+  'Hauptbrandmeister/in (HBM)',
+  'Erster Hauptbrandmeister/in (EHBM)',
+  // III. Dritte Dienstgradgruppe
+  'Brandinspektor/in (BrI)',
+  'Oberbrandinspektor/in (OBrI)',
+  'Hauptbrandinspektor/in (HBrI)',
+  'Erster Hauptbrandinspektor/in (EHBrI)',
+  'Gemeinde-/Stadtbrandinspektor/in (GemBrI/StBrI)',
+  // IV. Vierte Dienstgradgruppe
+  'Abschnittsbrandinspektor/in (ABrI)',
+  'Erster Abschnittsbrandinspektor/in (EABrI)',
+  'Kreisbrandinspektor/in (KBrI)',
+  'Erster Kreisbrandinspektor/in (EKBrI)',
+  'Regierungsbrandinspektor/in (RegBrI)',
+];
 
 // ── API-Layer ──────────────────────────────────────────────────────────────
 async function api(method, path, body) {
@@ -2114,6 +2154,8 @@ createApp({
         const payload = {
           Vorname:           form.kamerad.Vorname           || null,
           Name:              form.kamerad.Name              || null,
+          Dienstgrad:        form.kamerad.Dienstgrad        || null,
+          Email:             form.kamerad.Email             || null,
           Jacke_Groesse:     form.kamerad.Jacke_Groesse     || null,
           Hose_Groesse:      form.kamerad.Hose_Groesse      || null,
           Stiefel_Groesse:   form.kamerad.Stiefel_Groesse   || null,
@@ -2609,6 +2651,7 @@ createApp({
       page, pages, loading, toast,
       darkMode, toggleDark,
       sidebarOpen,
+      DIENSTGRADE,
       kameraden, ausruestung, typen, ausgaben, pruefungen, waescheListe, normen,
       filterKameraden, filterKameradenNurAktiv, filterTyp,
       filterVerlaufKamerad, verlaufTab,
