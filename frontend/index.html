@@ -805,7 +805,7 @@
   <!-- ══ MODALS ══════════════════════════════════════════ -->
 
   <!-- Kamerad Form Modal -->
-  <div v-if="modal.kameradenForm" class="modal-backdrop" @click.self="modal.kameradenForm = false">
+  <div v-if="modal.kameradenForm" class="modal-backdrop">
     <div class="modal-box">
       <h2 class="text-lg font-bold mb-5">{{ form.kamerad.Id ? 'Kamerad bearbeiten' : 'Neuer Kamerad' }}</h2>
       <div class="grid grid-cols-2 gap-3">
@@ -858,7 +858,7 @@
   </div>
 
   <!-- Ausrüstung Form Modal -->
-  <div v-if="modal.ausruestungForm" class="modal-backdrop" @click.self="modal.ausruestungForm = false">
+  <div v-if="modal.ausruestungForm" class="modal-backdrop">
     <div class="modal-box">
       <h2 class="text-lg font-bold mb-5">{{ form.ausruestung.Id ? 'Ausrüstung bearbeiten' : 'Neues Ausrüstungsstück' }}</h2>
       <div class="grid grid-cols-2 gap-3">
@@ -918,7 +918,7 @@
   </div>
 
   <!-- Typen Form Modal -->
-  <div v-if="modal.typForm" class="modal-backdrop" @click.self="modal.typForm = false">
+  <div v-if="modal.typForm" class="modal-backdrop">
     <div class="modal-box">
       <h2 class="text-lg font-bold mb-5">{{ form.typ.Id ? 'Typ bearbeiten' : 'Neuer Typ' }}</h2>
       <div class="grid gap-3">
@@ -992,7 +992,7 @@
   </div>
 
   <!-- Ausgabe Modal -->
-  <div v-if="modal.ausgabe" class="modal-backdrop" @click.self="modal.ausgabe = false">
+  <div v-if="modal.ausgabe" class="modal-backdrop">
     <div class="modal-box max-w-md">
       <h2 class="text-lg font-bold mb-1">Ausgabe / Rückgabe</h2>
       <div class="text-sm text-gray-500 dark:text-gray-400 mb-5">{{ form.aktion.Seriennummer }} – {{ form.aktion.Ausruestungstyp }}</div>
@@ -1031,7 +1031,7 @@
   </div>
 
   <!-- Prüfung Modal -->
-  <div v-if="modal.pruefung" class="modal-backdrop" @click.self="modal.pruefung = false">
+  <div v-if="modal.pruefung" class="modal-backdrop">
     <div class="modal-box max-w-md">
       <h2 class="text-lg font-bold mb-1">Prüfung erfassen</h2>
       <div class="text-sm text-gray-500 dark:text-gray-400 mb-5">{{ form.aktion.Seriennummer }} – {{ form.aktion.Ausruestungstyp }}</div>
@@ -1071,7 +1071,7 @@
   </div>
 
   <!-- Wäsche Modal -->
-  <div v-if="modal.waesche" class="modal-backdrop" @click.self="modal.waesche = false">
+  <div v-if="modal.waesche" class="modal-backdrop">
     <div class="modal-box max-w-md">
       <h2 class="text-lg font-bold mb-1">Wäsche erfassen</h2>
       <div class="text-sm text-gray-500 dark:text-gray-400 mb-3">{{ form.aktion.Seriennummer }} – {{ form.aktion.Ausruestungstyp }}</div>
@@ -1112,7 +1112,7 @@
   </div>
 
   <!-- Massenwäsche Modal -->
-  <div v-if="modal.massenWaesche" class="modal-backdrop" @click.self="modal.massenWaesche = false">
+  <div v-if="modal.massenWaesche" class="modal-backdrop">
     <div class="modal-box max-w-md">
       <h2 class="text-lg font-bold mb-1">Massenwäsche erfassen</h2>
       <div class="text-sm text-gray-500 dark:text-gray-400 mb-4">{{ selectedIds.length }} Ausrüstungsstück{{ selectedIds.length > 1 ? 'e' : '' }} werden als gewaschen markiert.</div>
@@ -1146,7 +1146,7 @@
   </div>
 
   <!-- Massenprüfung Modal -->
-  <div v-if="modal.massenPruefung" class="modal-backdrop" @click.self="modal.massenPruefung = false">
+  <div v-if="modal.massenPruefung" class="modal-backdrop">
     <div class="modal-box max-w-md">
       <h2 class="text-lg font-bold mb-1">Massenprüfung erfassen</h2>
       <div class="text-sm text-gray-500 dark:text-gray-400 mb-4">{{ selectedIds.length }} Ausrüstungsstück{{ selectedIds.length > 1 ? 'e' : '' }} werden als geprüft eingetragen. Nächste Prüfung wird automatisch berechnet.</div>
@@ -1184,7 +1184,7 @@
   </div>
 
   <!-- Rückgabe Modal -->
-  <div v-if="modal.rueckgabe" class="modal-backdrop" @click.self="modal.rueckgabe = false">
+  <div v-if="modal.rueckgabe" class="modal-backdrop">
     <div class="modal-box max-w-sm">
       <h2 class="text-lg font-bold mb-1">Rückgabe erfassen</h2>
       <div class="text-sm text-gray-500 dark:text-gray-400 mb-5">
@@ -1432,7 +1432,7 @@
   </div>
 
   <!-- Normen Form Modal -->
-  <div v-if="modal.normenForm" class="modal-backdrop" @click.self="modal.normenForm = false">
+  <div v-if="modal.normenForm" class="modal-backdrop">
     <div class="modal-box max-w-lg">
       <h2 class="text-lg font-bold mb-5">{{ form.norm.Id ? 'Norm bearbeiten' : 'Neue Norm' }}</h2>
       <div class="grid gap-3">
