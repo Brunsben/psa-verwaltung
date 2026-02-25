@@ -88,6 +88,10 @@ Falls `nocodb-setup.sh` nicht funktioniert, erstelle die Tabellen in der NocoDB 
 | Hose_Groesse | Single Line Text |
 | Stiefel_Groesse | Number |
 | Handschuh_Groesse | Single Line Text |
+| Hemd_Groesse | Single Line Text |
+| Poloshirt_Groesse | Single Line Text |
+| Fleece_Groesse | Single Line Text |
+| Dienstgrad | Single Line Text |
 | Aktiv | Checkbox |
 
 ### Ausruestungstypen

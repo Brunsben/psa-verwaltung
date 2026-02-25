@@ -24,6 +24,10 @@ CREATE TABLE IF NOT EXISTS kameraden (
   Hose_Groesse VARCHAR(20) DEFAULT NULL,
   Stiefel_Groesse INT DEFAULT NULL,
   Handschuh_Groesse VARCHAR(20) DEFAULT NULL,
+  Hemd_Groesse VARCHAR(20) DEFAULT NULL,
+  Poloshirt_Groesse VARCHAR(20) DEFAULT NULL,
+  Fleece_Groesse VARCHAR(20) DEFAULT NULL,
+  Dienstgrad VARCHAR(100) DEFAULT NULL,
   Aktiv TINYINT(1) DEFAULT 1,
   INDEX idx_aktiv (Aktiv),
   INDEX idx_name (Name, Vorname)

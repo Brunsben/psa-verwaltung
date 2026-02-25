@@ -90,6 +90,10 @@ create_table "Kameraden" '[
   {"title": "Hose_Groesse",      "uidt": "SingleLineText"},
   {"title": "Stiefel_Groesse",   "uidt": "Number"},
   {"title": "Handschuh_Groesse", "uidt": "SingleLineText"},
+  {"title": "Hemd_Groesse",      "uidt": "SingleLineText"},
+  {"title": "Poloshirt_Groesse", "uidt": "SingleLineText"},
+  {"title": "Fleece_Groesse",    "uidt": "SingleLineText"},
+  {"title": "Dienstgrad",        "uidt": "SingleLineText"},
   {"title": "Aktiv",             "uidt": "Checkbox"}
 ]'
 
