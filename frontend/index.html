@@ -319,7 +319,12 @@
           <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Kameraden</h1>
           <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">{{ kameraden.length }} gesamt &nbsp;·&nbsp; {{ stats.kameraden }} aktiv</p>
         </div>
-        <button @click="openKameradenForm()" class="btn-primary">+ Neu</button>
+        <div class="flex gap-2">
+          <button @click="openCsvImport" class="btn-secondary flex items-center gap-1.5 text-sm">
+            <i class="ph ph-upload-simple"></i> CSV Import
+          </button>
+          <button @click="openKameradenForm()" class="btn-primary">+ Neu</button>
+        </div>
       </div>
 
       <div class="flex gap-3 mb-4 flex-wrap items-center">
@@ -853,6 +858,90 @@
       <div class="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-100 dark:border-gray-700">
         <button @click="modal.kameradenForm = false" class="btn-secondary">Abbrechen</button>
         <button @click="saveKamerad" class="btn-primary">Speichern</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CSV Import Modal -->
+  <div v-if="modal.csvImport" class="modal-backdrop">
+    <div class="modal-box" style="max-width: 56rem;">
+      <div class="flex items-center justify-between mb-5">
+        <h2 class="text-lg font-bold text-gray-900 dark:text-white">Kameraden importieren (CSV)</h2>
+        <button @click="modal.csvImport = false" class="icon-btn"><i class="ph ph-x text-xl"></i></button>
+      </div>
+
+      <!-- Upload + Beispiel -->
+      <div class="flex gap-3 mb-4 flex-wrap items-center">
+        <label class="btn-primary cursor-pointer flex items-center gap-2 text-sm">
+          <i class="ph ph-upload-simple"></i> CSV-Datei wählen
+          <input type="file" accept=".csv,.txt" @change="onCsvFile" class="hidden" />
+        </label>
+        <button @click="downloadBeispielCSV" class="btn-secondary flex items-center gap-2 text-sm">
+          <i class="ph ph-download-simple"></i> Beispieldatei
+        </button>
+        <span v-if="form.csvImport.fileName" class="text-sm text-gray-500 dark:text-gray-400 italic">{{ form.csvImport.fileName }}</span>
+      </div>
+
+      <!-- Hinweis -->
+      <div class="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 text-xs text-blue-700 dark:text-blue-300 mb-4 leading-relaxed">
+        <strong>Format:</strong> Semikolon (<code>;</code>) oder Komma (<code>,</code>) als Trennzeichen, erste Zeile = Spaltentitel.<br>
+        <strong>Pflicht:</strong> <code>Vorname</code>, <code>Name</code> &nbsp;·&nbsp;
+        <strong>Optional:</strong> <code>Jacke_Groesse</code>, <code>Hose_Groesse</code>, <code>Stiefel_Groesse</code>, <code>Handschuh_Groesse</code>, <code>Hemd_Groesse</code>, <code>Poloshirt_Groesse</code>, <code>Fleece_Groesse</code>, <code>Aktiv</code> (ja/nein)
+      </div>
+
+      <!-- Vorschau-Tabelle -->
+      <div v-if="form.csvImport.rows.length">
+        <div class="flex items-center gap-3 mb-2">
+          <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
+            Vorschau: {{ form.csvImport.rows.filter(r => !r._error).length }} gültige /
+            {{ form.csvImport.rows.length }} Zeilen gesamt
+          </span>
+          <span v-if="form.csvImport.rows.some(r => r._error)"
+            class="text-xs text-red-600 dark:text-red-400">
+            (Zeilen mit ✗ werden übersprungen)
+          </span>
+        </div>
+        <div class="overflow-auto max-h-64 rounded-lg border border-gray-200 dark:border-gray-700">
+          <table class="w-full text-xs">
+            <thead class="bg-gray-50 dark:bg-gray-700/50 sticky top-0">
+              <tr>
+                <th class="px-3 py-2 text-left text-gray-400 dark:text-gray-500 font-semibold w-8"></th>
+                <th class="px-3 py-2 text-left text-gray-400 dark:text-gray-500 font-semibold">Vorname</th>
+                <th class="px-3 py-2 text-left text-gray-400 dark:text-gray-500 font-semibold">Name</th>
+                <th class="px-3 py-2 text-left text-gray-400 dark:text-gray-500 font-semibold">Jacke</th>
+                <th class="px-3 py-2 text-left text-gray-400 dark:text-gray-500 font-semibold">Hose</th>
+                <th class="px-3 py-2 text-left text-gray-400 dark:text-gray-500 font-semibold">Stiefel</th>
+                <th class="px-3 py-2 text-left text-gray-400 dark:text-gray-500 font-semibold">Handschuh</th>
+                <th class="px-3 py-2 text-left text-gray-400 dark:text-gray-500 font-semibold">Aktiv</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+              <tr v-for="(row, i) in form.csvImport.rows" :key="i"
+                :class="row._error ? 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300'">
+                <td class="px-3 py-1.5 text-center font-bold" :title="row._error">
+                  {{ row._error ? '✗' : '✓' }}
+                </td>
+                <td class="px-3 py-1.5">{{ row._Vorname || '—' }}</td>
+                <td class="px-3 py-1.5">{{ row._Name || '—' }}</td>
+                <td class="px-3 py-1.5 text-gray-400 dark:text-gray-500">{{ row.Jacke_Groesse || '—' }}</td>
+                <td class="px-3 py-1.5 text-gray-400 dark:text-gray-500">{{ row.Hose_Groesse || '—' }}</td>
+                <td class="px-3 py-1.5 text-gray-400 dark:text-gray-500">{{ row.Stiefel_Groesse || '—' }}</td>
+                <td class="px-3 py-1.5 text-gray-400 dark:text-gray-500">{{ row.Handschuh_Groesse || '—' }}</td>
+                <td class="px-3 py-1.5 text-gray-400 dark:text-gray-500">{{ row.Aktiv || 'ja' }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="flex justify-between gap-3 mt-6 pt-4 border-t border-gray-100 dark:border-gray-700">
+        <button @click="modal.csvImport = false" class="btn-secondary">Abbrechen</button>
+        <button @click="importKameraden"
+          :disabled="!form.csvImport.rows.filter(r => !r._error).length"
+          class="btn-primary disabled:opacity-40 disabled:cursor-not-allowed">
+          <i class="ph ph-cloud-arrow-up mr-1.5"></i>
+          {{ form.csvImport.rows.filter(r => !r._error).length }} Kamerad{{ form.csvImport.rows.filter(r => !r._error).length !== 1 ? 'en' : '' }} importieren
+        </button>
       </div>
     </div>
   </div>
@@ -1588,6 +1677,7 @@ createApp({
       kameradenForm: false, ausruestungForm: false,
       typForm: false, ausgabe: false, pruefung: false, waesche: false,
       kameradenDetail: false, normenForm: false, massenWaesche: false, massenPruefung: false, rueckgabe: false, ausruestungDetail: false,
+      csvImport: false,
     });
 
     // Form state
@@ -1604,6 +1694,7 @@ createApp({
       massenPruefung: {},
       rueckgabe: {},
       rueckgabeAusgabe: null,
+      csvImport: { rows: [], fileName: '' },
     });
 
     function showToast(msg, type = 'ok') {
@@ -1929,6 +2020,80 @@ createApp({
         await patch('Ausruestungstuecke', item.Id, { Status: newStatus });
         item.Status = newStatus;
         showToast(`Status → ${newStatus}`);
+      });
+    }
+
+    // ── CSV Import Kameraden ──
+    function downloadBeispielCSV() {
+      const header = 'Vorname;Name;Jacke_Groesse;Hose_Groesse;Stiefel_Groesse;Handschuh_Groesse;Hemd_Groesse;Poloshirt_Groesse;Fleece_Groesse;Aktiv';
+      const rows   = [
+        'Max;Mustermann;52;52;42;L;40/41;L;L;ja',
+        'Anna;Musterfrau;40;38;37;S;36/37;S;S;ja',
+      ];
+      const csv  = '\uFEFF' + [header, ...rows].join('\n');
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement('a');
+      a.href = url; a.download = 'kameraden_vorlage.csv'; a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function openCsvImport() {
+      form.csvImport = { rows: [], fileName: '' };
+      modal.csvImport = true;
+    }
+
+    function onCsvFile(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      form.csvImport.fileName = file.name;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const text  = e.target.result.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+        const lines = text.split('\n').filter(l => l.trim());
+        if (lines.length < 2) { showToast('CSV hat keine Datenzeilen', 'error'); return; }
+        const delim   = lines[0].includes(';') ? ';' : ',';
+        const headers = lines[0].split(delim).map(h => h.trim().replace(/^"|"$/g, ''));
+        const rows = [];
+        for (let i = 1; i < lines.length; i++) {
+          const vals = lines[i].split(delim).map(v => v.trim().replace(/^"|"$/g, ''));
+          const row  = {};
+          headers.forEach((h, idx) => { row[h] = vals[idx] ?? ''; });
+          row._Vorname = row.Vorname || row.vorname || '';
+          row._Name    = row.Name    || row.name    || '';
+          row._error   = (!row._Vorname || !row._Name) ? 'Vorname und Name sind Pflichtfelder' : '';
+          rows.push(row);
+        }
+        form.csvImport.rows = rows;
+        if (!rows.length) showToast('Keine Zeilen gefunden', 'error');
+      };
+      reader.readAsText(file, 'UTF-8');
+      event.target.value = '';
+    }
+
+    async function importKameraden() {
+      const valid = form.csvImport.rows.filter(r => !r._error);
+      if (!valid.length) { showToast('Keine gültigen Zeilen zum Importieren', 'error'); return; }
+      await load(async () => {
+        for (const row of valid) {
+          const aktivRaw = (row.Aktiv || row.aktiv || 'ja').toLowerCase().trim();
+          const aktiv    = !['nein', '0', 'false', 'falsch', 'no'].includes(aktivRaw);
+          await post('Kameraden', {
+            Vorname:           row._Vorname,
+            Name:              row._Name,
+            Jacke_Groesse:     row.Jacke_Groesse     || null,
+            Hose_Groesse:      row.Hose_Groesse      || null,
+            Stiefel_Groesse:   row.Stiefel_Groesse   ? Number(row.Stiefel_Groesse) : null,
+            Handschuh_Groesse: row.Handschuh_Groesse || null,
+            Hemd_Groesse:      row.Hemd_Groesse      || null,
+            Poloshirt_Groesse: row.Poloshirt_Groesse || null,
+            Fleece_Groesse:    row.Fleece_Groesse    || null,
+            Aktiv:             aktiv,
+          });
+        }
+        modal.csvImport = false;
+        showToast(`${valid.length} Kamerad${valid.length !== 1 ? 'en' : ''} importiert`);
+        await fetchAll();
       });
     }
 
@@ -2455,6 +2620,7 @@ createApp({
       pruefungenFiltered, waescheFiltered, ausgabenFiltered, ausruestungGroesseHint,
       pruefungenByAusruestung, waescheByAusruestung, ausgabenByAusruestung,
       fmtDate, fmtDateRel, datePriority, statusBadge, quickStatus, typLabel, exportCSV,
+      downloadBeispielCSV, openCsvImport, onCsvFile, importKameraden,
       openKameradenForm, saveKamerad, deleteKamerad,
       openKameradenDetail, ausruestungFuerKamerad, letzteAktion, kameradenGroessen,
       openAusruestungDetail,
