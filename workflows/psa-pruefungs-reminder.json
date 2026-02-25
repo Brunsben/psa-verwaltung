@@ -31,7 +31,7 @@
         "url": "https://nocodb.brunsben.org/api/v1/db/data/noco/p962d7ujd8wbfvi/mhskteevunob1r0",
         "sendHeaders": true,
         "headerParameters": {
-          "parameters": [{ "name": "xc-token", "value": "{{ $env.NOCODB_API_TOKEN }}" }]
+          "parameters": [{ "name": "xc-token", "value": "{{ $vars.NOCODB_API_TOKEN }}" }]
         },
         "sendQuery": true,
         "queryParameters": {
