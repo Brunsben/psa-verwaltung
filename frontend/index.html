@@ -149,6 +149,10 @@
             : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100']">
         <span class="nav-icon" v-html="p.icon"></span>
         {{ p.label }}
+        <span v-if="p.id === 'warnungen' && warnungen.length"
+          class="ml-auto bg-red-500 text-white text-xs font-bold rounded-full px-1.5 py-0.5 leading-none">
+          {{ warnungen.length }}
+        </span>
       </button>
     </nav>
     <!-- Dark-mode toggle -->
@@ -213,7 +217,8 @@
 
       <!-- Statistik-Kacheln -->
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        <div class="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm border border-gray-100 dark:border-gray-700 flex items-center justify-between gap-3">
+        <div @click="page = 'kameraden'"
+          class="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm border border-gray-100 dark:border-gray-700 flex items-center justify-between gap-3 cursor-pointer hover:shadow-md hover:border-red-200 dark:hover:border-red-800 transition-all">
           <div>
             <div class="text-2xl font-bold text-gray-900 dark:text-white">{{ stats.kameraden }}</div>
             <div class="text-xs font-medium text-gray-500 dark:text-gray-400 mt-0.5">Kameraden aktiv</div>
@@ -222,7 +227,8 @@
             <i class="ph ph-users-three text-xl text-red-500 dark:text-red-400"></i>
           </div>
         </div>
-        <div class="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm border border-gray-100 dark:border-gray-700 flex items-center justify-between gap-3">
+        <div @click="page = 'ausruestung'; filterStatus = ''"
+          class="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm border border-gray-100 dark:border-gray-700 flex items-center justify-between gap-3 cursor-pointer hover:shadow-md hover:border-blue-200 dark:hover:border-blue-800 transition-all">
           <div>
             <div class="text-2xl font-bold text-gray-900 dark:text-white">{{ stats.ausruestung }}</div>
             <div class="text-xs font-medium text-gray-500 dark:text-gray-400 mt-0.5">Ausrüstungsstücke</div>
@@ -231,7 +237,8 @@
             <i class="ph ph-t-shirt text-xl text-blue-500 dark:text-blue-400"></i>
           </div>
         </div>
-        <div class="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm border border-gray-100 dark:border-gray-700 flex items-center justify-between gap-3">
+        <div @click="page = 'ausruestung'; filterStatus = 'Prüfung fällig'"
+          class="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm border border-gray-100 dark:border-gray-700 flex items-center justify-between gap-3 cursor-pointer hover:shadow-md hover:border-orange-200 dark:hover:border-orange-800 transition-all">
           <div>
             <div class="text-2xl font-bold text-gray-900 dark:text-white">{{ stats.pruefungFaellig }}</div>
             <div class="text-xs font-medium text-gray-500 dark:text-gray-400 mt-0.5">Prüfungen ≤ 30 Tage</div>
@@ -240,7 +247,9 @@
             <i class="ph ph-warning text-xl text-orange-500 dark:text-orange-400"></i>
           </div>
         </div>
-        <div class="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm border border-gray-100 dark:border-gray-700 flex items-center justify-between gap-3">
+        <div @click="page = 'warnungen'"
+          :class="['rounded-xl p-5 shadow-sm border flex items-center justify-between gap-3 cursor-pointer hover:shadow-md transition-all',
+            warnungen.length > 0 ? 'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700 hover:border-red-200 dark:hover:border-red-800' : 'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700 hover:border-green-200 dark:hover:border-green-800']">
           <div>
             <div :class="warnungen.length > 0 ? 'text-2xl font-bold text-red-600 dark:text-red-400' : 'text-2xl font-bold text-green-600 dark:text-green-400'">{{ warnungen.length }}</div>
             <div class="text-xs font-medium text-gray-500 dark:text-gray-400 mt-0.5">Aktive Warnungen</div>
@@ -269,6 +278,37 @@
       <div v-else class="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-xl p-4 text-emerald-700 dark:text-emerald-400 text-sm flex items-center gap-2">
         <i class="ph ph-check-circle text-lg"></i>
         Keine dringenden Meldungen
+      </div>
+    </section>
+
+    <!-- ══ WARNUNGEN ══════════════════════════════════════ -->
+    <section v-if="page === 'warnungen'">
+      <div class="flex items-center justify-between mb-5">
+        <div>
+          <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Warnungen</h1>
+          <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">{{ warnungen.length }} aktive Meldung{{ warnungen.length !== 1 ? 'en' : '' }}</p>
+        </div>
+      </div>
+      <div v-if="warnungen.length" class="space-y-2">
+        <div v-for="w in warnungen" :key="w.id"
+          @click="openAusruestungDetail(ausruestung.find(a => a.Id === w.ausruestungId))"
+          :class="['flex items-start gap-3 bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-700 border-l-4 cursor-pointer hover:shadow-md transition-shadow',
+            w.prio === 'rot' ? 'border-l-red-500' : w.prio === 'orange' ? 'border-l-orange-400' : 'border-l-yellow-400']">
+          <i :class="['text-xl flex-shrink-0 mt-0.5',
+            w.prio === 'rot' ? 'ph ph-warning-circle text-red-500' : w.prio === 'orange' ? 'ph ph-warning text-orange-400' : 'ph ph-clock text-yellow-500']"></i>
+          <div class="flex-1 min-w-0">
+            <div class="font-semibold text-sm text-gray-800 dark:text-gray-100">{{ w.titel }}</div>
+            <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{ w.detail }}</div>
+          </div>
+          <i class="ph ph-arrow-right text-gray-300 dark:text-gray-600 flex-shrink-0 self-center"></i>
+        </div>
+      </div>
+      <div v-else class="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-xl p-6 text-emerald-700 dark:text-emerald-400 text-sm flex items-center gap-3">
+        <i class="ph ph-check-circle text-2xl"></i>
+        <div>
+          <div class="font-semibold">Alles in Ordnung</div>
+          <div class="text-xs mt-0.5 opacity-75">Keine Prüfungen, Lebensdaten oder Waschlimits überfällig.</div>
+        </div>
       </div>
     </section>
 
@@ -377,6 +417,7 @@
           <option value="">Alle Status</option>
           <option>Lager</option><option>Ausgegeben</option>
           <option>Reinigung</option><option>Außer Dienst</option><option>Ausgesondert</option>
+          <option value="Prüfung fällig">Prüfung fällig (≤30 Tage)</option>
         </select>
         <button @click="exportCSV" class="btn-secondary ml-auto text-xs">↓ CSV Export</button>
       </div>
@@ -1266,9 +1307,17 @@
         <div v-else class="text-xs text-gray-400 dark:text-gray-500 pl-1">Keine Wäschen</div>
       </div>
 
-      <div class="flex justify-end gap-3 pt-4 border-t border-gray-100 dark:border-gray-700">
-        <button @click="openAusruestungForm(selectedAusruestung); modal.ausruestungDetail = false" class="btn-secondary">Bearbeiten</button>
-        <button @click="modal.ausruestungDetail = false" class="btn-primary">Schließen</button>
+      <div class="flex justify-between gap-3 pt-4 border-t border-gray-100 dark:border-gray-700">
+        <button v-if="detailFromKamerad"
+          @click="modal.ausruestungDetail = false; selectedKamerad = detailFromKamerad; modal.kameradenDetail = true"
+          class="btn-secondary flex items-center gap-1.5">
+          <i class="ph ph-arrow-left"></i> {{ detailFromKamerad.Vorname }} {{ detailFromKamerad.Name }}
+        </button>
+        <div v-else></div>
+        <div class="flex gap-2">
+          <button @click="openAusruestungForm(selectedAusruestung); modal.ausruestungDetail = false" class="btn-secondary">Bearbeiten</button>
+          <button @click="modal.ausruestungDetail = false" class="btn-primary">Schließen</button>
+        </div>
       </div>
     </div>
   </div>
@@ -1321,7 +1370,7 @@
         </h3>
         <div v-if="ausruestungFuerKamerad(selectedKamerad).length" class="space-y-2">
           <div v-for="a in ausruestungFuerKamerad(selectedKamerad)" :key="a.Id"
-            @click="openAusruestungDetail(a)"
+            @click="openAusruestungDetail(a, selectedKamerad)"
             class="bg-gray-50 dark:bg-gray-700/40 rounded-xl p-4 border border-gray-100 dark:border-gray-600 cursor-pointer hover:border-purple-300 dark:hover:border-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/10 transition-colors">
             <div class="flex items-start justify-between gap-3">
               <div class="flex-1 min-w-0">
@@ -1491,6 +1540,7 @@ createApp({
     const selectedKamerad        = ref({});
     const selectedIds            = ref([]);
     const selectedAusruestung    = ref(null);
+    const detailFromKamerad      = ref(null);
 
     // Dark mode
     const darkMode = ref(document.documentElement.classList.contains('dark'));
@@ -1507,6 +1557,7 @@ createApp({
       { id: 'typen',       label: 'Typen',        icon: '<i class="ph ph-tag"></i>' },
       { id: 'verlauf',     label: 'Verlauf',      icon: '<i class="ph ph-clock-counter-clockwise"></i>' },
       { id: 'normen',      label: 'Normen',       icon: '<i class="ph ph-seal-check"></i>' },
+      { id: 'warnungen',   label: 'Warnungen',    icon: '<i class="ph ph-bell-ringing"></i>' },
     ];
 
     // Data
@@ -1623,7 +1674,11 @@ createApp({
 
     const ausruestungFiltered = computed(() => {
       let list = ausruestung.value;
-      if (filterStatus.value) list = list.filter(a => a.Status === filterStatus.value);
+      if (filterStatus.value === 'Prüfung fällig') {
+        list = list.filter(a => a.Naechste_Pruefung && new Date(a.Naechste_Pruefung) <= in30);
+      } else if (filterStatus.value) {
+        list = list.filter(a => a.Status === filterStatus.value);
+      }
       if (filterTyp.value) {
         list = list.filter(a => {
           const typ = typen.value.find(t => t.Bezeichnung === a.Ausruestungstyp);
@@ -1741,11 +1796,11 @@ createApp({
         if (a.Naechste_Pruefung) {
           const d = new Date(a.Naechste_Pruefung);
           if (d < today) {
-            w.push({ id: `p-${a.Id}`, prio: 'rot',
+            w.push({ id: `p-${a.Id}`, prio: 'rot', ausruestungId: a.Id,
               titel: `Prüfung überfällig: ${a.Ausruestungstyp||'?'} (${a.Seriennummer||''})`,
               detail: `Kamerad: ${a.Kamerad||'–'} · Fällig: ${fmtDate(a.Naechste_Pruefung)}` });
           } else if (d <= in30) {
-            w.push({ id: `p2-${a.Id}`, prio: 'orange',
+            w.push({ id: `p2-${a.Id}`, prio: 'orange', ausruestungId: a.Id,
               titel: `Prüfung bald fällig: ${a.Ausruestungstyp||'?'} (${a.Seriennummer||''})`,
               detail: `Kamerad: ${a.Kamerad||'–'} · Fällig: ${fmtDate(a.Naechste_Pruefung)}` });
           }
@@ -1753,11 +1808,11 @@ createApp({
         if (a.Lebensende_Datum) {
           const d = new Date(a.Lebensende_Datum);
           if (d < today) {
-            w.push({ id: `l-${a.Id}`, prio: 'rot',
+            w.push({ id: `l-${a.Id}`, prio: 'rot', ausruestungId: a.Id,
               titel: `Lebensende überschritten: ${a.Ausruestungstyp||'?'} (${a.Seriennummer||''})`,
               detail: `Kamerad: ${a.Kamerad||'–'} · Lebensende: ${fmtDate(a.Lebensende_Datum)}` });
           } else if (d <= in180) {
-            w.push({ id: `l2-${a.Id}`, prio: 'gelb',
+            w.push({ id: `l2-${a.Id}`, prio: 'gelb', ausruestungId: a.Id,
               titel: `Lebensende in < 6 Monaten: ${a.Ausruestungstyp||'?'} (${a.Seriennummer||''})`,
               detail: `Kamerad: ${a.Kamerad||'–'} · Lebensende: ${fmtDate(a.Lebensende_Datum)}` });
           }
@@ -1765,11 +1820,11 @@ createApp({
         const wi = waeschenInfo(a.Id, a.Ausruestungstyp);
         if (wi) {
           if (wi.count >= wi.max) {
-            w.push({ id: `wmax-${a.Id}`, prio: 'rot',
+            w.push({ id: `wmax-${a.Id}`, prio: 'rot', ausruestungId: a.Id,
               titel: `Waschzyklus-Limit erreicht: ${a.Ausruestungstyp||'?'} (${a.Seriennummer||''})`,
               detail: `Kamerad: ${a.Kamerad||'–'} · ${wi.count}/${wi.max} Wäschen` });
           } else if (wi.count / wi.max >= 0.9) {
-            w.push({ id: `wbald-${a.Id}`, prio: 'orange',
+            w.push({ id: `wbald-${a.Id}`, prio: 'orange', ausruestungId: a.Id,
               titel: `Waschzyklus-Limit fast erreicht: ${a.Ausruestungstyp||'?'} (${a.Seriennummer||''})`,
               detail: `Kamerad: ${a.Kamerad||'–'} · ${wi.count}/${wi.max} Wäschen (${wi.max - wi.count} verbleibend)` });
           }
@@ -2352,8 +2407,9 @@ createApp({
       modal.kameradenDetail = true;
     }
 
-    function openAusruestungDetail(a) {
+    function openAusruestungDetail(a, fromKamerad = null) {
       selectedAusruestung.value = a;
+      detailFromKamerad.value = fromKamerad;
       modal.ausruestungDetail = true;
     }
 
@@ -2393,7 +2449,7 @@ createApp({
       filterVerlaufKamerad, verlaufTab,
       filterAusruestung, filterStatus, sortAusruestung, sortBy,
       modal, form,
-      selectedKamerad, selectedIds, selectedAusruestung,
+      selectedKamerad, selectedIds, selectedAusruestung, detailFromKamerad,
       kameradenliste, kameradenFiltered, typenKategorien,
       ausruestungFiltered, stats, warnungen,
       pruefungenFiltered, waescheFiltered, ausgabenFiltered, ausruestungGroesseHint,
