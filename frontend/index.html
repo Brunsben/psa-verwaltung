@@ -425,7 +425,13 @@
               </td>
               <td class="px-4 py-2 text-gray-600 dark:text-gray-400">{{ a.Kamerad || '–' }}</td>
               <td class="px-4 py-2">
-                <span :class="statusBadge(a.Status)">{{ a.Status }}</span>
+                <select :value="a.Status" @change="quickStatus(a, $event.target.value)"
+                  :class="statusBadge(a.Status)"
+                  class="cursor-pointer border-0 appearance-none focus:outline-none focus:ring-1 focus:ring-red-400 pr-3"
+                  title="Status ändern">
+                  <option>Lager</option><option>Ausgegeben</option>
+                  <option>Reinigung</option><option>Außer Dienst</option><option>Ausgesondert</option>
+                </select>
               </td>
               <td class="px-4 py-2">
                 <template v-for="rel in [fmtDateRel(a.Naechste_Pruefung)]">
@@ -1861,6 +1867,15 @@ createApp({
       return `px-2 py-0.5 rounded-full text-xs font-semibold ${map[s] || 'bg-gray-100 dark:bg-gray-700 text-gray-600'}`;
     }
 
+    async function quickStatus(item, newStatus) {
+      if (item.Status === newStatus) return;
+      await load(async () => {
+        await patch('Ausruestungstuecke', item.Id, { Status: newStatus });
+        item.Status = newStatus;
+        showToast(`Status → ${newStatus}`);
+      });
+    }
+
     // ── Kameraden CRUD ──
     function openKameradenForm(k = {}) {
       form.kamerad = { Aktiv: true, ...k };
@@ -2382,7 +2397,7 @@ createApp({
       ausruestungFiltered, stats, warnungen,
       pruefungenFiltered, waescheFiltered, ausgabenFiltered, ausruestungGroesseHint,
       pruefungenByAusruestung, waescheByAusruestung, ausgabenByAusruestung,
-      fmtDate, fmtDateRel, datePriority, statusBadge, typLabel, exportCSV,
+      fmtDate, fmtDateRel, datePriority, statusBadge, quickStatus, typLabel, exportCSV,
       openKameradenForm, saveKamerad, deleteKamerad,
       openKameradenDetail, ausruestungFuerKamerad, letzteAktion, kameradenGroessen,
       openAusruestungDetail,
