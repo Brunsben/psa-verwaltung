@@ -1321,7 +1321,8 @@
         </h3>
         <div v-if="ausruestungFuerKamerad(selectedKamerad).length" class="space-y-2">
           <div v-for="a in ausruestungFuerKamerad(selectedKamerad)" :key="a.Id"
-            class="bg-gray-50 dark:bg-gray-700/40 rounded-xl p-4 border border-gray-100 dark:border-gray-600">
+            @click="openAusruestungDetail(a)"
+            class="bg-gray-50 dark:bg-gray-700/40 rounded-xl p-4 border border-gray-100 dark:border-gray-600 cursor-pointer hover:border-purple-300 dark:hover:border-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/10 transition-colors">
             <div class="flex items-start justify-between gap-3">
               <div class="flex-1 min-w-0">
                 <div class="flex items-center gap-2 flex-wrap mb-2">
