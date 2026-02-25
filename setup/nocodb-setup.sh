@@ -85,6 +85,7 @@ create_table() {
 create_table "Kameraden" '[
   {"title": "Name",              "uidt": "SingleLineText"},
   {"title": "Vorname",           "uidt": "SingleLineText"},
+  {"title": "Email",             "uidt": "Email"},
   {"title": "Jacke_Groesse",     "uidt": "SingleLineText"},
   {"title": "Hose_Groesse",      "uidt": "SingleLineText"},
   {"title": "Stiefel_Groesse",   "uidt": "Number"},
@@ -100,6 +101,7 @@ create_table "Ausruestungstypen" '[
   {"title": "Norm",                   "uidt": "SingleLineText"},
   {"title": "Max_Lebensdauer_Jahre",  "uidt": "Number"},
   {"title": "Pruefintervall_Monate",  "uidt": "Number"},
+  {"title": "Max_Waeschen",           "uidt": "Number"},
   {"title": "Beschreibung",           "uidt": "LongText"}
 ]'
 
@@ -118,25 +120,37 @@ create_table "Ausruestungstuecke" '[
 
 # ─── Tabelle 4: Ausgaben ──────────────────────────────────────────────────
 create_table "Ausgaben" '[
-  {"title": "Ausgabedatum",   "uidt": "Date"},
-  {"title": "Rueckgabedatum", "uidt": "Date"},
-  {"title": "Notizen",        "uidt": "LongText"}
+  {"title": "Ausgabedatum",       "uidt": "Date"},
+  {"title": "Rueckgabedatum",     "uidt": "Date"},
+  {"title": "Notizen",            "uidt": "LongText"},
+  {"title": "Ausruestungstueck_Id", "uidt": "Number"},
+  {"title": "Kamerad",            "uidt": "SingleLineText"},
+  {"title": "Ausruestungstyp",    "uidt": "SingleLineText"},
+  {"title": "Seriennummer",       "uidt": "SingleLineText"}
 ]'
 
 # ─── Tabelle 5: Pruefungen ────────────────────────────────────────────────
 create_table "Pruefungen" '[
-  {"title": "Datum",             "uidt": "Date"},
-  {"title": "Ergebnis",          "uidt": "SingleLineText"},
-  {"title": "Pruefer",           "uidt": "SingleLineText"},
-  {"title": "Naechste_Pruefung", "uidt": "Date"},
-  {"title": "Notizen",           "uidt": "LongText"}
+  {"title": "Datum",                 "uidt": "Date"},
+  {"title": "Ergebnis",              "uidt": "SingleLineText"},
+  {"title": "Pruefer",               "uidt": "SingleLineText"},
+  {"title": "Naechste_Pruefung",     "uidt": "Date"},
+  {"title": "Notizen",               "uidt": "LongText"},
+  {"title": "Ausruestungstueck_Id",  "uidt": "Number"},
+  {"title": "Kamerad",               "uidt": "SingleLineText"},
+  {"title": "Ausruestungstyp",       "uidt": "SingleLineText"},
+  {"title": "Seriennummer",          "uidt": "SingleLineText"}
 ]'
 
 # ─── Tabelle 6: Waesche ───────────────────────────────────────────────────
 create_table "Waesche" '[
-  {"title": "Datum",      "uidt": "Date"},
-  {"title": "Waescheart", "uidt": "SingleLineText"},
-  {"title": "Notizen",    "uidt": "LongText"}
+  {"title": "Datum",                 "uidt": "Date"},
+  {"title": "Waescheart",            "uidt": "SingleLineText"},
+  {"title": "Notizen",               "uidt": "LongText"},
+  {"title": "Ausruestungstueck_Id",  "uidt": "Number"},
+  {"title": "Kamerad",               "uidt": "SingleLineText"},
+  {"title": "Ausruestungstyp",       "uidt": "SingleLineText"},
+  {"title": "Seriennummer",          "uidt": "SingleLineText"}
 ]'
 
 echo ""

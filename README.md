@@ -83,6 +83,7 @@ Falls `nocodb-setup.sh` nicht funktioniert, erstelle die Tabellen in der NocoDB 
 |---|---|
 | Name | Single Line Text |
 | Vorname | Single Line Text |
+| Email | Email |
 | Jacke_Groesse | Single Line Text |
 | Hose_Groesse | Single Line Text |
 | Stiefel_Groesse | Number |
@@ -98,6 +99,7 @@ Falls `nocodb-setup.sh` nicht funktioniert, erstelle die Tabellen in der NocoDB 
 | Norm | Single Line Text |
 | Max_Lebensdauer_Jahre | Number |
 | Pruefintervall_Monate | Number |
+| Max_Waeschen | Number |
 | Beschreibung | Long Text |
 
 ### Ausruestungstuecke
@@ -119,6 +121,10 @@ Falls `nocodb-setup.sh` nicht funktioniert, erstelle die Tabellen in der NocoDB 
 | Ausgabedatum | Date |
 | Rueckgabedatum | Date |
 | Notizen | Long Text |
+| Ausruestungstueck_Id | Number |
+| Kamerad | Single Line Text |
+| Ausruestungstyp | Single Line Text |
+| Seriennummer | Single Line Text |
 
 ### Pruefungen
 | Spalte | Typ |
@@ -128,6 +134,10 @@ Falls `nocodb-setup.sh` nicht funktioniert, erstelle die Tabellen in der NocoDB 
 | Pruefer | Single Line Text |
 | Naechste_Pruefung | Date |
 | Notizen | Long Text |
+| Ausruestungstueck_Id | Number |
+| Kamerad | Single Line Text |
+| Ausruestungstyp | Single Line Text |
+| Seriennummer | Single Line Text |
 
 ### Waesche
 | Spalte | Typ |
@@ -135,6 +145,10 @@ Falls `nocodb-setup.sh` nicht funktioniert, erstelle die Tabellen in der NocoDB 
 | Datum | Date |
 | Waescheart | Single Line Text |
 | Notizen | Long Text |
+| Ausruestungstueck_Id | Number |
+| Kamerad | Single Line Text |
+| Ausruestungstyp | Single Line Text |
+| Seriennummer | Single Line Text |
 
 ### Danach: `configure-frontend.sh` ausführen
 
