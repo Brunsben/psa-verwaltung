@@ -381,10 +381,25 @@
         <button @click="exportCSV" class="btn-secondary ml-auto text-xs">↓ CSV Export</button>
       </div>
 
+      <!-- Massenwäsche-Aktionsleiste -->
+      <div v-if="selectedIds.length" class="mb-3 flex items-center gap-3 bg-teal-50 dark:bg-teal-900/20 border border-teal-200 dark:border-teal-800 rounded-xl px-4 py-2.5">
+        <span class="text-sm font-semibold text-teal-700 dark:text-teal-400">{{ selectedIds.length }} ausgewählt</span>
+        <button @click="openMassenWaesche" class="btn-primary bg-teal-600 hover:bg-teal-700 text-sm py-1.5">
+          <i class="ph ph-washing-machine"></i> Massenwäsche
+        </button>
+        <button @click="openMassenPruefung" class="btn-primary bg-orange-500 hover:bg-orange-600 text-sm py-1.5">
+          <i class="ph ph-clipboard-text"></i> Massenprüfung
+        </button>
+        <button @click="selectedIds = []" class="btn-secondary text-xs py-1.5">Auswahl aufheben</button>
+      </div>
+
       <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-x-auto">
         <table class="w-full text-sm">
           <thead>
             <tr class="border-b border-gray-100 dark:border-gray-700">
+              <th class="px-3 py-2.5 w-8">
+                <input type="checkbox" :checked="alleAusgewaehlt" @change="toggleAlle" class="accent-teal-600 cursor-pointer" />
+              </th>
               <th @click="sortBy('Seriennummer')" class="px-4 py-2.5 text-left text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider cursor-pointer select-none hover:text-gray-600 dark:hover:text-gray-300">Seriennr. <span v-if="sortAusruestung.field==='Seriennummer'">{{ sortAusruestung.dir==='asc' ? '↑' : '↓' }}</span></th>
               <th @click="sortBy('Ausruestungstyp')" class="px-4 py-2.5 text-left text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider cursor-pointer select-none hover:text-gray-600 dark:hover:text-gray-300">Typ <span v-if="sortAusruestung.field==='Ausruestungstyp'">{{ sortAusruestung.dir==='asc' ? '↑' : '↓' }}</span></th>
               <th @click="sortBy('Kamerad')" class="px-4 py-2.5 text-left text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider cursor-pointer select-none hover:text-gray-600 dark:hover:text-gray-300">Kamerad <span v-if="sortAusruestung.field==='Kamerad'">{{ sortAusruestung.dir==='asc' ? '↑' : '↓' }}</span></th>
@@ -395,9 +410,19 @@
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-50 dark:divide-gray-700">
-            <tr v-for="a in ausruestungFiltered" :key="a.Id" class="group hover:bg-gray-50 dark:hover:bg-gray-700/40 transition-colors">
+            <tr v-for="a in ausruestungFiltered" :key="a.Id" :class="['group hover:bg-gray-50 dark:hover:bg-gray-700/40 transition-colors', selectedIds.includes(a.Id) ? 'bg-teal-50/60 dark:bg-teal-900/10' : '']">
+              <td class="px-3 py-2">
+                <input type="checkbox" :checked="selectedIds.includes(a.Id)" @change="toggleSelect(a.Id)" class="accent-teal-600 cursor-pointer" />
+              </td>
               <td class="px-4 py-2 font-mono text-xs text-gray-500 dark:text-gray-400">{{ a.Seriennummer || '–' }}</td>
-              <td class="px-4 py-2 font-medium text-gray-800 dark:text-gray-200">{{ typLabel(a.Ausruestungstyp) }}</td>
+              <td class="px-4 py-2 font-medium text-gray-800 dark:text-gray-200">
+                {{ typLabel(a.Ausruestungstyp) }}
+                <template v-if="waeschenInfo(a.Id, a.Ausruestungstyp)" v-for="wi in [waeschenInfo(a.Id, a.Ausruestungstyp)]">
+                  <div :class="['text-xs mt-0.5 font-semibold', wi.count >= wi.max ? 'text-red-500 dark:text-red-400' : wi.count / wi.max >= 0.9 ? 'text-orange-500 dark:text-orange-400' : 'text-gray-400 dark:text-gray-500']">
+                    <i class="ph ph-washing-machine"></i> {{ wi.count }}/{{ wi.max }}
+                  </div>
+                </template>
+              </td>
               <td class="px-4 py-2 text-gray-600 dark:text-gray-400">{{ a.Kamerad || '–' }}</td>
               <td class="px-4 py-2">
                 <span :class="statusBadge(a.Status)">{{ a.Status }}</span>
@@ -422,6 +447,9 @@
               </td>
               <td class="px-4 py-2">
                 <div class="flex items-center justify-end gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button @click="openAusruestungDetail(a)" title="Detail / History" class="icon-btn hover:text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/20 dark:hover:text-purple-400">
+                    <i class="ph ph-list-magnifying-glass text-base"></i>
+                  </button>
                   <button @click="openAusgabe(a)" title="Ausgabe / Rückgabe" class="icon-btn hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 dark:hover:text-blue-400">
                     <i class="ph ph-sign-out text-base"></i>
                   </button>
@@ -482,6 +510,7 @@
           <div class="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700 flex gap-5 text-xs text-gray-500 dark:text-gray-400 flex-wrap">
             <span><i class="ph ph-hourglass"></i> <strong class="text-gray-700 dark:text-gray-300">{{ t.Max_Lebensdauer_Jahre || '–' }}</strong> J. Lebensdauer</span>
             <span><i class="ph ph-magnifying-glass"></i> <strong class="text-gray-700 dark:text-gray-300">{{ t.Pruefintervall_Monate || '–' }}</strong> Mon. Prüfintervall</span>
+            <span v-if="t.Max_Waeschen"><i class="ph ph-washing-machine"></i> max. <strong class="text-gray-700 dark:text-gray-300">{{ t.Max_Waeschen }}</strong> Wäschen</span>
             <span v-if="t.Typ && normenFuerTyp(t.Typ).length" class="text-blue-500 dark:text-blue-400">
               <i class="ph ph-seal-check"></i> <strong>{{ normenFuerTyp(t.Typ).length }}</strong> Norm{{ normenFuerTyp(t.Typ).length > 1 ? 'en' : '' }}
             </span>
@@ -500,7 +529,7 @@
         <div>
           <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Verlauf</h1>
           <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-            {{ pruefungen.length }} Prüfungen &nbsp;·&nbsp; {{ waescheListe.length }} Wäschen
+            {{ pruefungen.length }} Prüfungen &nbsp;·&nbsp; {{ waescheListe.length }} Wäschen &nbsp;·&nbsp; {{ ausgaben.length }} Ausgaben
           </p>
         </div>
       </div>
@@ -521,6 +550,13 @@
                 ? 'bg-white dark:bg-gray-700 text-red-700 dark:text-red-400 shadow-sm'
                 : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100']">
             <i class="ph ph-washing-machine"></i> Wäschen ({{ waescheFiltered.length }})
+          </button>
+          <button @click="verlaufTab = 'ausgaben'"
+            :class="['px-3 py-1.5 rounded-md text-sm font-medium transition-colors',
+              verlaufTab === 'ausgaben'
+                ? 'bg-white dark:bg-gray-700 text-red-700 dark:text-red-400 shadow-sm'
+                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100']">
+            <i class="ph ph-sign-out"></i> Ausgaben ({{ ausgabenFiltered.length }})
           </button>
         </div>
         <select v-model="filterVerlaufKamerad"
@@ -606,6 +642,49 @@
           </tbody>
         </table>
       </div>
+
+      <!-- Ausgaben Tab -->
+      <div v-if="verlaufTab === 'ausgaben'" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b border-gray-100 dark:border-gray-700">
+              <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Ausgabedatum</th>
+              <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Rückgabedatum</th>
+              <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Kamerad</th>
+              <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Ausrüstung</th>
+              <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Notizen</th>
+              <th class="px-4 py-2.5 w-10"></th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-50 dark:divide-gray-700">
+            <tr v-for="ag in ausgabenFiltered" :key="ag.Id" class="hover:bg-gray-50 dark:hover:bg-gray-700/40 transition-colors">
+              <td class="px-4 py-2.5 font-medium text-gray-800 dark:text-gray-200">{{ fmtDate(ag.Ausgabedatum) }}</td>
+              <td class="px-4 py-2.5 text-gray-600 dark:text-gray-400">
+                <span v-if="ag.Rueckgabedatum">{{ fmtDate(ag.Rueckgabedatum) }}</span>
+                <span v-else class="text-amber-500 dark:text-amber-400 text-xs font-semibold">noch ausgegeben</span>
+              </td>
+              <td class="px-4 py-2.5 text-gray-600 dark:text-gray-400">{{ ag.Kamerad || '–' }}</td>
+              <td class="px-4 py-2.5 text-gray-600 dark:text-gray-400">
+                <div class="font-medium text-gray-800 dark:text-gray-200">{{ ag.Ausruestungstyp || '–' }}</div>
+                <div v-if="ag.Seriennummer" class="text-xs text-gray-400 dark:text-gray-500 font-mono mt-0.5">{{ ag.Seriennummer }}</div>
+              </td>
+              <td class="px-4 py-2.5 text-gray-500 dark:text-gray-400 text-xs">{{ ag.Notizen || '' }}</td>
+              <td class="px-4 py-2.5">
+                <button v-if="!ag.Rueckgabedatum" @click="openRueckgabe(ag)"
+                  class="text-xs px-2 py-1 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/40 font-medium whitespace-nowrap transition-colors">
+                  <i class="ph ph-arrow-u-up-left"></i> Rückgabe
+                </button>
+              </td>
+            </tr>
+            <tr v-if="!ausgabenFiltered.length">
+              <td colspan="6" class="px-4 py-10 text-center text-gray-400 dark:text-gray-500 text-sm">
+                <div class="font-medium mb-1">Keine Ausgaben vorhanden</div>
+                <div class="text-xs">Ausgaben werden beim Erfassen automatisch hier eingetragen</div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </section>
 
     <!-- ══ NORMEN ══════════════════════════════════════════ -->
@@ -634,6 +713,7 @@
               <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Kategorie</th>
               <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Prüfintervall</th>
               <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Lebensdauer</th>
+              <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Max. Wäschen</th>
               <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Beschreibung</th>
               <th class="px-4 py-2.5"></th>
             </tr>
@@ -647,6 +727,7 @@
               </td>
               <td class="px-4 py-3 text-gray-600 dark:text-gray-400">{{ n.Pruefintervall_Monate ? n.Pruefintervall_Monate + ' Mon.' : '–' }}</td>
               <td class="px-4 py-3 text-gray-600 dark:text-gray-400">{{ n.Max_Lebensdauer_Jahre ? n.Max_Lebensdauer_Jahre + ' J.' : '–' }}</td>
+              <td class="px-4 py-3 text-gray-600 dark:text-gray-400">{{ n.Max_Waeschen ? n.Max_Waeschen + 'x' : '–' }}</td>
               <td class="px-4 py-3 text-gray-500 dark:text-gray-400 text-xs max-w-xs">{{ n.Beschreibung || '' }}</td>
               <td class="px-4 py-3">
                 <div class="flex gap-1 justify-end">
@@ -660,7 +741,7 @@
               </td>
             </tr>
             <tr v-if="!normenFiltered.length">
-              <td colspan="6" class="px-4 py-10 text-center text-gray-400 dark:text-gray-500 text-sm">Keine Normen vorhanden</td>
+              <td colspan="7" class="px-4 py-10 text-center text-gray-400 dark:text-gray-500 text-sm">Keine Normen vorhanden</td>
             </tr>
           </tbody>
         </table>
@@ -837,7 +918,7 @@
           </div>
           <input v-else v-model="form.typ.Norm" class="input" placeholder="z.B. DIN EN 469" />
         </div>
-        <div class="grid grid-cols-2 gap-3">
+        <div class="grid grid-cols-3 gap-3">
           <div>
             <label class="label">Max. Lebensdauer (Jahre)</label>
             <input v-model.number="form.typ.Max_Lebensdauer_Jahre" type="number" class="input" />
@@ -845,6 +926,10 @@
           <div>
             <label class="label">Prüfintervall (Monate)</label>
             <input v-model.number="form.typ.Pruefintervall_Monate" type="number" class="input" />
+          </div>
+          <div>
+            <label class="label">Max. Wäschen</label>
+            <input v-model.number="form.typ.Max_Waeschen" type="number" class="input" placeholder="z.B. 50" />
           </div>
         </div>
         <div>
@@ -907,7 +992,7 @@
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="label">Datum</label>
-            <input v-model="form.pruefung.datum" type="date" class="input" />
+            <input v-model="form.pruefung.datum" type="date" class="input" @change="recalcNaechstePruefung" />
           </div>
           <div>
             <label class="label">Ergebnis</label>
@@ -942,7 +1027,16 @@
   <div v-if="modal.waesche" class="modal-backdrop" @click.self="modal.waesche = false">
     <div class="modal-box max-w-md">
       <h2 class="text-lg font-bold mb-1">Wäsche erfassen</h2>
-      <div class="text-sm text-gray-500 dark:text-gray-400 mb-5">{{ form.aktion.Seriennummer }} – {{ form.aktion.Ausruestungstyp }}</div>
+      <div class="text-sm text-gray-500 dark:text-gray-400 mb-3">{{ form.aktion.Seriennummer }} – {{ form.aktion.Ausruestungstyp }}</div>
+      <template v-if="waeschenInfo(form.aktion.Id, form.aktion.Ausruestungstyp)" v-for="wi in [waeschenInfo(form.aktion.Id, form.aktion.Ausruestungstyp)]">
+        <div class="flex items-center gap-2 text-sm px-3 py-2 rounded-lg mb-4"
+             :class="wi.count + 1 >= wi.max ? 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400' : wi.count + 1 >= wi.max * 0.9 ? 'bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-400' : 'bg-gray-50 dark:bg-gray-700/50 text-gray-600 dark:text-gray-400'">
+          <i class="ph ph-washing-machine"></i>
+          <span>Dies wird Wäsche <strong>{{ wi.count + 1 }}</strong> von max. {{ wi.max }}</span>
+          <span v-if="wi.count + 1 >= wi.max" class="ml-auto font-semibold">⚠ Limit erreicht!</span>
+          <span v-else-if="wi.count + 1 >= wi.max * 0.9" class="ml-auto font-semibold">Limit fast erreicht</span>
+        </div>
+      </template>
       <div class="grid gap-3">
         <div class="grid grid-cols-2 gap-3">
           <div>
@@ -966,6 +1060,209 @@
       <div class="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-100 dark:border-gray-700">
         <button @click="modal.waesche = false" class="btn-secondary">Abbrechen</button>
         <button @click="saveWaesche" class="btn-primary">Speichern</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Massenwäsche Modal -->
+  <div v-if="modal.massenWaesche" class="modal-backdrop" @click.self="modal.massenWaesche = false">
+    <div class="modal-box max-w-md">
+      <h2 class="text-lg font-bold mb-1">Massenwäsche erfassen</h2>
+      <div class="text-sm text-gray-500 dark:text-gray-400 mb-4">{{ selectedIds.length }} Ausrüstungsstück{{ selectedIds.length > 1 ? 'e' : '' }} werden als gewaschen markiert.</div>
+      <div class="grid gap-3">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="label">Datum</label>
+            <input v-model="form.massenWaesche.datum" type="date" class="input" />
+          </div>
+          <div>
+            <label class="label">Art</label>
+            <select v-model="form.massenWaesche.art" class="input">
+              <option>Normal</option>
+              <option>Spezialreinigung</option>
+              <option>Dekontamination</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <label class="label">Notizen</label>
+          <textarea v-model="form.massenWaesche.notizen" rows="2" class="input resize-none"></textarea>
+        </div>
+      </div>
+      <div class="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-100 dark:border-gray-700">
+        <button @click="modal.massenWaesche = false" class="btn-secondary">Abbrechen</button>
+        <button @click="saveMassenWaesche" class="btn-primary">
+          <i class="ph ph-washing-machine"></i> {{ selectedIds.length }} Stücke speichern
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Massenprüfung Modal -->
+  <div v-if="modal.massenPruefung" class="modal-backdrop" @click.self="modal.massenPruefung = false">
+    <div class="modal-box max-w-md">
+      <h2 class="text-lg font-bold mb-1">Massenprüfung erfassen</h2>
+      <div class="text-sm text-gray-500 dark:text-gray-400 mb-4">{{ selectedIds.length }} Ausrüstungsstück{{ selectedIds.length > 1 ? 'e' : '' }} werden als geprüft eingetragen. Nächste Prüfung wird automatisch berechnet.</div>
+      <div class="grid gap-3">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="label">Datum</label>
+            <input v-model="form.massenPruefung.datum" type="date" class="input" />
+          </div>
+          <div>
+            <label class="label">Ergebnis</label>
+            <select v-model="form.massenPruefung.ergebnis" class="input">
+              <option>Bestanden</option>
+              <option>Eingeschränkt</option>
+              <option>Nicht bestanden</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <label class="label">Prüfer</label>
+          <input v-model="form.massenPruefung.pruefer" type="text" class="input" placeholder="Name des Prüfers" />
+        </div>
+        <div>
+          <label class="label">Notizen</label>
+          <textarea v-model="form.massenPruefung.notizen" rows="2" class="input resize-none"></textarea>
+        </div>
+      </div>
+      <div class="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-100 dark:border-gray-700">
+        <button @click="modal.massenPruefung = false" class="btn-secondary">Abbrechen</button>
+        <button @click="saveMassenPruefung" class="btn-primary bg-orange-500 hover:bg-orange-600">
+          <i class="ph ph-clipboard-text"></i> {{ selectedIds.length }} Stücke speichern
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Rückgabe Modal -->
+  <div v-if="modal.rueckgabe" class="modal-backdrop" @click.self="modal.rueckgabe = false">
+    <div class="modal-box max-w-sm">
+      <h2 class="text-lg font-bold mb-1">Rückgabe erfassen</h2>
+      <div class="text-sm text-gray-500 dark:text-gray-400 mb-5">
+        {{ form.rueckgabeAusgabe?.Ausruestungstyp }} – {{ form.rueckgabeAusgabe?.Seriennummer }}<br>
+        <span class="text-xs">Kamerad: {{ form.rueckgabeAusgabe?.Kamerad || '–' }}</span>
+      </div>
+      <div>
+        <label class="label">Rückgabedatum</label>
+        <input v-model="form.rueckgabe.datum" type="date" class="input" />
+      </div>
+      <div class="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-100 dark:border-gray-700">
+        <button @click="modal.rueckgabe = false" class="btn-secondary">Abbrechen</button>
+        <button @click="saveRueckgabe" class="btn-primary">
+          <i class="ph ph-arrow-u-up-left"></i> Rückgabe speichern
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ausrüstungsstück Detail Modal -->
+  <div v-if="modal.ausruestungDetail && selectedAusruestung" class="modal-backdrop" @click.self="modal.ausruestungDetail = false">
+    <div class="modal-box max-w-2xl" style="max-height:85vh;overflow-y:auto">
+      <div class="flex items-start justify-between mb-4">
+        <div>
+          <h2 class="text-lg font-bold text-gray-900 dark:text-white">
+            {{ selectedAusruestung.Ausruestungstyp || 'Ausrüstungsstück' }}
+          </h2>
+          <div class="text-sm text-gray-500 dark:text-gray-400 mt-0.5 font-mono">{{ selectedAusruestung.Seriennummer || '–' }}</div>
+        </div>
+        <span :class="statusBadge(selectedAusruestung.Status)">{{ selectedAusruestung.Status }}</span>
+      </div>
+
+      <!-- Info-Grid -->
+      <div class="grid grid-cols-2 md:grid-cols-3 gap-3 mb-5 text-sm">
+        <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3">
+          <div class="text-xs text-gray-400 dark:text-gray-500 mb-0.5">Kamerad</div>
+          <div class="font-medium text-gray-800 dark:text-gray-100">{{ selectedAusruestung.Kamerad || '–' }}</div>
+        </div>
+        <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3">
+          <div class="text-xs text-gray-400 dark:text-gray-500 mb-0.5">Herstellungsdatum</div>
+          <div class="font-medium text-gray-800 dark:text-gray-100">{{ fmtDate(selectedAusruestung.Herstellungsdatum) || '–' }}</div>
+        </div>
+        <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3">
+          <div class="text-xs text-gray-400 dark:text-gray-500 mb-0.5">Lebensende</div>
+          <div class="font-medium" :class="selectedAusruestung.Lebensende_Datum && new Date(selectedAusruestung.Lebensende_Datum) < new Date() ? 'text-red-600 dark:text-red-400' : 'text-gray-800 dark:text-gray-100'">{{ fmtDate(selectedAusruestung.Lebensende_Datum) || '–' }}</div>
+        </div>
+        <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3">
+          <div class="text-xs text-gray-400 dark:text-gray-500 mb-0.5">Nächste Prüfung</div>
+          <template v-for="rel in [fmtDateRel(selectedAusruestung.Naechste_Pruefung)]">
+            <div v-if="rel" :class="[rel.cls, 'font-semibold text-sm']">{{ rel.label }}</div>
+            <div v-else class="font-medium text-gray-800 dark:text-gray-100">–</div>
+          </template>
+        </div>
+        <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3">
+          <div class="text-xs text-gray-400 dark:text-gray-500 mb-0.5">Wäschen</div>
+          <template v-if="waeschenInfo(selectedAusruestung.Id, selectedAusruestung.Ausruestungstyp)" v-for="wi in [waeschenInfo(selectedAusruestung.Id, selectedAusruestung.Ausruestungstyp)]">
+            <div class="font-semibold text-sm" :class="wi.count >= wi.max ? 'text-red-600 dark:text-red-400' : wi.count / wi.max >= 0.9 ? 'text-orange-500' : 'text-gray-800 dark:text-gray-100'">{{ wi.count }} / {{ wi.max }}</div>
+          </template>
+          <div v-else class="font-medium text-gray-800 dark:text-gray-100">{{ (waescheByAusruestung.get(selectedAusruestung.Id) || []).length }}</div>
+        </div>
+        <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3">
+          <div class="text-xs text-gray-400 dark:text-gray-500 mb-0.5">QR-Code</div>
+          <div class="font-mono text-xs text-gray-600 dark:text-gray-300 break-all">{{ selectedAusruestung.QR_Code || '–' }}</div>
+        </div>
+      </div>
+
+      <!-- Ausgaben-History -->
+      <div class="mb-4">
+        <h3 class="text-sm font-semibold text-gray-600 dark:text-gray-300 mb-2 flex items-center gap-1.5">
+          <i class="ph ph-sign-out"></i> Ausgaben
+          <span class="text-xs font-normal text-gray-400">({{ (ausgabenByAusruestung.get(selectedAusruestung.Id) || []).length }})</span>
+        </h3>
+        <div v-if="(ausgabenByAusruestung.get(selectedAusruestung.Id) || []).length" class="space-y-1.5">
+          <div v-for="ag in [...(ausgabenByAusruestung.get(selectedAusruestung.Id) || [])].sort((a,b) => new Date(b.Ausgabedatum||0) - new Date(a.Ausgabedatum||0))"
+            :key="ag.Id" class="flex items-center gap-3 text-sm bg-gray-50 dark:bg-gray-700/40 rounded-lg px-3 py-2">
+            <i class="ph ph-sign-out text-blue-500 flex-shrink-0"></i>
+            <span class="text-gray-500 dark:text-gray-400 w-20 flex-shrink-0">{{ fmtDate(ag.Ausgabedatum) }}</span>
+            <span class="font-medium text-gray-800 dark:text-gray-100">{{ ag.Kamerad || '–' }}</span>
+            <span v-if="ag.Rueckgabedatum" class="ml-auto text-xs text-gray-400">zurück {{ fmtDate(ag.Rueckgabedatum) }}</span>
+            <span v-else class="ml-auto text-xs text-amber-500 font-semibold">noch ausgegeben</span>
+          </div>
+        </div>
+        <div v-else class="text-xs text-gray-400 dark:text-gray-500 pl-1">Keine Ausgaben</div>
+      </div>
+
+      <!-- Prüfungs-History -->
+      <div class="mb-4">
+        <h3 class="text-sm font-semibold text-gray-600 dark:text-gray-300 mb-2 flex items-center gap-1.5">
+          <i class="ph ph-clipboard-text"></i> Prüfungen
+          <span class="text-xs font-normal text-gray-400">({{ (pruefungenByAusruestung.get(selectedAusruestung.Id) || []).length }})</span>
+        </h3>
+        <div v-if="(pruefungenByAusruestung.get(selectedAusruestung.Id) || []).length" class="space-y-1.5">
+          <div v-for="p in [...(pruefungenByAusruestung.get(selectedAusruestung.Id) || [])].sort((a,b) => new Date(b.Datum||0) - new Date(a.Datum||0))"
+            :key="p.Id" class="flex items-center gap-3 text-sm bg-gray-50 dark:bg-gray-700/40 rounded-lg px-3 py-2">
+            <i class="ph ph-clipboard-text flex-shrink-0" :class="p.Ergebnis === 'Bestanden' ? 'text-emerald-500' : p.Ergebnis === 'Nicht bestanden' ? 'text-red-500' : 'text-orange-500'"></i>
+            <span class="text-gray-500 dark:text-gray-400 w-20 flex-shrink-0">{{ fmtDate(p.Datum) }}</span>
+            <span class="font-medium" :class="p.Ergebnis === 'Bestanden' ? 'text-emerald-700 dark:text-emerald-400' : p.Ergebnis === 'Nicht bestanden' ? 'text-red-600 dark:text-red-400' : 'text-orange-600 dark:text-orange-400'">{{ p.Ergebnis }}</span>
+            <span class="text-gray-500 dark:text-gray-400">{{ p.Pruefer || '' }}</span>
+            <span v-if="p.Notizen" class="ml-auto text-xs text-gray-400 truncate max-w-32">{{ p.Notizen }}</span>
+          </div>
+        </div>
+        <div v-else class="text-xs text-gray-400 dark:text-gray-500 pl-1">Keine Prüfungen</div>
+      </div>
+
+      <!-- Wäsche-History -->
+      <div class="mb-5">
+        <h3 class="text-sm font-semibold text-gray-600 dark:text-gray-300 mb-2 flex items-center gap-1.5">
+          <i class="ph ph-washing-machine"></i> Wäschen
+          <span class="text-xs font-normal text-gray-400">({{ (waescheByAusruestung.get(selectedAusruestung.Id) || []).length }})</span>
+        </h3>
+        <div v-if="(waescheByAusruestung.get(selectedAusruestung.Id) || []).length" class="space-y-1.5">
+          <div v-for="w in [...(waescheByAusruestung.get(selectedAusruestung.Id) || [])].sort((a,b) => new Date(b.Datum||0) - new Date(a.Datum||0))"
+            :key="w.Id" class="flex items-center gap-3 text-sm bg-gray-50 dark:bg-gray-700/40 rounded-lg px-3 py-2">
+            <i class="ph ph-washing-machine text-teal-500 flex-shrink-0"></i>
+            <span class="text-gray-500 dark:text-gray-400 w-20 flex-shrink-0">{{ fmtDate(w.Datum) }}</span>
+            <span class="font-medium text-gray-800 dark:text-gray-100">{{ w.Waescheart || 'Normal' }}</span>
+            <span v-if="w.Notizen" class="ml-auto text-xs text-gray-400 truncate max-w-40">{{ w.Notizen }}</span>
+          </div>
+        </div>
+        <div v-else class="text-xs text-gray-400 dark:text-gray-500 pl-1">Keine Wäschen</div>
+      </div>
+
+      <div class="flex justify-end gap-3 pt-4 border-t border-gray-100 dark:border-gray-700">
+        <button @click="openAusruestungForm(selectedAusruestung); modal.ausruestungDetail = false" class="btn-secondary">Bearbeiten</button>
+        <button @click="modal.ausruestungDetail = false" class="btn-primary">Schließen</button>
       </div>
     </div>
   </div>
@@ -1045,6 +1342,16 @@
                     </span>
                     <span v-else class="text-gray-400 italic">nicht erfasst</span>
                   </div>
+                  <div v-if="waeschenInfo(a.Id, a.Ausruestungstyp)" class="flex items-center gap-2">
+                    <span class="text-gray-400 dark:text-gray-500 w-28 flex-shrink-0">Wäschen gesamt:</span>
+                    <template v-for="wi in [waeschenInfo(a.Id, a.Ausruestungstyp)]">
+                      <span :class="['font-medium', wi.count >= wi.max ? 'text-red-600 dark:text-red-400' : wi.count / wi.max >= 0.9 ? 'text-orange-500 dark:text-orange-400' : 'text-gray-700 dark:text-gray-300']">
+                        {{ wi.count }}/{{ wi.max }}
+                        <span v-if="wi.count >= wi.max" class="text-red-500"> – Limit erreicht!</span>
+                        <span v-else-if="wi.count / wi.max >= 0.9" class="text-orange-500"> – fast erschöpft</span>
+                      </span>
+                    </template>
+                  </div>
                   <div v-if="a.Naechste_Pruefung" class="flex items-center gap-2">
                     <span class="text-gray-400 dark:text-gray-500 w-28 flex-shrink-0">Nächste Prüfung:</span>
                     <span :class="fmtDateRel(a.Naechste_Pruefung)?.cls || 'text-gray-600'" class="font-medium">
@@ -1084,7 +1391,7 @@
             <option v-for="k in normenKategorien" :key="k" :value="k">{{ k }}</option>
           </select>
         </div>
-        <div class="grid grid-cols-2 gap-3">
+        <div class="grid grid-cols-3 gap-3">
           <div>
             <label class="label">Prüfintervall (Monate)</label>
             <input v-model.number="form.norm.Pruefintervall_Monate" type="number" min="1" class="input" placeholder="12" />
@@ -1092,6 +1399,10 @@
           <div>
             <label class="label">Max. Lebensdauer (Jahre)</label>
             <input v-model.number="form.norm.Max_Lebensdauer_Jahre" type="number" min="1" class="input" placeholder="10" />
+          </div>
+          <div>
+            <label class="label">Max. Wäschen</label>
+            <input v-model.number="form.norm.Max_Waeschen" type="number" min="1" class="input" placeholder="z.B. 50" />
           </div>
         </div>
         <div>
@@ -1171,6 +1482,8 @@ createApp({
     const filterVerlaufKamerad   = ref('');
     const verlaufTab             = ref('pruefungen');
     const selectedKamerad        = ref({});
+    const selectedIds            = ref([]);
+    const selectedAusruestung    = ref(null);
 
     // Dark mode
     const darkMode = ref(document.documentElement.classList.contains('dark'));
@@ -1216,7 +1529,7 @@ createApp({
     const modal = reactive({
       kameradenForm: false, ausruestungForm: false,
       typForm: false, ausgabe: false, pruefung: false, waesche: false,
-      kameradenDetail: false, normenForm: false,
+      kameradenDetail: false, normenForm: false, massenWaesche: false, massenPruefung: false, rueckgabe: false, ausruestungDetail: false,
     });
 
     // Form state
@@ -1229,6 +1542,10 @@ createApp({
       pruefung: {},
       waesche: {},
       norm: {},
+      massenWaesche: {},
+      massenPruefung: {},
+      rueckgabe: {},
+      rueckgabeAusgabe: null,
     });
 
     function showToast(msg, type = 'ok') {
@@ -1326,6 +1643,12 @@ createApp({
       return list;
     });
 
+    const ausgabenFiltered = computed(() =>
+      [...ausgaben.value]
+        .sort((a, b) => new Date(b.Ausgabedatum||0) - new Date(a.Ausgabedatum||0))
+        .filter(ag => !filterVerlaufKamerad.value || ag.Kamerad === filterVerlaufKamerad.value)
+    );
+
     const pruefungenByAusruestung = computed(() => {
       const map = new Map();
       pruefungen.value.forEach(p => {
@@ -1344,6 +1667,17 @@ createApp({
         if (!id) return;
         if (!map.has(id)) map.set(id, []);
         map.get(id).push(w);
+      });
+      return map;
+    });
+
+    const ausgabenByAusruestung = computed(() => {
+      const map = new Map();
+      ausgaben.value.forEach(ag => {
+        const id = ag.Ausruestungstueck_Id;
+        if (!id) return;
+        if (!map.has(id)) map.set(id, []);
+        map.get(id).push(ag);
       });
       return map;
     });
@@ -1419,6 +1753,18 @@ createApp({
             w.push({ id: `l2-${a.Id}`, prio: 'gelb',
               titel: `Lebensende in < 6 Monaten: ${a.Ausruestungstyp||'?'} (${a.Seriennummer||''})`,
               detail: `Kamerad: ${a.Kamerad||'–'} · Lebensende: ${fmtDate(a.Lebensende_Datum)}` });
+          }
+        }
+        const wi = waeschenInfo(a.Id, a.Ausruestungstyp);
+        if (wi) {
+          if (wi.count >= wi.max) {
+            w.push({ id: `wmax-${a.Id}`, prio: 'rot',
+              titel: `Waschzyklus-Limit erreicht: ${a.Ausruestungstyp||'?'} (${a.Seriennummer||''})`,
+              detail: `Kamerad: ${a.Kamerad||'–'} · ${wi.count}/${wi.max} Wäschen` });
+          } else if (wi.count / wi.max >= 0.9) {
+            w.push({ id: `wbald-${a.Id}`, prio: 'orange',
+              titel: `Waschzyklus-Limit fast erreicht: ${a.Ausruestungstyp||'?'} (${a.Seriennummer||''})`,
+              detail: `Kamerad: ${a.Kamerad||'–'} · ${wi.count}/${wi.max} Wäschen (${wi.max - wi.count} verbleibend)` });
           }
         }
       });
@@ -1666,6 +2012,7 @@ createApp({
         form.typ.Norm = n.Bezeichnung;
         if (n.Pruefintervall_Monate)   form.typ.Pruefintervall_Monate   = n.Pruefintervall_Monate;
         if (n.Max_Lebensdauer_Jahre)   form.typ.Max_Lebensdauer_Jahre   = n.Max_Lebensdauer_Jahre;
+        if (n.Max_Waeschen)            form.typ.Max_Waeschen            = n.Max_Waeschen;
         form.typ._normHinweis = n.Beschreibung || '';
       }
     }
@@ -1685,6 +2032,7 @@ createApp({
           Ausruestungstyp_Kategorie: form.norm.Ausruestungstyp_Kategorie || null,
           Pruefintervall_Monate:     form.norm.Pruefintervall_Monate    || null,
           Max_Lebensdauer_Jahre:     form.norm.Max_Lebensdauer_Jahre    || null,
+          Max_Waeschen:              form.norm.Max_Waeschen             || null,
           Beschreibung:              form.norm.Beschreibung             || null,
         };
         if (Id) await patch('Normen', Id, payload);
@@ -1729,6 +2077,7 @@ createApp({
           Hersteller:            form.typ.Hersteller             || null,
           Norm:                  form.typ.Norm                   || null,
           Max_Lebensdauer_Jahre: form.typ.Max_Lebensdauer_Jahre  || null,
+          Max_Waeschen:          form.typ.Max_Waeschen           || null,
           Pruefintervall_Monate: form.typ.Pruefintervall_Monate  || null,
           Beschreibung:          form.typ.Beschreibung           || null,
         };
@@ -1761,6 +2110,112 @@ createApp({
       });
     }
 
+    // ── Wäschen-Zähler ──
+    function waeschenInfo(ausruestungId, ausruestungstyp) {
+      const typ = typen.value.find(t => t.Bezeichnung === ausruestungstyp);
+      if (!typ?.Max_Waeschen) return null;
+      const count = (waescheByAusruestung.value.get(ausruestungId) || []).length;
+      return { count, max: typ.Max_Waeschen };
+    }
+
+    // ── Massenwäsche ──
+    const alleAusgewaehlt = computed(() =>
+      ausruestungFiltered.value.length > 0 &&
+      ausruestungFiltered.value.every(a => selectedIds.value.includes(a.Id))
+    );
+
+    function toggleSelect(id) {
+      const idx = selectedIds.value.indexOf(id);
+      if (idx === -1) selectedIds.value.push(id);
+      else selectedIds.value.splice(idx, 1);
+    }
+
+    function toggleAlle() {
+      if (alleAusgewaehlt.value) selectedIds.value = [];
+      else selectedIds.value = ausruestungFiltered.value.map(a => a.Id);
+    }
+
+    function openMassenWaesche() {
+      form.massenWaesche = { datum: todayStr(), art: 'Normal', notizen: '' };
+      modal.massenWaesche = true;
+    }
+
+    async function saveMassenWaesche() {
+      await load(async () => {
+        const ids = [...selectedIds.value];
+        await Promise.all(ids.map(id => {
+          const a = ausruestung.value.find(x => x.Id === id);
+          if (!a) return;
+          return post('Waesche', {
+            Datum:                form.massenWaesche.datum,
+            Waescheart:           form.massenWaesche.art,
+            Notizen:              form.massenWaesche.notizen || null,
+            Ausruestungstueck_Id: a.Id,
+            Kamerad:              a.Kamerad || null,
+            Ausruestungstyp:      a.Ausruestungstyp || null,
+            Seriennummer:         a.Seriennummer || null,
+          });
+        }));
+        await Promise.all(ids
+          .filter(id => ausruestung.value.find(x => x.Id === id)?.Status === 'Lager')
+          .map(id => patch('Ausruestungstuecke', id, { Status: 'Reinigung' }))
+        );
+        selectedIds.value = [];
+        modal.massenWaesche = false;
+        showToast(`${ids.length} Wäsche${ids.length > 1 ? 'n' : ''} erfasst`);
+        await fetchAll();
+      });
+    }
+
+    function openMassenPruefung() {
+      form.massenPruefung = { datum: todayStr(), ergebnis: 'Bestanden', pruefer: '', notizen: '' };
+      modal.massenPruefung = true;
+    }
+
+    async function saveMassenPruefung() {
+      await load(async () => {
+        const ids = [...selectedIds.value];
+        await Promise.all(ids.map(id => {
+          const a = ausruestung.value.find(x => x.Id === id);
+          if (!a) return;
+          return post('Pruefungen', {
+            Datum:                form.massenPruefung.datum,
+            Ergebnis:             form.massenPruefung.ergebnis,
+            Pruefer:              form.massenPruefung.pruefer || null,
+            Notizen:              form.massenPruefung.notizen || null,
+            Ausruestungstueck_Id: a.Id,
+            Kamerad:              a.Kamerad || null,
+            Ausruestungstyp:      a.Ausruestungstyp || null,
+            Seriennummer:         a.Seriennummer || null,
+            Naechste_Pruefung:    (() => {
+              const typ = typen.value.find(t => t.Bezeichnung === a.Ausruestungstyp);
+              if (!typ?.Pruefintervall_Monate) return null;
+              const d = new Date(form.massenPruefung.datum);
+              d.setMonth(d.getMonth() + typ.Pruefintervall_Monate);
+              return d.toISOString().split('T')[0];
+            })(),
+          });
+        }));
+        await Promise.all(ids.map(id => {
+          const a = ausruestung.value.find(x => x.Id === id);
+          if (!a) return;
+          const typ = typen.value.find(t => t.Bezeichnung === a.Ausruestungstyp);
+          const update = {};
+          if (typ?.Pruefintervall_Monate) {
+            const d = new Date(form.massenPruefung.datum);
+            d.setMonth(d.getMonth() + typ.Pruefintervall_Monate);
+            update.Naechste_Pruefung = d.toISOString().split('T')[0];
+          }
+          if (form.massenPruefung.ergebnis === 'Nicht bestanden') update.Status = 'Außer Dienst';
+          if (Object.keys(update).length) return patch('Ausruestungstuecke', id, update);
+        }));
+        selectedIds.value = [];
+        modal.massenPruefung = false;
+        showToast(`${ids.length} Prüfung${ids.length > 1 ? 'en' : ''} erfasst`);
+        await fetchAll();
+      });
+    }
+
     // ── Aktionen (Ausgabe / Prüfung / Wäsche) ──
     function openAusgabe(a) {
       form.aktion = a;
@@ -1771,9 +2226,13 @@ createApp({
     async function saveAusgabe() {
       await load(async () => {
         await post('Ausgaben', {
-          Ausgabedatum:   form.ausgabe.datum,
-          Rueckgabedatum: form.ausgabe.rueckgabe || null,
-          Notizen:        form.ausgabe.notizen,
+          Ausgabedatum:         form.ausgabe.datum,
+          Rueckgabedatum:       form.ausgabe.rueckgabe || null,
+          Notizen:              form.ausgabe.notizen,
+          Ausruestungstueck_Id: form.aktion.Id,
+          Kamerad:              form.ausgabe.kamerad || null,
+          Ausruestungstyp:      form.aktion.Ausruestungstyp || null,
+          Seriennummer:         form.aktion.Seriennummer    || null,
         });
         const newStatus = form.ausgabe.kamerad ? 'Ausgegeben' : 'Lager';
         await patch('Ausruestungstuecke', form.aktion.Id, {
@@ -1786,17 +2245,41 @@ createApp({
       });
     }
 
+    function openRueckgabe(ag) {
+      form.rueckgabeAusgabe = ag;
+      form.rueckgabe = { datum: todayStr() };
+      modal.rueckgabe = true;
+    }
+
+    async function saveRueckgabe() {
+      await load(async () => {
+        await patch('Ausgaben', form.rueckgabeAusgabe.Id, {
+          Rueckgabedatum: form.rueckgabe.datum,
+        });
+        if (form.rueckgabeAusgabe.Ausruestungstueck_Id) {
+          await patch('Ausruestungstuecke', form.rueckgabeAusgabe.Ausruestungstueck_Id, {
+            Status: 'Lager',
+          });
+        }
+        modal.rueckgabe = false;
+        showToast('Rückgabe erfasst');
+        await fetchAll();
+      });
+    }
+
     function openPruefung(a) {
       form.aktion = a;
-      let naechste = '';
-      const typ = typen.value.find(t => t.Bezeichnung === a.Ausruestungstyp);
-      if (typ && typ.Pruefintervall_Monate) {
-        const d = new Date();
-        d.setMonth(d.getMonth() + typ.Pruefintervall_Monate);
-        naechste = d.toISOString().split('T')[0];
-      }
-      form.pruefung = { datum: todayStr(), ergebnis: 'Bestanden', pruefer: '', naechste, notizen: '' };
+      form.pruefung = { datum: todayStr(), ergebnis: 'Bestanden', pruefer: '', naechste: '', notizen: '' };
+      recalcNaechstePruefung();
       modal.pruefung = true;
+    }
+
+    function recalcNaechstePruefung() {
+      const typ = typen.value.find(t => t.Bezeichnung === form.aktion.Ausruestungstyp);
+      if (!typ?.Pruefintervall_Monate || !form.pruefung.datum) return;
+      const d = new Date(form.pruefung.datum);
+      d.setMonth(d.getMonth() + typ.Pruefintervall_Monate);
+      form.pruefung.naechste = d.toISOString().split('T')[0];
     }
 
     async function savePruefung() {
@@ -1853,6 +2336,11 @@ createApp({
       modal.kameradenDetail = true;
     }
 
+    function openAusruestungDetail(a) {
+      selectedAusruestung.value = a;
+      modal.ausruestungDetail = true;
+    }
+
     function ausruestungFuerKamerad(k) {
       const label = `${k.Vorname} ${k.Name}`;
       return ausruestung.value.filter(a => a.Kamerad === label);
@@ -1889,23 +2377,27 @@ createApp({
       filterVerlaufKamerad, verlaufTab,
       filterAusruestung, filterStatus, sortAusruestung, sortBy,
       modal, form,
-      selectedKamerad,
+      selectedKamerad, selectedIds, selectedAusruestung,
       kameradenliste, kameradenFiltered, typenKategorien,
       ausruestungFiltered, stats, warnungen,
-      pruefungenFiltered, waescheFiltered, ausruestungGroesseHint,
-      pruefungenByAusruestung, waescheByAusruestung,
+      pruefungenFiltered, waescheFiltered, ausgabenFiltered, ausruestungGroesseHint,
+      pruefungenByAusruestung, waescheByAusruestung, ausgabenByAusruestung,
       fmtDate, fmtDateRel, datePriority, statusBadge, typLabel, exportCSV,
       openKameradenForm, saveKamerad, deleteKamerad,
       openKameradenDetail, ausruestungFuerKamerad, letzteAktion, kameradenGroessen,
+      openAusruestungDetail,
       autoFillAusruestungDaten, autoFillLebensdauer,
       openAusruestungForm, saveAusruestung, deleteAusruestung,
       normenFuerAktuellenTyp, normenFuerTyp, onTypChange, onNormSelected,
       filterNormKategorie, normenKategorien, normenFiltered,
       openNormenForm, saveNorm, deleteNorm,
       openTypenForm, saveTyp, deleteTyp,
-      openAusgabe, saveAusgabe,
-      openPruefung, savePruefung,
+      openAusgabe, saveAusgabe, openRueckgabe, saveRueckgabe,
+      openPruefung, savePruefung, recalcNaechstePruefung,
       openWaesche, saveWaesche,
+      waeschenInfo,
+      alleAusgewaehlt, toggleSelect, toggleAlle, openMassenWaesche, saveMassenWaesche,
+      openMassenPruefung, saveMassenPruefung,
       window,
     };
   }

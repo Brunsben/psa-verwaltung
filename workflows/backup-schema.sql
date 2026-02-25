@@ -25,6 +25,7 @@ CREATE TABLE IF NOT EXISTS ausruestungstypen (
   Bezeichnung VARCHAR(255),
   Norm VARCHAR(255),
   Max_Lebensdauer_Jahre INT,
+  Max_Waeschen INT,
   Pruefintervall_Monate INT,
   Beschreibung TEXT,
   Typ VARCHAR(100),
@@ -52,7 +53,11 @@ CREATE TABLE IF NOT EXISTS ausgaben (
   UpdatedAt DATETIME,
   Ausgabedatum DATE,
   Rueckgabedatum DATE,
-  Notizen TEXT
+  Notizen TEXT,
+  Ausruestungstueck_Id INT,
+  Kamerad VARCHAR(255),
+  Ausruestungstyp VARCHAR(255),
+  Seriennummer VARCHAR(255)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS pruefungen (
@@ -78,6 +83,7 @@ CREATE TABLE IF NOT EXISTS normen (
   Beschreibung TEXT,
   Pruefintervall_Monate INT,
   Max_Lebensdauer_Jahre INT,
+  Max_Waeschen INT,
   Ausruestungstyp_Kategorie VARCHAR(100)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
