@@ -12,5 +12,6 @@ window.CONFIG = {
     Ausgaben:           'YOUR_TABLE_ID',
     Pruefungen:         'YOUR_TABLE_ID',
     Waesche:            'YOUR_TABLE_ID',
+    Normen:             'YOUR_TABLE_ID',
   }
 };

@@ -153,6 +153,16 @@ create_table "Waesche" '[
   {"title": "Seriennummer",          "uidt": "SingleLineText"}
 ]'
 
+# ─── Tabelle 7: Normen ────────────────────────────────────────────────────
+create_table "Normen" '[
+  {"title": "Bezeichnung",                "uidt": "SingleLineText"},
+  {"title": "Beschreibung",               "uidt": "LongText"},
+  {"title": "Pruefintervall_Monate",      "uidt": "Number"},
+  {"title": "Max_Lebensdauer_Jahre",      "uidt": "Number"},
+  {"title": "Ausruestungstyp_Kategorie",  "uidt": "SingleLineText"},
+  {"title": "Max_Waeschen",               "uidt": "Number"}
+]'
+
 echo ""
 echo "════════════════════════════════════════════════"
 echo "🎉 Tabellen erstellt! Base-ID: $BASE_ID"

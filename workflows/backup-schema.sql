@@ -133,6 +133,23 @@ CREATE TABLE IF NOT EXISTS waesche (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
   COMMENT='Waschprotokoll – relevant für Max_Waeschen Tracking';
 
+-- ─── 7. Normen ────────────────────────────────────────────────
+-- Synchron mit: nocodb-setup.sh Tabelle "Normen"
+CREATE TABLE IF NOT EXISTS normen (
+  Id INT PRIMARY KEY AUTO_INCREMENT,
+  CreatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+  UpdatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  Bezeichnung VARCHAR(255) NOT NULL COMMENT 'z.B. DIN EN 443:2008, DIN EN 469:2020',
+  Beschreibung TEXT DEFAULT NULL,
+  Pruefintervall_Monate INT DEFAULT NULL,
+  Max_Lebensdauer_Jahre INT DEFAULT NULL,
+  Ausruestungstyp_Kategorie VARCHAR(100) DEFAULT NULL COMMENT 'z.B. Helm, Jacke, Hose, Stiefel, Handschuh',
+  Max_Waeschen INT DEFAULT NULL COMMENT 'Maximale Waschzyklen laut Norm',
+  INDEX idx_norm_kategorie (Ausruestungstyp_Kategorie),
+  INDEX idx_norm_bezeichnung (Bezeichnung)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+  COMMENT='DIN-Normen für Ausrüstungstypen mit Prüf- und Lebensdauer-Vorgaben';
+
 SET FOREIGN_KEY_CHECKS = 1;
 
 -- ─────────────────────────────────────────────────────────────

@@ -150,6 +150,16 @@ Falls `nocodb-setup.sh` nicht funktioniert, erstelle die Tabellen in der NocoDB 
 | Ausruestungstyp | Single Line Text |
 | Seriennummer | Single Line Text |
 
+### Normen
+| Spalte | Typ |
+|---|---|
+| Bezeichnung | Single Line Text |
+| Beschreibung | Long Text |
+| Pruefintervall_Monate | Number |
+| Max_Lebensdauer_Jahre | Number |
+| Ausruestungstyp_Kategorie | Single Line Text |
+| Max_Waeschen | Number |
+
 ### Danach: `configure-frontend.sh` ausführen
 
 ```bash
