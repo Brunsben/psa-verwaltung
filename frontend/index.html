@@ -11,6 +11,7 @@
   </script>
   <script src="/vendor/vue.global.prod.js"></script>
   <script src="/config.js?v=2"></script>
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
   <style>
     [v-cloak] { display: none; }
     .fade-enter-active { transition: opacity .15s ease, transform .15s ease; }
@@ -94,9 +95,8 @@
     }
     .dark .icon-btn { color: #6b7280; }
 
-    /* Sidebar nav icons (via v-html) */
-    .nav-icon { display: block; width: 1.25rem; height: 1.25rem; flex-shrink: 0; }
-    .nav-icon svg { width: 100%; height: 100%; }
+    /* Sidebar nav icons (Phosphor icon font) */
+    .nav-icon { display: flex; align-items: center; justify-content: center; width: 1.25rem; height: 1.25rem; flex-shrink: 0; font-size: 1.25rem; }
 
     /* Print styles */
     @media print {
@@ -155,12 +155,8 @@
     <div class="p-3 border-t border-gray-100 dark:border-gray-800">
       <button @click="toggleDark"
         class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100 transition-colors">
-        <svg v-if="darkMode" class="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1.5m0 15V21m8.485-8.485l-1.06 1.06M4.575 19.425l-1.06-1.06M21 12h-1.5M4.5 12H3m15.364-6.364l-1.06 1.06M6.696 17.304l-1.06 1.06M12 7.5a4.5 4.5 0 100 9 4.5 4.5 0 000-9z" />
-        </svg>
-        <svg v-else class="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z" />
-        </svg>
+        <i v-if="darkMode" class="ph ph-sun text-xl flex-shrink-0"></i>
+        <i v-else class="ph ph-moon text-xl flex-shrink-0"></i>
         {{ darkMode ? 'Helles Design' : 'Dunkles Design' }}
       </button>
     </div>
@@ -177,9 +173,7 @@
     <header class="md:hidden sticky top-0 z-20 bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-700 px-4 flex items-center gap-3 h-14">
       <button @click="sidebarOpen = true"
         class="p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
-        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
-        </svg>
+        <i class="ph ph-list text-xl"></i>
       </button>
       <span class="font-semibold text-gray-900 dark:text-white text-sm">FF Wietmarschen · PSA</span>
     </header>
@@ -189,7 +183,7 @@
     <div v-if="toast.show"
       :class="['fixed top-4 right-4 z-50 px-4 py-3 rounded-xl shadow-2xl text-white text-sm font-medium max-w-xs flex items-center gap-2',
         toast.type === 'error' ? 'bg-red-600' : 'bg-emerald-600']">
-      <span>{{ toast.type === 'error' ? '⚠️' : '✓' }}</span>
+      <span><i :class="toast.type === 'error' ? 'ph ph-warning' : 'ph ph-check'"></i></span>
       {{ toast.msg }}
     </div>
   </transition>
@@ -197,10 +191,7 @@
   <!-- ── Loader ─────────────────────────────────────────── -->
   <div v-if="loading" class="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-40">
     <div class="bg-white dark:bg-gray-800 rounded-xl px-6 py-4 shadow-2xl text-gray-600 dark:text-gray-300 text-sm flex items-center gap-3">
-      <svg class="w-5 h-5 animate-spin text-red-600" fill="none" viewBox="0 0 24 24">
-        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
-        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
-      </svg>
+      <i class="ph ph-spinner-gap text-xl text-red-600 animate-spin"></i>
       Lade…
     </div>
   </div>
@@ -228,7 +219,7 @@
             <div class="text-xs font-medium text-gray-500 dark:text-gray-400 mt-0.5">Kameraden aktiv</div>
           </div>
           <div class="w-10 h-10 rounded-xl bg-red-50 dark:bg-red-900/20 flex items-center justify-center flex-shrink-0">
-            <svg class="w-5 h-5 text-red-500 dark:text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" /></svg>
+            <i class="ph ph-users-three text-xl text-red-500 dark:text-red-400"></i>
           </div>
         </div>
         <div class="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm border border-gray-100 dark:border-gray-700 flex items-center justify-between gap-3">
@@ -237,7 +228,7 @@
             <div class="text-xs font-medium text-gray-500 dark:text-gray-400 mt-0.5">Ausrüstungsstücke</div>
           </div>
           <div class="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center flex-shrink-0">
-            <svg class="w-5 h-5 text-blue-500 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" /></svg>
+            <i class="ph ph-t-shirt text-xl text-blue-500 dark:text-blue-400"></i>
           </div>
         </div>
         <div class="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm border border-gray-100 dark:border-gray-700 flex items-center justify-between gap-3">
@@ -246,7 +237,7 @@
             <div class="text-xs font-medium text-gray-500 dark:text-gray-400 mt-0.5">Prüfungen ≤ 30 Tage</div>
           </div>
           <div class="w-10 h-10 rounded-xl bg-orange-50 dark:bg-orange-900/20 flex items-center justify-center flex-shrink-0">
-            <svg class="w-5 h-5 text-orange-500 dark:text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            <i class="ph ph-warning text-xl text-orange-500 dark:text-orange-400"></i>
           </div>
         </div>
         <div class="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm border border-gray-100 dark:border-gray-700 flex items-center justify-between gap-3">
@@ -255,7 +246,7 @@
             <div class="text-xs font-medium text-gray-500 dark:text-gray-400 mt-0.5">Ausgegeben</div>
           </div>
           <div class="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center flex-shrink-0">
-            <svg class="w-5 h-5 text-indigo-500 dark:text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" /></svg>
+            <i class="ph ph-sign-out text-xl text-indigo-500 dark:text-indigo-400"></i>
           </div>
         </div>
       </div>
@@ -276,7 +267,7 @@
         </div>
       </div>
       <div v-else class="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-xl p-4 text-emerald-700 dark:text-emerald-400 text-sm flex items-center gap-2">
-        <span class="text-lg">✅</span>
+        <i class="ph ph-check-circle text-lg"></i>
         Keine dringenden Meldungen
       </div>
     </section>
@@ -342,10 +333,10 @@
               <td class="px-4 py-2">
                 <div class="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                   <button @click.stop="openKameradenForm(k)" title="Bearbeiten" class="icon-btn hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 dark:hover:text-blue-400">
-                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" /></svg>
+                    <i class="ph ph-pencil-simple text-base"></i>
                   </button>
                   <button @click.stop="deleteKamerad(k)" title="Löschen" class="icon-btn hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 dark:hover:text-red-400">
-                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" /></svg>
+                    <i class="ph ph-trash text-base"></i>
                   </button>
                 </div>
               </td>
@@ -432,19 +423,19 @@
               <td class="px-4 py-2">
                 <div class="flex items-center justify-end gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
                   <button @click="openAusgabe(a)" title="Ausgabe / Rückgabe" class="icon-btn hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 dark:hover:text-blue-400">
-                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" /></svg>
+                    <i class="ph ph-sign-out text-base"></i>
                   </button>
                   <button @click="openPruefung(a)" title="Prüfung erfassen" class="icon-btn hover:text-orange-500 hover:bg-orange-50 dark:hover:bg-orange-900/20 dark:hover:text-orange-400">
-                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11.35 3.836c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m8.9-4.414c.376.023.75.05 1.124.08 1.131.094 1.976 1.057 1.976 2.192V16.5A2.25 2.25 0 0118 18.75h-2.25m-7.5-10.5H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V18.75m-7.5-10.5h6.375c.621 0 1.125.504 1.125 1.125v9.375m-8.25-3l1.5 1.5 3-3.75" /></svg>
+                    <i class="ph ph-clipboard-text text-base"></i>
                   </button>
                   <button @click="openWaesche(a)" title="Wäsche erfassen" class="icon-btn hover:text-teal-600 hover:bg-teal-50 dark:hover:bg-teal-900/20 dark:hover:text-teal-400">
-                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" /></svg>
+                    <i class="ph ph-washing-machine text-base"></i>
                   </button>
                   <button @click="openAusruestungForm(a)" title="Bearbeiten" class="icon-btn hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 dark:hover:text-blue-400">
-                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" /></svg>
+                    <i class="ph ph-pencil-simple text-base"></i>
                   </button>
                   <button @click="deleteAusruestung(a)" title="Löschen" class="icon-btn hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 dark:hover:text-red-400">
-                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" /></svg>
+                    <i class="ph ph-trash text-base"></i>
                   </button>
                 </div>
               </td>
@@ -481,18 +472,18 @@
             </div>
             <div class="flex gap-1 ml-4 flex-shrink-0">
               <button @click="openTypenForm(t)" title="Bearbeiten" class="icon-btn hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 dark:hover:text-blue-400">
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" /></svg>
+                <i class="ph ph-pencil-simple text-base"></i>
               </button>
               <button @click="deleteTyp(t)" title="Löschen" class="icon-btn hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 dark:hover:text-red-400">
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" /></svg>
+                <i class="ph ph-trash text-base"></i>
               </button>
             </div>
           </div>
           <div class="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700 flex gap-5 text-xs text-gray-500 dark:text-gray-400 flex-wrap">
-            <span>⏱ <strong class="text-gray-700 dark:text-gray-300">{{ t.Max_Lebensdauer_Jahre || '–' }}</strong> J. Lebensdauer</span>
-            <span>🔍 <strong class="text-gray-700 dark:text-gray-300">{{ t.Pruefintervall_Monate || '–' }}</strong> Mon. Prüfintervall</span>
+            <span><i class="ph ph-hourglass"></i> <strong class="text-gray-700 dark:text-gray-300">{{ t.Max_Lebensdauer_Jahre || '–' }}</strong> J. Lebensdauer</span>
+            <span><i class="ph ph-magnifying-glass"></i> <strong class="text-gray-700 dark:text-gray-300">{{ t.Pruefintervall_Monate || '–' }}</strong> Mon. Prüfintervall</span>
             <span v-if="t.Typ && normenFuerTyp(t.Typ).length" class="text-blue-500 dark:text-blue-400">
-              📋 <strong>{{ normenFuerTyp(t.Typ).length }}</strong> Norm{{ normenFuerTyp(t.Typ).length > 1 ? 'en' : '' }}
+              <i class="ph ph-seal-check"></i> <strong>{{ normenFuerTyp(t.Typ).length }}</strong> Norm{{ normenFuerTyp(t.Typ).length > 1 ? 'en' : '' }}
             </span>
           </div>
           <div v-if="t.Beschreibung" class="mt-2 text-xs text-gray-400 dark:text-gray-500 italic">{{ t.Beschreibung }}</div>
@@ -522,14 +513,14 @@
               verlaufTab === 'pruefungen'
                 ? 'bg-white dark:bg-gray-700 text-red-700 dark:text-red-400 shadow-sm'
                 : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100']">
-            🔍 Prüfungen ({{ pruefungenFiltered.length }})
+            <i class="ph ph-clipboard-text"></i> Prüfungen ({{ pruefungenFiltered.length }})
           </button>
           <button @click="verlaufTab = 'waesche'"
             :class="['px-3 py-1.5 rounded-md text-sm font-medium transition-colors',
               verlaufTab === 'waesche'
                 ? 'bg-white dark:bg-gray-700 text-red-700 dark:text-red-400 shadow-sm'
                 : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100']">
-            🧺 Wäschen ({{ waescheFiltered.length }})
+            <i class="ph ph-washing-machine"></i> Wäschen ({{ waescheFiltered.length }})
           </button>
         </div>
         <select v-model="filterVerlaufKamerad"
@@ -660,10 +651,10 @@
               <td class="px-4 py-3">
                 <div class="flex gap-1 justify-end">
                   <button @click="openNormenForm(n)" title="Bearbeiten" class="icon-btn hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 dark:hover:text-blue-400">
-                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" /></svg>
+                    <i class="ph ph-pencil-simple text-base"></i>
                   </button>
                   <button @click="deleteNorm(n)" title="Löschen" class="icon-btn hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 dark:hover:text-red-400">
-                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" /></svg>
+                    <i class="ph ph-trash text-base"></i>
                   </button>
                 </div>
               </td>
@@ -881,7 +872,7 @@
             <option v-for="k in kameradenliste" :key="k.Id" :value="k.label">{{ k.label }}</option>
           </select>
           <div v-if="ausruestungGroesseHint" class="mt-1.5 flex items-center gap-1.5 text-xs bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 px-3 py-1.5 rounded-lg">
-            <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <i class="ph ph-info text-sm flex-shrink-0"></i>
             Bekannte Größe ({{ ausruestungGroesseHint.label }}): <strong>{{ ausruestungGroesseHint.val || '–' }}</strong>
           </div>
         </div>
@@ -999,9 +990,7 @@
         </div>
         <div class="flex gap-2">
           <button @click="window.print()" class="btn-secondary text-xs no-print">
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0110.56 0m-10.56 0L6.75 19.5m.72-5.671L6.75 19.5m0 0a42.417 42.417 0 0110.5 0m0 0L17.25 13.829m0 5.671a42.417 42.417 0 00-10.5 0"/>
-            </svg>
+            <i class="ph ph-printer text-base"></i>
             Drucken
           </button>
         </div>
@@ -1192,18 +1181,12 @@ createApp({
     }
 
     const pages = [
-      { id: 'dashboard',  label: 'Dashboard',
-        icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" /></svg>' },
-      { id: 'kameraden',  label: 'Kameraden',
-        icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" /></svg>' },
-      { id: 'ausruestung', label: 'Ausrüstung',
-        icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" /></svg>' },
-      { id: 'typen',      label: 'Typen',
-        icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" /><path stroke-linecap="round" stroke-linejoin="round" d="M6 6h.008v.008H6V6z" /></svg>' },
-      { id: 'verlauf',    label: 'Verlauf',
-        icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" /></svg>' },
-      { id: 'normen',     label: 'Normen',
-        icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z" /></svg>' },
+      { id: 'dashboard',   label: 'Dashboard',   icon: '<i class="ph ph-gauge"></i>' },
+      { id: 'kameraden',   label: 'Kameraden',   icon: '<i class="ph ph-users-three"></i>' },
+      { id: 'ausruestung', label: 'Ausrüstung',  icon: '<i class="ph ph-t-shirt"></i>' },
+      { id: 'typen',       label: 'Typen',        icon: '<i class="ph ph-tag"></i>' },
+      { id: 'verlauf',     label: 'Verlauf',      icon: '<i class="ph ph-clock-counter-clockwise"></i>' },
+      { id: 'normen',      label: 'Normen',       icon: '<i class="ph ph-seal-check"></i>' },
     ];
 
     // Data
