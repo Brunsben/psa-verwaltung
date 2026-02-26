@@ -1769,7 +1769,7 @@
 
 
 <script>
-const { createApp, ref, reactive, computed, onMounted } = Vue;
+const { createApp, ref, reactive, computed, onMounted, watch } = Vue;
 
 if (!window.CONFIG) {
   throw new Error('config.js nicht geladen. Bitte setup/configure-frontend.sh ausführen.');
@@ -3260,6 +3260,13 @@ createApp({
     }
 
     onMounted(fetchAll);
+
+    // Charts neu rendern wenn Statistiken- oder Dashboard-Seite geöffnet wird
+    watch(page, (newPage) => {
+      if (newPage === 'statistiken' || newPage === 'dashboard') {
+        Vue.nextTick(() => renderCharts());
+      }
+    });
 
     // ── Login aus localStorage wiederherstellen ──
     const savedUser = localStorage.getItem('psa_user');
