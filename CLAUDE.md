@@ -66,6 +66,8 @@ Located in `~/.claude/skills/`:
 | Pruefungen | `mkb11hw0mzcib6y` |
 | Waesche | `m38ul9qugdihrhx` |
 | Normen | `mrgq8jsdlaqg1r9` |
+| Benutzer | `mv1i1ofa9j09jqf` |
+| Changelog | `m8dlu49dv8wf8uo` |
 
 > Cloudflare Tunnel läuft als Systemdienst auf dem Pi (`sudo systemctl status cloudflared`). Startet automatisch nach Neustart.
 
