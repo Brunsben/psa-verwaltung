@@ -1,5 +1,5 @@
 // PSA-Verwaltung Service Worker – Offline-Cache
-const CACHE_NAME = 'psa-v2';
+const CACHE_NAME = 'psa-v3';
 const ASSETS = [
   '/',
   '/index.html',
