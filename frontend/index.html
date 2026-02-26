@@ -2457,6 +2457,8 @@ createApp({
       ])) return;
       await load(async () => {
         const { Id } = form.ausruestung;
+        const oldKamerad = Id ? (ausruestung.value.find(x => x.Id === Id)?.Kamerad || '') : '';
+        const newKamerad = form.ausruestung.Kamerad || '';
         const payload = {
           Ausruestungstyp:   form.ausruestung.Ausruestungstyp   || null,
           Kamerad:           form.ausruestung.Kamerad            || null,
@@ -2468,8 +2470,19 @@ createApp({
           Status:            form.ausruestung.Status             || 'Lager',
           Notizen:           form.ausruestung.Notizen            || null,
         };
+        let savedId = Id;
         if (Id) await patch('Ausruestungstuecke', Id, payload);
-        else    await post('Ausruestungstuecke', payload);
+        else { const r = await post('Ausruestungstuecke', payload); savedId = r?.Id || null; }
+        // Ausgabe automatisch tracken wenn Kamerad sich geändert hat
+        if (newKamerad !== oldKamerad) {
+          await post('Ausgaben', {
+            Ausgabedatum:         todayStr(),
+            Kamerad:              newKamerad || null,
+            Ausruestungstyp:      form.ausruestung.Ausruestungstyp || null,
+            Seriennummer:         form.ausruestung.Seriennummer    || null,
+            Ausruestungstueck_Id: savedId || null,
+          });
+        }
         modal.ausruestungForm = false;
         showToast('Ausrüstung gespeichert');
         logChange('Ausrüstung', Id ? 'Bearbeitet' : 'Erstellt', `${form.ausruestung.Ausruestungstyp} (${form.ausruestung.Seriennummer})`);
