@@ -140,6 +140,7 @@ create_table "Pruefungen" '[
   {"title": "Pruefer",               "uidt": "SingleLineText"},
   {"title": "Naechste_Pruefung",     "uidt": "Date"},
   {"title": "Notizen",               "uidt": "LongText"},
+  {"title": "Foto",                  "uidt": "LongText"},
   {"title": "Ausruestungstueck_Id",  "uidt": "Number"},
   {"title": "Kamerad",               "uidt": "SingleLineText"},
   {"title": "Ausruestungstyp",       "uidt": "SingleLineText"},
@@ -165,6 +166,24 @@ create_table "Normen" '[
   {"title": "Max_Lebensdauer_Jahre",      "uidt": "Number"},
   {"title": "Ausruestungstyp_Kategorie",  "uidt": "SingleLineText"},
   {"title": "Max_Waeschen",               "uidt": "Number"}
+]'
+
+# ─── Tabelle 8: Benutzer ──────────────────────────────────────────────────
+create_table "Benutzer" '[
+  {"title": "Benutzername",  "uidt": "SingleLineText"},
+  {"title": "PIN",           "uidt": "SingleLineText"},
+  {"title": "Rolle",         "uidt": "SingleLineText"},
+  {"title": "Aktiv",         "uidt": "Checkbox"}
+]'
+
+# ─── Tabelle 9: Changelog ─────────────────────────────────────────────────
+create_table "Changelog" '[
+  {"title": "Zeitpunkt",     "uidt": "DateTime"},
+  {"title": "Benutzer",      "uidt": "SingleLineText"},
+  {"title": "Tabelle",       "uidt": "SingleLineText"},
+  {"title": "Aktion",        "uidt": "SingleLineText"},
+  {"title": "Details",        "uidt": "LongText"},
+  {"title": "Datensatz_Id",  "uidt": "Number"}
 ]'
 
 echo ""

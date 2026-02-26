@@ -3,6 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#dc2626" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="PSA-Verwaltung" />
+  <link rel="manifest" href="/manifest.json" />
   <title>PSA-Verwaltung – FF Wietmarschen</title>
   <script src="/vendor/tailwind.cdn.js"></script>
   <script>
@@ -12,6 +17,12 @@
   <script src="/vendor/vue.global.prod.js"></script>
   <script src="/config.js?v=2"></script>
   <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+  <!-- Chart.js für Dashboard-Statistiken -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+  <!-- jsPDF für PDF-Export -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js"></script>
+  <!-- html5-qrcode für QR-Scanner -->
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
   <style>
     [v-cloak] { display: none; }
     .fade-enter-active { transition: opacity .15s ease, transform .15s ease; }
@@ -128,6 +139,33 @@
 
 <div id="app" v-cloak>
 
+  <!-- ── Login Screen ────────────────────────────────────── -->
+  <div v-if="!loggedIn" class="fixed inset-0 z-50 bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 w-full max-w-sm border border-gray-100 dark:border-gray-700">
+      <div class="text-center mb-6">
+        <span class="text-4xl">🔥</span>
+        <h1 class="text-xl font-bold text-gray-900 dark:text-white mt-2">FF Wietmarschen</h1>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">PSA-Verwaltung</p>
+      </div>
+      <div class="grid gap-3">
+        <div>
+          <label class="label">Benutzername</label>
+          <input v-model="loginForm.username" class="input" placeholder="Benutzername" @keyup.enter="doLogin" />
+        </div>
+        <div>
+          <label class="label">PIN / Passwort</label>
+          <input v-model="loginForm.pin" type="password" class="input" placeholder="••••" @keyup.enter="doLogin" />
+        </div>
+        <div v-if="loginForm.error" class="text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 rounded-lg px-3 py-2">
+          {{ loginForm.error }}
+        </div>
+        <button @click="doLogin" class="btn-primary w-full justify-center mt-2" :disabled="loading">
+          <i class="ph ph-sign-in"></i> Anmelden
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- ── Sidebar ─────────────────────────────────────────── -->
   <aside :class="['fixed inset-y-0 left-0 z-40 w-56 bg-white dark:bg-gray-900 border-r border-gray-100 dark:border-gray-700 flex flex-col transition-transform duration-300 ease-in-out',
     sidebarOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full md:translate-x-0']">
@@ -156,12 +194,29 @@
       </button>
     </nav>
     <!-- Dark-mode toggle -->
-    <div class="p-3 border-t border-gray-100 dark:border-gray-800">
+    <div class="p-3 border-t border-gray-100 dark:border-gray-800 space-y-0.5">
+      <!-- QR Scanner Button -->
+      <button @click="modal.qrScanner = true; startQrScanner()"
+        class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100 transition-colors">
+        <i class="ph ph-qr-code text-xl flex-shrink-0"></i>
+        QR-Scanner
+      </button>
       <button @click="toggleDark"
         class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100 transition-colors">
         <i v-if="darkMode" class="ph ph-sun text-xl flex-shrink-0"></i>
         <i v-else class="ph ph-moon text-xl flex-shrink-0"></i>
         {{ darkMode ? 'Helles Design' : 'Dunkles Design' }}
+      </button>
+      <!-- Benutzer + Logout -->
+      <div class="flex items-center gap-2 px-3 py-2 text-xs text-gray-400 dark:text-gray-500 mt-1">
+        <i class="ph ph-user-circle text-base"></i>
+        <span class="truncate flex-1">{{ currentUser?.Benutzername || '–' }}</span>
+        <span v-if="currentUser?.Rolle" class="text-xs bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 px-1.5 py-0.5 rounded font-semibold">{{ currentUser.Rolle }}</span>
+      </div>
+      <button @click="doLogout"
+        class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-gray-500 dark:text-gray-400 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400 transition-colors">
+        <i class="ph ph-sign-out text-lg flex-shrink-0"></i>
+        Abmelden
       </button>
     </div>
   </aside>
@@ -308,6 +363,18 @@
         <div>
           <div class="font-semibold">Alles in Ordnung</div>
           <div class="text-xs mt-0.5 opacity-75">Keine Prüfungen, Lebensdaten oder Waschlimits überfällig.</div>
+        </div>
+      </div>
+
+      <!-- Dashboard-Charts -->
+      <div v-if="ausruestung.length" class="mt-6 grid md:grid-cols-2 gap-6">
+        <div class="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm border border-gray-100 dark:border-gray-700">
+          <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Status-Verteilung</h3>
+          <canvas id="chartStatus" height="200"></canvas>
+        </div>
+        <div class="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm border border-gray-100 dark:border-gray-700">
+          <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Prüfungen (letzte 12 Monate)</h3>
+          <canvas id="chartPruefungen" height="200"></canvas>
         </div>
       </div>
     </section>
@@ -802,6 +869,73 @@
       </div>
     </section>
 
+    <!-- ══ STATISTIKEN ═══════════════════════════════════ -->
+    <section v-if="page === 'statistiken'">
+      <div class="mb-5">
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Statistiken</h1>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Übersicht & Auswertungen</p>
+      </div>
+      <div class="grid md:grid-cols-2 gap-6">
+        <div class="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm border border-gray-100 dark:border-gray-700">
+          <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Status-Verteilung</h3>
+          <canvas id="chartStatusPage" height="260"></canvas>
+        </div>
+        <div class="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm border border-gray-100 dark:border-gray-700">
+          <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Prüfungen pro Monat</h3>
+          <canvas id="chartPruefungenPage" height="260"></canvas>
+        </div>
+        <div class="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm border border-gray-100 dark:border-gray-700">
+          <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Ausrüstung pro Typ-Kategorie</h3>
+          <canvas id="chartTypen" height="260"></canvas>
+        </div>
+        <div class="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm border border-gray-100 dark:border-gray-700">
+          <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Wäschen pro Monat</h3>
+          <canvas id="chartWaeschen" height="260"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ CHANGELOG ════════════════════════════════════ -->
+    <section v-if="page === 'changelog'">
+      <div class="mb-5">
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Änderungsprotokoll</h1>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">{{ changelog.length }} Einträge</p>
+      </div>
+      <div class="mb-4 flex gap-3 flex-wrap items-center">
+        <select v-model="filterChangelog" class="input max-w-xs">
+          <option value="">Alle Aktionen</option>
+          <option>Erstellt</option>
+          <option>Bearbeitet</option>
+          <option>Gelöscht</option>
+        </select>
+      </div>
+      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+        <div v-if="changelogFiltered.length" class="divide-y divide-gray-50 dark:divide-gray-700">
+          <div v-for="c in changelogFiltered" :key="c.Id" class="px-5 py-3 flex items-start gap-3">
+            <i :class="['text-lg flex-shrink-0 mt-0.5',
+              c.Aktion === 'Erstellt' ? 'ph ph-plus-circle text-emerald-500' :
+              c.Aktion === 'Gelöscht' ? 'ph ph-trash text-red-500' :
+              'ph ph-pencil-simple text-blue-500']"></i>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="text-sm font-semibold text-gray-800 dark:text-gray-100">{{ c.Tabelle }}</span>
+                <span :class="['text-xs px-1.5 py-0.5 rounded font-semibold',
+                  c.Aktion === 'Erstellt' ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400' :
+                  c.Aktion === 'Gelöscht' ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400' :
+                  'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400']">{{ c.Aktion }}</span>
+              </div>
+              <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{ c.Details || '' }}</div>
+            </div>
+            <div class="text-right flex-shrink-0">
+              <div class="text-xs text-gray-500 dark:text-gray-400">{{ fmtDate(c.Zeitpunkt) }}</div>
+              <div class="text-xs text-gray-400 dark:text-gray-500">{{ c.Benutzer || '–' }}</div>
+            </div>
+          </div>
+        </div>
+        <div v-else class="px-5 py-10 text-center text-gray-400 dark:text-gray-500 text-sm">Keine Änderungen protokolliert</div>
+      </div>
+    </section>
+
     </div>
     </transition>
 
@@ -1105,9 +1239,17 @@
             <option value="">– Rückgabe (kein Kamerad) –</option>
             <option v-for="k in kameradenliste" :key="k.Id" :value="k.label">{{ k.label }}</option>
           </select>
-          <div v-if="ausruestungGroesseHint" class="mt-1.5 flex items-center gap-1.5 text-xs bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 px-3 py-1.5 rounded-lg">
-            <i class="ph ph-info text-sm flex-shrink-0"></i>
-            Bekannte Größe ({{ ausruestungGroesseHint.label }}): <strong>{{ ausruestungGroesseHint.val || '–' }}</strong>
+          <div v-if="ausruestungGroesseHint" class="mt-1.5 flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg"
+            :class="ausruestungGroesseHint.mismatch
+              ? 'bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-300 border border-orange-200 dark:border-orange-800'
+              : 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300'">
+            <i :class="ausruestungGroesseHint.mismatch ? 'ph ph-warning text-sm flex-shrink-0' : 'ph ph-info text-sm flex-shrink-0'"></i>
+            <span v-if="ausruestungGroesseHint.mismatch">
+              ⚠ Größe des Ausrüstungsstücks weicht ab! Bekannt ({{ ausruestungGroesseHint.label }}): <strong>{{ ausruestungGroesseHint.val || '–' }}</strong>
+            </span>
+            <span v-else>
+              Bekannte Größe ({{ ausruestungGroesseHint.label }}): <strong>{{ ausruestungGroesseHint.val || '–' }}</strong>
+            </span>
           </div>
         </div>
         <div class="grid grid-cols-2 gap-3">
@@ -1163,6 +1305,26 @@
         <div>
           <label class="label">Notizen</label>
           <textarea v-model="form.pruefung.notizen" rows="2" class="input resize-none"></textarea>
+        </div>
+        <!-- Foto-Upload -->
+        <div>
+          <label class="label">Foto (optional)</label>
+          <div class="flex gap-2">
+            <label class="btn-secondary cursor-pointer flex items-center gap-1.5 text-xs flex-1 justify-center">
+              <i class="ph ph-camera"></i> Foto aufnehmen
+              <input type="file" accept="image/*" capture="environment" @change="onPruefungFoto" class="hidden" />
+            </label>
+            <label class="btn-secondary cursor-pointer flex items-center gap-1.5 text-xs flex-1 justify-center">
+              <i class="ph ph-image"></i> Datei wählen
+              <input type="file" accept="image/*" @change="onPruefungFoto" class="hidden" />
+            </label>
+          </div>
+          <div v-if="form.pruefung.foto" class="mt-2 relative">
+            <img :src="form.pruefung.foto" class="w-full max-h-40 object-cover rounded-lg border border-gray-200 dark:border-gray-600" />
+            <button @click="form.pruefung.foto = ''" class="absolute top-1 right-1 bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-700">
+              <i class="ph ph-x"></i>
+            </button>
+          </div>
         </div>
       </div>
       <div class="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-100 dark:border-gray-700">
@@ -1387,6 +1549,9 @@
             <span class="text-gray-500 dark:text-gray-400">{{ p.Pruefer || '' }}</span>
             <span v-if="p.Notizen" class="ml-auto text-xs text-gray-400 truncate max-w-32">{{ p.Notizen }}</span>
           </div>
+          <div v-if="p.Foto" class="mt-1.5">
+            <img :src="p.Foto" class="w-full max-h-24 object-cover rounded-lg border border-gray-200 dark:border-gray-600 cursor-pointer hover:opacity-90" @click="window.open(p.Foto, '_blank')" title="Foto vergrößern" />
+          </div>
         </div>
         <div v-else class="text-xs text-gray-400 dark:text-gray-500 pl-1">Keine Prüfungen</div>
       </div>
@@ -1444,6 +1609,10 @@
           </span>
         </div>
         <div class="flex gap-2">
+          <button @click="exportPDF(selectedKamerad)" class="btn-secondary text-xs no-print">
+            <i class="ph ph-file-pdf text-base"></i>
+            PDF Export
+          </button>
           <button @click="window.print()" class="btn-secondary text-xs no-print">
             <i class="ph ph-printer text-base"></i>
             Drucken
@@ -1576,6 +1745,26 @@
     </div>
   </div>
 
+  <!-- QR-Scanner Modal -->
+  <div v-if="modal.qrScanner" class="modal-backdrop" @click.self="stopQrScanner">
+    <div class="modal-box max-w-md">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-bold">QR-Code scannen</h2>
+        <button @click="stopQrScanner" class="icon-btn"><i class="ph ph-x text-xl"></i></button>
+      </div>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mb-3">Richte die Kamera auf den QR-Code eines Ausrüstungsstücks.</p>
+      <div id="qr-reader" class="rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700"></div>
+      <div v-if="qrResult" class="mt-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg px-3 py-2 text-sm text-emerald-700 dark:text-emerald-400 flex items-center gap-2">
+        <i class="ph ph-check-circle"></i>
+        <span>Gefunden: <strong>{{ qrResult }}</strong></span>
+      </div>
+      <div v-if="qrError" class="mt-3 bg-red-50 dark:bg-red-900/20 rounded-lg px-3 py-2 text-sm text-red-700 dark:text-red-400 flex items-center gap-2">
+        <i class="ph ph-warning"></i>
+        <span>{{ qrError }}</span>
+      </div>
+    </div>
+  </div>
+
 </div><!-- #app -->
 
 
@@ -1687,6 +1876,8 @@ createApp({
       { id: 'verlauf',     label: 'Verlauf',      icon: '<i class="ph ph-clock-counter-clockwise"></i>' },
       { id: 'normen',      label: 'Normen',       icon: '<i class="ph ph-seal-check"></i>' },
       { id: 'warnungen',   label: 'Warnungen',    icon: '<i class="ph ph-bell-ringing"></i>' },
+      { id: 'statistiken', label: 'Statistiken',  icon: '<i class="ph ph-chart-bar"></i>' },
+      { id: 'changelog',   label: 'Changelog',    icon: '<i class="ph ph-clock-counter-clockwise"></i>' },
     ];
 
     // Data
@@ -1697,6 +1888,21 @@ createApp({
     const pruefungen   = ref([]);
     const waescheListe = ref([]);
     const normen       = ref([]);
+    const changelog    = ref([]);
+    const benutzer     = ref([]);
+
+    // Login / Auth
+    const loggedIn    = ref(!!localStorage.getItem('psa_user'));
+    const currentUser = ref(JSON.parse(localStorage.getItem('psa_user') || 'null'));
+    const loginForm   = reactive({ username: '', pin: '', error: '' });
+
+    // QR Scanner
+    const qrResult = ref('');
+    const qrError  = ref('');
+    let qrScanner  = null;
+
+    // Changelog Filter
+    const filterChangelog = ref('');
 
     // Filter + Sortierung (Ausrüstungstabelle)
     const filterAusruestung = ref('');
@@ -1718,6 +1924,7 @@ createApp({
       typForm: false, ausgabe: false, pruefung: false, waesche: false,
       kameradenDetail: false, normenForm: false, massenWaesche: false, massenPruefung: false, rueckgabe: false, ausruestungDetail: false,
       csvImport: false,
+      qrScanner: false,
     });
 
     // Form state
@@ -1760,6 +1967,8 @@ createApp({
           getAll('Pruefungen'),
           getAll('Waesche'),
           getAll('Normen'),
+          TABLES.Changelog ? getAll('Changelog') : Promise.resolve([]),
+          TABLES.Benutzer ? getAll('Benutzer') : Promise.resolve([]),
         ]);
         const val = (i) => results[i].status === 'fulfilled' ? results[i].value : [];
         kameraden.value    = val(0);
@@ -1769,6 +1978,11 @@ createApp({
         pruefungen.value   = val(4);
         waescheListe.value = val(5);
         normen.value       = val(6);
+        changelog.value    = val(7);
+        benutzer.value     = val(8);
+
+        // Charts rendern nach Datenlade
+        Vue.nextTick(() => renderCharts());
       });
     }
 
@@ -1902,7 +2116,12 @@ createApp({
         'Poloshirt':      { label: 'Poloshirt',     val: k.Poloshirt_Groesse },
         'Fleece/Softshell': { label: 'Fleece',      val: k.Fleece_Groesse },
       };
-      return map[kat] || null;
+      const hint = map[kat] || null;
+      if (!hint) return null;
+      // Prüfe ob die Größe des Ausrüstungsstücks von der bekannten Größe abweicht
+      const ausrGroesse = form.aktion?.Groesse || form.aktion?.Seriennummer || '';
+      const mismatch = hint.val && ausrGroesse && !ausrGroesse.toString().toLowerCase().includes(hint.val.toString().toLowerCase());
+      return { ...hint, mismatch };
     });
 
     // Datum-Schwellwerte (einmalig beim App-Start berechnet)
@@ -2177,6 +2396,7 @@ createApp({
 
         modal.kameradenForm = false;
         showToast('Kamerad gespeichert');
+        logChange('Kameraden', Id ? 'Bearbeitet' : 'Erstellt', `${form.kamerad.Vorname} ${form.kamerad.Name}`);
         await fetchAll();
       });
     }
@@ -2191,6 +2411,7 @@ createApp({
       await load(async () => {
         await del('Kameraden', k.Id);
         showToast('Gelöscht');
+        logChange('Kameraden', 'Gelöscht', label);
         await fetchAll();
       });
     }
@@ -2251,6 +2472,7 @@ createApp({
         else    await post('Ausruestungstuecke', payload);
         modal.ausruestungForm = false;
         showToast('Ausrüstung gespeichert');
+        logChange('Ausrüstung', Id ? 'Bearbeitet' : 'Erstellt', `${form.ausruestung.Ausruestungstyp} (${form.ausruestung.Seriennummer})`);
         await fetchAll();
       });
     }
@@ -2260,6 +2482,7 @@ createApp({
       await load(async () => {
         await del('Ausruestungstuecke', a.Id);
         showToast('Gelöscht');
+        logChange('Ausrüstung', 'Gelöscht', `${a.Ausruestungstyp} (${a.Seriennummer})`);
         await fetchAll();
       });
     }
@@ -2317,6 +2540,7 @@ createApp({
         else    await post('Normen', payload);
         modal.normenForm = false;
         showToast('Norm gespeichert');
+        logChange('Normen', Id ? 'Bearbeitet' : 'Erstellt', form.norm.Bezeichnung);
         await fetchAll();
       });
     }
@@ -2326,6 +2550,7 @@ createApp({
       await load(async () => {
         await del('Normen', n.Id);
         showToast('Gelöscht');
+        logChange('Normen', 'Gelöscht', n.Bezeichnung);
         await fetchAll();
       });
     }
@@ -2371,6 +2596,7 @@ createApp({
 
         modal.typForm = false;
         showToast('Typ gespeichert');
+        logChange('Typen', Id ? 'Bearbeitet' : 'Erstellt', form.typ.Bezeichnung);
         await fetchAll();
       });
     }
@@ -2384,6 +2610,7 @@ createApp({
       await load(async () => {
         await del('Ausruestungstypen', t.Id);
         showToast('Gelöscht');
+        logChange('Typen', 'Gelöscht', t.Bezeichnung);
         await fetchAll();
       });
     }
@@ -2519,6 +2746,7 @@ createApp({
         });
         modal.ausgabe = false;
         showToast(`Ausgabe gespeichert · Status: ${newStatus}`);
+        logChange('Ausgaben', 'Erstellt', `${form.aktion.Ausruestungstyp} → ${form.ausgabe.kamerad || 'Lager'}`);
         await fetchAll();
       });
     }
@@ -2541,13 +2769,14 @@ createApp({
         }
         modal.rueckgabe = false;
         showToast('Rückgabe erfasst');
+        logChange('Ausgaben', 'Bearbeitet', `Rückgabe: ${form.rueckgabeAusgabe.Ausruestungstyp || form.rueckgabeAusgabe.Seriennummer}`);
         await fetchAll();
       });
     }
 
     function openPruefung(a) {
       form.aktion = a;
-      form.pruefung = { datum: todayStr(), ergebnis: 'Bestanden', pruefer: '', naechste: '', notizen: '' };
+      form.pruefung = { datum: todayStr(), ergebnis: 'Bestanden', pruefer: '', naechste: '', notizen: '', foto: '' };
       recalcNaechstePruefung();
       modal.pruefung = true;
     }
@@ -2568,6 +2797,7 @@ createApp({
           Pruefer:              form.pruefung.pruefer,
           Naechste_Pruefung:    form.pruefung.naechste,
           Notizen:              form.pruefung.notizen,
+          Foto:                 form.pruefung.foto || null,
           Ausruestungstueck_Id: form.aktion.Id,
           Kamerad:              form.aktion.Kamerad      || null,
           Ausruestungstyp:      form.aktion.Ausruestungstyp || null,
@@ -2578,6 +2808,7 @@ createApp({
         await patch('Ausruestungstuecke', form.aktion.Id, update);
         modal.pruefung = false;
         showToast('Prüfung gespeichert');
+        logChange('Prüfungen', 'Erstellt', `${form.aktion.Ausruestungstyp}: ${form.pruefung.ergebnis}`);
         await fetchAll();
       });
     }
@@ -2604,6 +2835,7 @@ createApp({
         }
         modal.waesche = false;
         showToast('Wäsche erfasst');
+        logChange('Wäsche', 'Erstellt', `${form.aktion.Ausruestungstyp} (${form.waesche.art})`);
         await fetchAll();
       });
     }
@@ -2645,7 +2877,390 @@ createApp({
       ];
     }
 
+    // ── Changelog Computed ──
+    const changelogFiltered = computed(() => {
+      let list = [...changelog.value].sort((a, b) => new Date(b.Zeitpunkt||0) - new Date(a.Zeitpunkt||0));
+      if (filterChangelog.value) list = list.filter(c => c.Aktion === filterChangelog.value);
+      return list;
+    });
+
+    // ── Audit-Log: Änderungen protokollieren ──
+    async function logChange(tabelle, aktion, details) {
+      if (!TABLES.Changelog) return; // Changelog-Tabelle noch nicht eingerichtet
+      try {
+        await post('Changelog', {
+          Tabelle:   tabelle,
+          Aktion:    aktion,
+          Details:   details,
+          Benutzer:  currentUser.value?.Benutzername || '–',
+          Zeitpunkt: new Date().toISOString(),
+        });
+      } catch (e) {
+        console.warn('Changelog-Eintrag fehlgeschlagen:', e);
+      }
+    }
+
+    // ── Login / Auth ──
+    async function doLogin() {
+      loginForm.error = '';
+      if (!loginForm.username || !loginForm.pin) {
+        loginForm.error = 'Bitte Benutzername und PIN eingeben.';
+        return;
+      }
+      await load(async () => {
+        // Versuche Benutzer aus NocoDB zu laden
+        if (TABLES.Benutzer) {
+          const users = await getAll('Benutzer');
+          const user = users.find(u =>
+            u.Benutzername?.toLowerCase() === loginForm.username.toLowerCase() &&
+            u.PIN === loginForm.pin
+          );
+          if (!user) {
+            loginForm.error = 'Benutzername oder PIN falsch.';
+            return;
+          }
+          if (!user.Aktiv) {
+            loginForm.error = 'Benutzer deaktiviert.';
+            return;
+          }
+          currentUser.value = user;
+        } else {
+          // Fallback: Einfaches Login ohne Benutzer-Tabelle (admin/1234)
+          if (loginForm.username.toLowerCase() === 'admin' && loginForm.pin === '1234') {
+            currentUser.value = { Benutzername: 'admin', Rolle: 'Admin' };
+          } else {
+            loginForm.error = 'Benutzer-Tabelle nicht eingerichtet. Standard: admin / 1234';
+            return;
+          }
+        }
+        localStorage.setItem('psa_user', JSON.stringify(currentUser.value));
+        loggedIn.value = true;
+        loginForm.username = '';
+        loginForm.pin = '';
+        await fetchAll();
+      });
+    }
+
+    function doLogout() {
+      localStorage.removeItem('psa_user');
+      loggedIn.value = false;
+      currentUser.value = null;
+      page.value = 'dashboard';
+    }
+
+    // ── QR-Code Scanner ──
+    function startQrScanner() {
+      qrResult.value = '';
+      qrError.value = '';
+      Vue.nextTick(() => {
+        if (typeof Html5Qrcode === 'undefined') {
+          qrError.value = 'QR-Scanner-Bibliothek nicht geladen.';
+          return;
+        }
+        qrScanner = new Html5Qrcode('qr-reader');
+        qrScanner.start(
+          { facingMode: 'environment' },
+          { fps: 10, qrbox: { width: 250, height: 250 } },
+          (decodedText) => {
+            qrResult.value = decodedText;
+            // Suche Ausrüstungsstück nach QR-Code oder Seriennummer
+            const found = ausruestung.value.find(a =>
+              a.QR_Code === decodedText || a.Seriennummer === decodedText
+            );
+            if (found) {
+              stopQrScanner();
+              openAusruestungDetail(found);
+              showToast(`Gefunden: ${found.Ausruestungstyp || found.Seriennummer}`);
+            } else {
+              qrError.value = `Kein Ausrüstungsstück mit QR "${decodedText}" gefunden.`;
+            }
+          },
+          () => {} // ignore errors (no QR found in frame)
+        ).catch(err => {
+          qrError.value = 'Kamera konnte nicht gestartet werden: ' + (err.message || err);
+        });
+      });
+    }
+
+    function stopQrScanner() {
+      if (qrScanner) {
+        qrScanner.stop().catch(() => {});
+        qrScanner.clear().catch(() => {});
+        qrScanner = null;
+      }
+      modal.qrScanner = false;
+      qrResult.value = '';
+      qrError.value = '';
+    }
+
+    // ── Foto-Upload bei Prüfungen ──
+    function onPruefungFoto(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      // Auf 800px Breite komprimieren
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const maxW = 800;
+          const scale = Math.min(1, maxW / img.width);
+          const canvas = document.createElement('canvas');
+          canvas.width = img.width * scale;
+          canvas.height = img.height * scale;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          form.pruefung.foto = canvas.toDataURL('image/jpeg', 0.7);
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+      event.target.value = '';
+    }
+
+    // ── PDF Export ──
+    function exportPDF(kamerad) {
+      if (typeof jspdf === 'undefined' && typeof window.jspdf === 'undefined') {
+        showToast('PDF-Bibliothek nicht geladen', 'error');
+        return;
+      }
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      const label = `${kamerad.Vorname} ${kamerad.Name}`;
+      let y = 20;
+
+      // Header
+      doc.setFontSize(18);
+      doc.setTextColor(220, 38, 38); // red-600
+      doc.text('PSA-Nachweis', 14, y);
+      doc.setFontSize(10);
+      doc.setTextColor(107, 114, 128); // gray-500
+      doc.text('FF Wietmarschen', 14, y + 7);
+      y += 20;
+
+      // Kamerad-Info
+      doc.setFontSize(14);
+      doc.setTextColor(17, 24, 39); // gray-900
+      doc.text(label, 14, y);
+      y += 7;
+      doc.setFontSize(9);
+      doc.setTextColor(107, 114, 128);
+      if (kamerad.Dienstgrad) { doc.text(`Dienstgrad: ${kamerad.Dienstgrad}`, 14, y); y += 5; }
+      doc.text(`Status: ${kamerad.Aktiv ? 'Aktiv' : 'Inaktiv'}`, 14, y);
+      y += 5;
+      doc.text(`Erstellt am: ${new Date().toLocaleDateString('de-DE')}`, 14, y);
+      y += 10;
+
+      // Größen
+      doc.setFontSize(11);
+      doc.setTextColor(17, 24, 39);
+      doc.text('Größen', 14, y);
+      y += 6;
+      doc.setFontSize(8);
+      doc.setTextColor(75, 85, 99);
+      const groessen = kameradenGroessen(kamerad);
+      const gText = groessen.map(g => `${g.label}: ${g.wert || '–'}`).join('  ·  ');
+      doc.text(gText, 14, y);
+      y += 10;
+
+      // Zugewiesene Ausrüstung
+      doc.setFontSize(11);
+      doc.setTextColor(17, 24, 39);
+      doc.text('Zugewiesene Ausrüstung', 14, y);
+      y += 7;
+
+      const zugewiesen = ausruestungFuerKamerad(kamerad);
+      if (zugewiesen.length) {
+        doc.setFontSize(8);
+        // Tabellen-Header
+        doc.setTextColor(107, 114, 128);
+        doc.text('Typ', 14, y);
+        doc.text('Seriennr.', 60, y);
+        doc.text('Status', 100, y);
+        doc.text('Nächste Prüfung', 130, y);
+        doc.text('Lebensende', 170, y);
+        y += 1;
+        doc.setDrawColor(229, 231, 235);
+        doc.line(14, y, 196, y);
+        y += 4;
+
+        doc.setTextColor(55, 65, 81);
+        zugewiesen.forEach(a => {
+          if (y > 275) { doc.addPage(); y = 20; }
+          doc.text(typLabel(a.Ausruestungstyp).substring(0, 25), 14, y);
+          doc.text(a.Seriennummer || '–', 60, y);
+          doc.text(a.Status || '–', 100, y);
+          doc.text(a.Naechste_Pruefung ? fmtDate(a.Naechste_Pruefung) : '–', 130, y);
+          doc.text(a.Lebensende_Datum ? fmtDate(a.Lebensende_Datum) : '–', 170, y);
+          y += 5;
+        });
+      } else {
+        doc.setFontSize(8);
+        doc.setTextColor(156, 163, 175);
+        doc.text('Keine Ausrüstung zugeordnet', 14, y);
+        y += 5;
+      }
+      y += 5;
+
+      // Letzte Prüfungen
+      if (y > 250) { doc.addPage(); y = 20; }
+      doc.setFontSize(11);
+      doc.setTextColor(17, 24, 39);
+      doc.text('Letzte Prüfungen', 14, y);
+      y += 7;
+
+      const kamPruefungen = pruefungen.value
+        .filter(p => p.Kamerad === label)
+        .sort((a, b) => new Date(b.Datum||0) - new Date(a.Datum||0))
+        .slice(0, 10);
+
+      if (kamPruefungen.length) {
+        doc.setFontSize(8);
+        doc.setTextColor(107, 114, 128);
+        doc.text('Datum', 14, y);
+        doc.text('Ausrüstung', 40, y);
+        doc.text('Ergebnis', 100, y);
+        doc.text('Prüfer', 130, y);
+        y += 1;
+        doc.line(14, y, 196, y);
+        y += 4;
+
+        doc.setTextColor(55, 65, 81);
+        kamPruefungen.forEach(p => {
+          if (y > 275) { doc.addPage(); y = 20; }
+          doc.text(fmtDate(p.Datum), 14, y);
+          doc.text((p.Ausruestungstyp || '–').substring(0, 30), 40, y);
+          doc.text(p.Ergebnis || '–', 100, y);
+          doc.text(p.Pruefer || '–', 130, y);
+          y += 5;
+        });
+      }
+
+      // Footer
+      doc.setFontSize(7);
+      doc.setTextColor(156, 163, 175);
+      doc.text(`PSA-Verwaltung · FF Wietmarschen · ${new Date().toLocaleDateString('de-DE')} ${new Date().toLocaleTimeString('de-DE')}`, 14, 290);
+
+      doc.save(`PSA-Nachweis_${label.replace(/\s+/g, '_')}_${todayStr()}.pdf`);
+      showToast('PDF erstellt');
+    }
+
+    // ── Dashboard-Charts ──
+    let chartInstances = {};
+    function renderCharts() {
+      if (typeof Chart === 'undefined') return;
+      const isDark = document.documentElement.classList.contains('dark');
+      const gridColor = isDark ? 'rgba(75,85,99,0.3)' : 'rgba(229,231,235,0.8)';
+      const textColor = isDark ? '#9ca3af' : '#6b7280';
+
+      Chart.defaults.color = textColor;
+      Chart.defaults.borderColor = gridColor;
+
+      // Status-Verteilung (Dashboard + Statistiken)
+      ['chartStatus', 'chartStatusPage'].forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        if (chartInstances[id]) chartInstances[id].destroy();
+        const statusCounts = {};
+        ausruestung.value.forEach(a => { statusCounts[a.Status || 'Unbekannt'] = (statusCounts[a.Status || 'Unbekannt'] || 0) + 1; });
+        const colorMap = { 'Lager': '#6b7280', 'Ausgegeben': '#3b82f6', 'Reinigung': '#14b8a6', 'Außer Dienst': '#f97316', 'Ausgesondert': '#ef4444' };
+        chartInstances[id] = new Chart(el, {
+          type: 'doughnut',
+          data: {
+            labels: Object.keys(statusCounts),
+            datasets: [{ data: Object.values(statusCounts), backgroundColor: Object.keys(statusCounts).map(s => colorMap[s] || '#9ca3af') }]
+          },
+          options: { responsive: true, plugins: { legend: { position: 'bottom', labels: { padding: 12, font: { size: 11 } } } } }
+        });
+      });
+
+      // Prüfungen pro Monat (Dashboard + Statistiken)
+      ['chartPruefungen', 'chartPruefungenPage'].forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        if (chartInstances[id]) chartInstances[id].destroy();
+        const months = {};
+        const now = new Date();
+        for (let i = 11; i >= 0; i--) {
+          const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+          months[`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`] = 0;
+        }
+        pruefungen.value.forEach(p => {
+          if (!p.Datum) return;
+          const key = p.Datum.substring(0, 7);
+          if (key in months) months[key]++;
+        });
+        chartInstances[id] = new Chart(el, {
+          type: 'bar',
+          data: {
+            labels: Object.keys(months).map(m => { const [y,mo] = m.split('-'); return `${mo}/${y.slice(2)}`; }),
+            datasets: [{ label: 'Prüfungen', data: Object.values(months), backgroundColor: '#f97316', borderRadius: 4 }]
+          },
+          options: { responsive: true, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }, plugins: { legend: { display: false } } }
+        });
+      });
+
+      // Ausrüstung pro Typ-Kategorie (nur Statistiken-Seite)
+      const elTypen = document.getElementById('chartTypen');
+      if (elTypen) {
+        if (chartInstances.chartTypen) chartInstances.chartTypen.destroy();
+        const typCounts = {};
+        ausruestung.value.forEach(a => {
+          const typ = typen.value.find(t => t.Bezeichnung === a.Ausruestungstyp);
+          const kat = typ?.Typ || 'Sonstige';
+          typCounts[kat] = (typCounts[kat] || 0) + 1;
+        });
+        const colors = ['#ef4444','#3b82f6','#14b8a6','#f97316','#8b5cf6','#ec4899','#6b7280','#eab308'];
+        chartInstances.chartTypen = new Chart(elTypen, {
+          type: 'pie',
+          data: {
+            labels: Object.keys(typCounts),
+            datasets: [{ data: Object.values(typCounts), backgroundColor: colors.slice(0, Object.keys(typCounts).length) }]
+          },
+          options: { responsive: true, plugins: { legend: { position: 'bottom', labels: { padding: 12, font: { size: 11 } } } } }
+        });
+      }
+
+      // Wäschen pro Monat (nur Statistiken-Seite)
+      const elWaeschen = document.getElementById('chartWaeschen');
+      if (elWaeschen) {
+        if (chartInstances.chartWaeschen) chartInstances.chartWaeschen.destroy();
+        const months = {};
+        const now = new Date();
+        for (let i = 11; i >= 0; i--) {
+          const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+          months[`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`] = 0;
+        }
+        waescheListe.value.forEach(w => {
+          if (!w.Datum) return;
+          const key = w.Datum.substring(0, 7);
+          if (key in months) months[key]++;
+        });
+        chartInstances.chartWaeschen = new Chart(elWaeschen, {
+          type: 'bar',
+          data: {
+            labels: Object.keys(months).map(m => { const [y,mo] = m.split('-'); return `${mo}/${y.slice(2)}`; }),
+            datasets: [{ label: 'Wäschen', data: Object.values(months), backgroundColor: '#14b8a6', borderRadius: 4 }]
+          },
+          options: { responsive: true, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }, plugins: { legend: { display: false } } }
+        });
+      }
+    }
+
     onMounted(fetchAll);
+
+    // ── Login aus localStorage wiederherstellen ──
+    const savedUser = localStorage.getItem('psa_user');
+    if (savedUser) {
+      try {
+        currentUser.value = JSON.parse(savedUser);
+        loggedIn.value = true;
+      } catch (e) { localStorage.removeItem('psa_user'); }
+    }
+
+    // ── Service Worker Registrierung ──
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/service-worker.js').catch(() => {});
+    }
 
     return {
       page, pages, loading, toast,
@@ -2679,6 +3294,11 @@ createApp({
       waeschenInfo,
       alleAusgewaehlt, toggleSelect, toggleAlle, openMassenWaesche, saveMassenWaesche,
       openMassenPruefung, saveMassenPruefung,
+      // ── Neue Features ──
+      loggedIn, currentUser, loginForm, doLogin, doLogout,
+      changelog, benutzer, filterChangelog, changelogFiltered,
+      qrResult, qrError, startQrScanner, stopQrScanner,
+      exportPDF, onPruefungFoto, renderCharts,
       window,
     };
   }

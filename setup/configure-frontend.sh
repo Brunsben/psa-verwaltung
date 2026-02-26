@@ -24,6 +24,8 @@ ID_Ausgaben=$(grep "^Ausgaben=" "$IDS_FILE" | cut -d= -f2)
 ID_Pruefungen=$(grep "^Pruefungen=" "$IDS_FILE" | cut -d= -f2)
 ID_Waesche=$(grep "^Waesche=" "$IDS_FILE" | cut -d= -f2)
 ID_Normen=$(grep "^Normen=" "$IDS_FILE" | cut -d= -f2)
+ID_Benutzer=$(grep "^Benutzer=" "$IDS_FILE" | cut -d= -f2)
+ID_Changelog=$(grep "^Changelog=" "$IDS_FILE" | cut -d= -f2)
 
 if [ -z "$BASE_ID" ]; then
   echo "❌ BASE_ID fehlt in $IDS_FILE"
@@ -39,6 +41,8 @@ echo "   Ausgaben:             $ID_Ausgaben"
 echo "   Pruefungen:           $ID_Pruefungen"
 echo "   Waesche:              $ID_Waesche"
 echo "   Normen:               $ID_Normen"
+echo "   Benutzer:             $ID_Benutzer"
+echo "   Changelog:            $ID_Changelog"
 
 cat > "$CONFIG_JS" << EOF
 // PSA-Verwaltung – Laufzeitkonfiguration
@@ -56,6 +60,8 @@ window.CONFIG = {
     Pruefungen:         '$ID_Pruefungen',
     Waesche:            '$ID_Waesche',
     Normen:             '$ID_Normen',
+    Benutzer:           '$ID_Benutzer',
+    Changelog:          '$ID_Changelog',
   }
 };
 EOF

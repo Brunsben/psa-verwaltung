@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 192 192">
+  <rect width="192" height="192" rx="32" fill="#dc2626"/>
+  <text x="96" y="110" font-family="system-ui,sans-serif" font-size="80" font-weight="700" fill="white" text-anchor="middle">PSA</text>
+  <text x="96" y="150" font-family="system-ui,sans-serif" font-size="26" fill="rgba(255,255,255,0.85)" text-anchor="middle">FF Wietmarschen</text>
+</svg>
