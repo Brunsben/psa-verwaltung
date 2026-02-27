@@ -1,18 +1,18 @@
 // PSA-Verwaltung Service Worker – Offline-Cache
-const CACHE_NAME = 'psa-v3';
-const ASSETS = [
-  '/',
-  '/index.html',
-  '/config.js',
+const CACHE_NAME = 'psa-v4';
+
+// Nur schwere Vendor-Dateien cachen (ändern sich nie)
+const VENDOR_ASSETS = [
   '/vendor/tailwind.cdn.js',
   '/vendor/vue.global.prod.js',
+  '/vendor/chart.umd.min.js',
   '/manifest.json',
 ];
 
-// Install: statische Assets cachen
+// Install: Vendor-Assets vorladen
 self.addEventListener('install', e => {
   e.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS))
+    caches.open(CACHE_NAME).then(cache => cache.addAll(VENDOR_ASSETS))
   );
   self.skipWaiting();
 });
@@ -27,7 +27,10 @@ self.addEventListener('activate', e => {
   self.clients.claim();
 });
 
-// Fetch: Network-first für API, Cache-first für Assets
+// Fetch-Strategie:
+// - API: immer Netzwerk
+// - index.html + config.js: immer Netzwerk (damit Updates sofort wirken)
+// - Vendor-Dateien: Cache-first (ändern sich nicht)
 self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
 
@@ -44,17 +47,25 @@ self.addEventListener('fetch', e => {
     return;
   }
 
-  // Statische Assets: Cache-first, dann Netzwerk
+  // index.html und config.js: Network-first (immer aktuell)
+  if (url.pathname === '/' || url.pathname === '/index.html' || url.pathname.startsWith('/config.js')) {
+    e.respondWith(
+      fetch(e.request).catch(() => caches.match(e.request))
+    );
+    return;
+  }
+
+  // Vendor-Dateien: Cache-first, dann Netzwerk
   e.respondWith(
     caches.match(e.request).then(cached => {
-      const networkFetch = fetch(e.request).then(response => {
+      if (cached) return cached;
+      return fetch(e.request).then(response => {
         if (response.ok) {
           const clone = response.clone();
           caches.open(CACHE_NAME).then(cache => cache.put(e.request, clone));
         }
         return response;
-      }).catch(() => cached);
-      return cached || networkFetch;
+      });
     })
   );
 });
