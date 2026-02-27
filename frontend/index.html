@@ -3205,7 +3205,7 @@ createApp({
             labels: Object.keys(statusCounts),
             datasets: [{ data: Object.values(statusCounts), backgroundColor: Object.keys(statusCounts).map(s => colorMap[s] || '#9ca3af') }]
           },
-          options: { responsive: true, plugins: { legend: { position: 'bottom', labels: { padding: 12, font: { size: 11 } } } } }
+          options: { responsive: true, aspectRatio: 2, plugins: { legend: { position: 'bottom', labels: { padding: 12, font: { size: 11 } } } } }
         });
       });
 
@@ -3252,7 +3252,7 @@ createApp({
             labels: Object.keys(typCounts),
             datasets: [{ data: Object.values(typCounts), backgroundColor: colors.slice(0, Object.keys(typCounts).length) }]
           },
-          options: { responsive: true, plugins: { legend: { position: 'bottom', labels: { padding: 12, font: { size: 11 } } } } }
+          options: { responsive: true, aspectRatio: 2, plugins: { legend: { position: 'bottom', labels: { padding: 12, font: { size: 11 } } } } }
         });
       }
 
