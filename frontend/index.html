@@ -179,7 +179,7 @@
     </div>
     <!-- Navigation -->
     <nav class="flex-1 py-3 px-3 space-y-0.5">
-      <button v-for="p in pages" :key="p.id"
+      <button v-for="p in visiblePages" :key="p.id"
         @click="page = p.id; sidebarOpen = false"
         :class="['w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors text-sm font-medium text-left',
           page === p.id
@@ -236,6 +236,13 @@
       </button>
       <span class="font-semibold text-gray-900 dark:text-white text-sm">FF Wietmarschen · PSA</span>
     </header>
+
+  <!-- ── Offline-Banner ──────────────────────────────────── -->
+  <div v-if="isOffline"
+    class="sticky top-0 z-40 bg-amber-50 dark:bg-amber-900/30 border-b border-amber-200 dark:border-amber-700 px-4 py-2 flex items-center justify-center gap-2 text-amber-800 dark:text-amber-300 text-sm">
+    <i class="ph ph-wifi-slash"></i>
+    <span>Offline – Daten vom {{ offlineTimestamp ? new Date(offlineTimestamp).toLocaleString('de-DE') : '?' }}. Änderungen nicht möglich.</span>
+  </div>
 
   <!-- ── Toast ─────────────────────────────────────────── -->
   <transition name="fade">
@@ -490,7 +497,7 @@
                  rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-400 focus:border-transparent">
           <option value="">Alle Status</option>
           <option>Lager</option><option>Ausgegeben</option>
-          <option>Reinigung</option><option>Außer Dienst</option><option>Ausgesondert</option>
+          <option>Reinigung</option><option>In Reparatur</option><option>Ausgesondert</option>
           <option value="Prüfung fällig">Prüfung fällig (≤30 Tage)</option>
         </select>
         <button @click="exportCSV" class="btn-secondary ml-auto text-xs">↓ CSV Export</button>
@@ -545,7 +552,7 @@
                   class="cursor-pointer border-0 appearance-none focus:outline-none focus:ring-1 focus:ring-red-400 pr-3"
                   title="Status ändern">
                   <option>Lager</option><option>Ausgegeben</option>
-                  <option>Reinigung</option><option>Außer Dienst</option><option>Ausgesondert</option>
+                  <option>Reinigung</option><option>In Reparatur</option><option>Ausgesondert</option>
                 </select>
               </td>
               <td class="px-4 py-2">
@@ -936,6 +943,62 @@
       </div>
     </section>
 
+    <!-- Benutzerverwaltung (nur Admin) -->
+    <section v-if="page === 'benutzer' && isAdmin">
+      <div class="mb-5 flex items-center justify-between">
+        <div>
+          <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Benutzerverwaltung</h1>
+          <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">{{ benutzer.length }} Benutzer</p>
+        </div>
+        <button @click="openBenutzerForm()" class="btn-primary">+ Neuer Benutzer</button>
+      </div>
+      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+        <table class="w-full text-sm">
+          <thead class="bg-gray-50 dark:bg-gray-700/50 text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+            <tr>
+              <th class="px-4 py-3 text-left">Benutzername</th>
+              <th class="px-4 py-3 text-left">Rolle</th>
+              <th class="px-4 py-3 text-left">Kamerad</th>
+              <th class="px-4 py-3 text-left">Status</th>
+              <th class="px-4 py-3 text-right">Aktionen</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+            <tr v-if="!benutzer.length">
+              <td colspan="5" class="px-4 py-8 text-center text-gray-400 dark:text-gray-500">Keine Benutzer vorhanden</td>
+            </tr>
+            <tr v-for="b in benutzer" :key="b.Id" class="hover:bg-gray-50 dark:hover:bg-gray-700/30">
+              <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">
+                {{ b.Benutzername }}
+                <span v-if="b.Id === currentUser?.Id" class="ml-1 text-xs text-gray-400">(du)</span>
+              </td>
+              <td class="px-4 py-3">
+                <span :class="['px-2 py-0.5 rounded-full text-xs font-semibold',
+                  b.Rolle === 'Admin' ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400' :
+                  b.Rolle === 'Kleiderwart' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400' :
+                  'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300']">
+                  {{ b.Rolle || '–' }}
+                </span>
+              </td>
+              <td class="px-4 py-3 text-gray-500 dark:text-gray-400">
+                {{ b.KameradId ? (kameraden.find(k => k.Id == b.KameradId)?.Vorname + ' ' + kameraden.find(k => k.Id == b.KameradId)?.Name || 'ID: ' + b.KameradId) : '–' }}
+              </td>
+              <td class="px-4 py-3">
+                <span :class="['px-2 py-0.5 rounded-full text-xs font-semibold', b.Aktiv !== false ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400' : 'bg-gray-100 dark:bg-gray-700 text-gray-500']">
+                  {{ b.Aktiv !== false ? 'Aktiv' : 'Inaktiv' }}
+                </span>
+              </td>
+              <td class="px-4 py-3 text-right space-x-2">
+                <button @click="openBenutzerForm(b)" class="text-blue-500 hover:text-blue-700 text-xs font-medium">Bearbeiten</button>
+                <button @click="deleteBenutzer(b)" :disabled="b.Id === currentUser?.Id"
+                  class="text-red-500 hover:text-red-700 text-xs font-medium disabled:opacity-30 disabled:cursor-not-allowed">Löschen</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
     </div>
     </transition>
 
@@ -1005,6 +1068,47 @@
       <div class="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-100 dark:border-gray-700">
         <button @click="modal.kameradenForm = false" class="btn-secondary">Abbrechen</button>
         <button @click="saveKamerad" class="btn-primary">Speichern</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Benutzer Form Modal -->
+  <div v-if="modal.benutzerForm" class="modal-backdrop">
+    <div class="modal-box">
+      <h2 class="text-lg font-bold mb-5">{{ form.benutzer.Id ? 'Benutzer bearbeiten' : 'Neuer Benutzer' }}</h2>
+      <div class="grid grid-cols-2 gap-3">
+        <div class="col-span-2">
+          <label class="label">Benutzername *</label>
+          <input v-model="form.benutzer.Benutzername" class="input" placeholder="max.mustermann" autocomplete="off" />
+        </div>
+        <div class="col-span-2">
+          <label class="label">PIN *</label>
+          <input v-model="form.benutzer.PIN" class="input" placeholder="z.B. 1234" type="password" autocomplete="new-password" />
+        </div>
+        <div>
+          <label class="label">Rolle</label>
+          <select v-model="form.benutzer.Rolle" class="input">
+            <option>Admin</option>
+            <option>Kleiderwart</option>
+            <option>User</option>
+          </select>
+        </div>
+        <div class="flex items-center gap-2 mt-5">
+          <input type="checkbox" v-model="form.benutzer.Aktiv" id="benutzerAktiv" class="w-4 h-4 accent-red-600" />
+          <label for="benutzerAktiv" class="label mb-0">Aktiv</label>
+        </div>
+        <div class="col-span-2" v-if="form.benutzer.Rolle === 'User'">
+          <label class="label">Verknüpfter Kamerad (ID)</label>
+          <select v-model="form.benutzer.KameradId" class="input">
+            <option value="">– Kein Kamerad –</option>
+            <option v-for="k in kameraden" :key="k.Id" :value="String(k.Id)">{{ k.Vorname }} {{ k.Name }}</option>
+          </select>
+          <p class="text-xs text-gray-400 mt-1">Nur nötig für Rolle "User" – zeigt dem Benutzer seine eigene Ausrüstung</p>
+        </div>
+      </div>
+      <div class="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-100 dark:border-gray-700">
+        <button @click="modal.benutzerForm = false" class="btn-secondary">Abbrechen</button>
+        <button @click="saveBenutzer" class="btn-primary">Speichern</button>
       </div>
     </div>
   </div>
@@ -1146,7 +1250,7 @@
           <label class="label">Status</label>
           <select v-model="form.ausruestung.Status" class="input">
             <option>Lager</option><option>Ausgegeben</option>
-            <option>Reinigung</option><option>Außer Dienst</option><option>Ausgesondert</option>
+            <option>Reinigung</option><option>In Reparatur</option><option>Ausgesondert</option>
           </select>
         </div>
         <div class="col-span-2">
@@ -1877,16 +1981,21 @@ createApp({
     }
 
     const pages = [
-      { id: 'dashboard',   label: 'Dashboard',   icon: '<i class="ph ph-gauge"></i>' },
-      { id: 'kameraden',   label: 'Kameraden',   icon: '<i class="ph ph-users-three"></i>' },
-      { id: 'ausruestung', label: 'Ausrüstung',  icon: '<i class="ph ph-t-shirt"></i>' },
-      { id: 'typen',       label: 'Typen',        icon: '<i class="ph ph-tag"></i>' },
-      { id: 'verlauf',     label: 'Verlauf',      icon: '<i class="ph ph-clock-counter-clockwise"></i>' },
-      { id: 'normen',      label: 'Normen',       icon: '<i class="ph ph-seal-check"></i>' },
-      { id: 'warnungen',   label: 'Warnungen',    icon: '<i class="ph ph-bell-ringing"></i>' },
-      { id: 'statistiken', label: 'Statistiken',  icon: '<i class="ph ph-chart-bar"></i>' },
-      { id: 'changelog',   label: 'Changelog',    icon: '<i class="ph ph-clock-counter-clockwise"></i>' },
+      { id: 'dashboard',   label: 'Dashboard',         icon: '<i class="ph ph-gauge"></i>',                    roles: ['Admin','Kleiderwart'] },
+      { id: 'kameraden',   label: 'Kameraden',          icon: '<i class="ph ph-users-three"></i>',              roles: ['Admin','Kleiderwart'] },
+      { id: 'ausruestung', label: 'Ausrüstung',         icon: '<i class="ph ph-t-shirt"></i>',                  roles: ['Admin','Kleiderwart','User'] },
+      { id: 'typen',       label: 'Typen',              icon: '<i class="ph ph-tag"></i>',                      roles: ['Admin','Kleiderwart'] },
+      { id: 'verlauf',     label: 'Verlauf',            icon: '<i class="ph ph-clock-counter-clockwise"></i>',  roles: ['Admin','Kleiderwart','User'] },
+      { id: 'normen',      label: 'Normen',             icon: '<i class="ph ph-seal-check"></i>',               roles: ['Admin','Kleiderwart'] },
+      { id: 'warnungen',   label: 'Warnungen',          icon: '<i class="ph ph-bell-ringing"></i>',             roles: ['Admin','Kleiderwart'] },
+      { id: 'statistiken', label: 'Statistiken',        icon: '<i class="ph ph-chart-bar"></i>',                roles: ['Admin','Kleiderwart'] },
+      { id: 'changelog',   label: 'Changelog',          icon: '<i class="ph ph-clock-counter-clockwise"></i>',  roles: ['Admin','Kleiderwart'] },
+      { id: 'benutzer',    label: 'Benutzer',           icon: '<i class="ph ph-users-gear"></i>',               roles: ['Admin'] },
     ];
+    const visiblePages = computed(() => {
+      const role = currentUser.value?.Rolle || '';
+      return pages.filter(p => !p.roles || p.roles.includes(role));
+    });
 
     // Data
     const kameraden    = ref([]);
@@ -1903,6 +2012,64 @@ createApp({
     const loggedIn    = ref(!!localStorage.getItem('psa_user'));
     const currentUser = ref(JSON.parse(localStorage.getItem('psa_user') || 'null'));
     const loginForm   = reactive({ username: '', pin: '', error: '' });
+
+    // Rollen
+    const isAdmin        = computed(() => currentUser.value?.Rolle === 'Admin');
+    const isKleiderwart  = computed(() => ['Admin', 'Kleiderwart'].includes(currentUser.value?.Rolle));
+    const canEdit        = computed(() => isKleiderwart.value);
+    const myKameradId    = computed(() => {
+      if (currentUser.value?.Rolle !== 'User') return null;
+      return currentUser.value?.KameradId || null;
+    });
+    const myKameradName  = computed(() => {
+      if (!myKameradId.value) return null;
+      const k = kameraden.value.find(k => String(k.Id) === String(myKameradId.value));
+      return k ? `${k.Vorname} ${k.Name}` : null;
+    });
+
+    // Offline
+    const isOffline         = ref(false);
+    const offlineTimestamp  = ref(null);
+
+    function saveOfflineSnapshot() {
+      try {
+        localStorage.setItem('psa_offline_data', JSON.stringify({
+          timestamp: Date.now(),
+          data: {
+            kameraden:    kameraden.value,
+            ausruestung:  ausruestung.value,
+            typen:        typen.value,
+            ausgaben:     ausgaben.value,
+            pruefungen:   pruefungen.value,
+            waescheListe: waescheListe.value,
+            normen:       normen.value,
+            changelog:    changelog.value,
+            benutzer:     benutzer.value,
+          }
+        }));
+      } catch(e) {}
+    }
+
+    function loadOfflineSnapshot() {
+      try {
+        const raw = localStorage.getItem('psa_offline_data');
+        if (!raw) return false;
+        const snap = JSON.parse(raw);
+        kameraden.value    = snap.data.kameraden    || [];
+        ausruestung.value  = snap.data.ausruestung  || [];
+        typen.value        = snap.data.typen        || [];
+        ausgaben.value     = snap.data.ausgaben     || [];
+        pruefungen.value   = snap.data.pruefungen   || [];
+        waescheListe.value = snap.data.waescheListe || [];
+        normen.value       = snap.data.normen       || [];
+        changelog.value    = snap.data.changelog    || [];
+        benutzer.value     = snap.data.benutzer     || [];
+        isOffline.value         = true;
+        offlineTimestamp.value  = snap.timestamp;
+        Vue.nextTick(renderCharts);
+        return true;
+      } catch(e) { return false; }
+    }
 
     // QR Scanner
     const qrResult = ref('');
@@ -1933,6 +2100,7 @@ createApp({
       kameradenDetail: false, normenForm: false, massenWaesche: false, massenPruefung: false, rueckgabe: false, ausruestungDetail: false,
       csvImport: false,
       qrScanner: false,
+      benutzerForm: false,
     });
 
     // Form state
@@ -1950,6 +2118,7 @@ createApp({
       rueckgabe: {},
       rueckgabeAusgabe: null,
       csvImport: { rows: [], fileName: '' },
+      benutzer: { Id: null, Benutzername: '', PIN: '', Rolle: 'Kleiderwart', Aktiv: true, KameradId: '' },
     });
 
     function showToast(msg, type = 'ok') {
@@ -1966,7 +2135,8 @@ createApp({
 
     // ── Fetch ──
     async function fetchAll() {
-      await load(async () => {
+      loading.value = true;
+      try {
         const results = await Promise.allSettled([
           getAll('Kameraden'),
           getAll('Ausruestungstuecke'),
@@ -1988,10 +2158,19 @@ createApp({
         normen.value       = val(6);
         changelog.value    = val(7);
         benutzer.value     = val(8);
-
+        isOffline.value    = false;
+        saveOfflineSnapshot();
         // Charts rendern nach Datenlade (nach Vue DOM-Update)
         Vue.nextTick(renderCharts);
-      });
+      } catch(e) {
+        if (!loadOfflineSnapshot()) {
+          showToast('Verbindung fehlgeschlagen und kein Offline-Cache vorhanden', 'error');
+        } else {
+          showToast('Offline – zeige zwischengespeicherte Daten', 'error');
+        }
+      } finally {
+        loading.value = false;
+      }
     }
 
     // ── Computed ──
@@ -2026,7 +2205,9 @@ createApp({
     });
 
     const ausruestungFiltered = computed(() => {
-      let list = ausruestung.value;
+      let list = myKameradName.value
+        ? ausruestung.value.filter(a => a.Kamerad === myKameradName.value)
+        : ausruestung.value;
       if (filterStatus.value === 'Prüfung fällig') {
         list = list.filter(a => a.Naechste_Pruefung && new Date(a.Naechste_Pruefung) <= in30);
       } else if (filterStatus.value) {
@@ -2099,13 +2280,15 @@ createApp({
 
     const pruefungenFiltered = computed(() => {
       let list = [...pruefungen.value].sort((a, b) => new Date(b.Datum||0) - new Date(a.Datum||0));
-      if (filterVerlaufKamerad.value) list = list.filter(p => p.Kamerad === filterVerlaufKamerad.value);
+      if (myKameradName.value) list = list.filter(p => p.Kamerad === myKameradName.value);
+      else if (filterVerlaufKamerad.value) list = list.filter(p => p.Kamerad === filterVerlaufKamerad.value);
       return list;
     });
 
     const waescheFiltered = computed(() => {
       let list = [...waescheListe.value].sort((a, b) => new Date(b.Datum||0) - new Date(a.Datum||0));
-      if (filterVerlaufKamerad.value) list = list.filter(w => w.Kamerad === filterVerlaufKamerad.value);
+      if (myKameradName.value) list = list.filter(w => w.Kamerad === myKameradName.value);
+      else if (filterVerlaufKamerad.value) list = list.filter(w => w.Kamerad === filterVerlaufKamerad.value);
       return list;
     });
 
@@ -2275,7 +2458,7 @@ createApp({
         'Lager':        'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300',
         'Ausgegeben':   'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400',
         'Reinigung':    'bg-teal-100 dark:bg-teal-900/30 text-teal-700 dark:text-teal-400',
-        'Außer Dienst': 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400',
+        'In Reparatur': 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400',
         'Ausgesondert': 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400',
       };
       return `px-2 py-0.5 rounded-full text-xs font-semibold ${map[s] || 'bg-gray-100 dark:bg-gray-700 text-gray-600'}`;
@@ -2746,7 +2929,7 @@ createApp({
             d.setMonth(d.getMonth() + typ.Pruefintervall_Monate);
             update.Naechste_Pruefung = d.toISOString().split('T')[0];
           }
-          if (form.massenPruefung.ergebnis === 'Nicht bestanden') update.Status = 'Außer Dienst';
+          if (form.massenPruefung.ergebnis === 'Nicht bestanden') update.Status = 'In Reparatur';
           if (Object.keys(update).length) return patch('Ausruestungstuecke', id, update);
         }));
         selectedIds.value = [];
@@ -2839,7 +3022,7 @@ createApp({
           Seriennummer:         form.aktion.Seriennummer  || null,
         });
         const update = { Naechste_Pruefung: form.pruefung.naechste };
-        if (form.pruefung.ergebnis === 'Nicht bestanden') update.Status = 'Außer Dienst';
+        if (form.pruefung.ergebnis === 'Nicht bestanden') update.Status = 'In Reparatur';
         await patch('Ausruestungstuecke', form.aktion.Id, update);
         modal.pruefung = false;
         showToast('Prüfung gespeichert');
@@ -2981,6 +3164,54 @@ createApp({
       loggedIn.value = false;
       currentUser.value = null;
       page.value = 'dashboard';
+    }
+
+    // ── Benutzerverwaltung ──
+    function openBenutzerForm(b = null) {
+      if (b) {
+        Object.assign(form.benutzer, { Id: b.Id, Benutzername: b.Benutzername, PIN: b.PIN, Rolle: b.Rolle || 'Kleiderwart', Aktiv: b.Aktiv !== false, KameradId: b.KameradId || '' });
+      } else {
+        Object.assign(form.benutzer, { Id: null, Benutzername: '', PIN: '', Rolle: 'Kleiderwart', Aktiv: true, KameradId: '' });
+      }
+      modal.benutzerForm = true;
+    }
+
+    async function saveBenutzer() {
+      if (!form.benutzer.Benutzername.trim() || !form.benutzer.PIN.trim()) {
+        showToast('Benutzername und PIN sind Pflichtfelder', 'error'); return;
+      }
+      await load(async () => {
+        const payload = {
+          Benutzername: form.benutzer.Benutzername.trim(),
+          PIN: form.benutzer.PIN.trim(),
+          Rolle: form.benutzer.Rolle,
+          Aktiv: form.benutzer.Aktiv,
+          KameradId: form.benutzer.KameradId || null,
+        };
+        if (form.benutzer.Id) {
+          await patch('Benutzer', form.benutzer.Id, payload);
+          const idx = benutzer.value.findIndex(b => b.Id === form.benutzer.Id);
+          if (idx >= 0) benutzer.value[idx] = { ...benutzer.value[idx], ...payload };
+          logChange('Benutzer', 'Bearbeitet', payload.Benutzername);
+        } else {
+          const created = await post('Benutzer', payload);
+          benutzer.value.push(created);
+          logChange('Benutzer', 'Erstellt', payload.Benutzername);
+        }
+        modal.benutzerForm = false;
+        showToast('Benutzer gespeichert');
+      });
+    }
+
+    async function deleteBenutzer(b) {
+      if (b.Id === currentUser.value?.Id) { showToast('Eigenen Account nicht löschbar', 'error'); return; }
+      if (!confirm(`Benutzer "${b.Benutzername}" wirklich löschen?`)) return;
+      await load(async () => {
+        await del('Benutzer', b.Id);
+        benutzer.value = benutzer.value.filter(u => u.Id !== b.Id);
+        logChange('Benutzer', 'Gelöscht', b.Benutzername);
+        showToast('Benutzer gelöscht');
+      });
     }
 
     // ── QR-Code Scanner ──
@@ -3198,7 +3429,7 @@ createApp({
         if (chartInstances[id]) { try { chartInstances[id].destroy(); } catch(e) {} }
         const statusCounts = {};
         ausruestung.value.forEach(a => { statusCounts[a.Status || 'Unbekannt'] = (statusCounts[a.Status || 'Unbekannt'] || 0) + 1; });
-        const colorMap = { 'Lager': '#6b7280', 'Ausgegeben': '#3b82f6', 'Reinigung': '#14b8a6', 'Außer Dienst': '#f97316', 'Ausgesondert': '#ef4444' };
+        const colorMap = { 'Lager': '#6b7280', 'Ausgegeben': '#3b82f6', 'Reinigung': '#14b8a6', 'In Reparatur': '#f97316', 'Ausgesondert': '#ef4444' };
         chartInstances[id] = new Chart(el, {
           type: 'doughnut',
           data: {

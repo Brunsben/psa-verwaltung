@@ -1,5 +1,5 @@
 // PSA-Verwaltung Service Worker – Offline-Cache
-const CACHE_NAME = 'psa-v6';
+const CACHE_NAME = 'psa-v7';
 
 // Nur schwere Vendor-Dateien cachen (ändern sich nie)
 const VENDOR_ASSETS = [
