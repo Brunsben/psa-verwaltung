@@ -3160,8 +3160,7 @@ createApp({
     // ── Dashboard-Charts ──
     let chartInstances = {};
     function renderCharts() {
-      console.log('[Charts] aufgerufen – Chart:', typeof Chart, '| ausruestung:', ausruestung.value.length, '| page:', page.value);
-      if (typeof Chart === 'undefined') { console.error('[Charts] Chart.js nicht geladen!'); return; }
+      if (typeof Chart === 'undefined') return;
       const isDark = document.documentElement.classList.contains('dark');
       const gridColor = isDark ? 'rgba(75,85,99,0.3)' : 'rgba(229,231,235,0.8)';
       const textColor = isDark ? '#9ca3af' : '#6b7280';
@@ -3172,23 +3171,19 @@ createApp({
       // Status-Verteilung (Dashboard + Statistiken)
       ['chartStatus', 'chartStatusPage'].forEach(id => {
         const el = document.getElementById(id);
-        console.log('[Charts]', id, 'el:', !!el, 'w:', el?.offsetWidth, 'parentW:', el?.parentElement?.offsetWidth);
         if (!el) return;
         if (chartInstances[id]) { try { chartInstances[id].destroy(); } catch(e) {} }
         const statusCounts = {};
         ausruestung.value.forEach(a => { statusCounts[a.Status || 'Unbekannt'] = (statusCounts[a.Status || 'Unbekannt'] || 0) + 1; });
         const colorMap = { 'Lager': '#6b7280', 'Ausgegeben': '#3b82f6', 'Reinigung': '#14b8a6', 'Außer Dienst': '#f97316', 'Ausgesondert': '#ef4444' };
-        try {
-          chartInstances[id] = new Chart(el, {
-            type: 'doughnut',
-            data: {
-              labels: Object.keys(statusCounts),
-              datasets: [{ data: Object.values(statusCounts), backgroundColor: Object.keys(statusCounts).map(s => colorMap[s] || '#9ca3af') }]
-            },
-            options: { responsive: true, plugins: { legend: { position: 'bottom', labels: { padding: 12, font: { size: 11 } } } } }
-          });
-          console.log('[Charts]', id, 'erstellt, data:', statusCounts);
-        } catch(e) { console.error('[Charts]', id, 'Fehler:', e.message); }
+        chartInstances[id] = new Chart(el, {
+          type: 'doughnut',
+          data: {
+            labels: Object.keys(statusCounts),
+            datasets: [{ data: Object.values(statusCounts), backgroundColor: Object.keys(statusCounts).map(s => colorMap[s] || '#9ca3af') }]
+          },
+          options: { responsive: true, plugins: { legend: { position: 'bottom', labels: { padding: 12, font: { size: 11 } } } } }
+        });
       });
 
       // Prüfungen pro Monat (Dashboard + Statistiken)
