@@ -1993,8 +1993,8 @@ createApp({
       { id: 'benutzer',    label: 'Benutzer',           icon: '<i class="ph ph-users-gear"></i>',               roles: ['Admin'] },
     ];
     const visiblePages = computed(() => {
-      const role = currentUser.value?.Rolle || '';
-      return pages.filter(p => !p.roles || p.roles.includes(role));
+      const role = (currentUser.value?.Rolle || '').toLowerCase();
+      return pages.filter(p => !p.roles || p.roles.some(r => r.toLowerCase() === role));
     });
 
     // Data
@@ -2014,11 +2014,12 @@ createApp({
     const loginForm   = reactive({ username: '', pin: '', error: '' });
 
     // Rollen
-    const isAdmin        = computed(() => currentUser.value?.Rolle === 'Admin');
-    const isKleiderwart  = computed(() => ['Admin', 'Kleiderwart'].includes(currentUser.value?.Rolle));
+    const userRole       = computed(() => (currentUser.value?.Rolle || '').toLowerCase());
+    const isAdmin        = computed(() => userRole.value === 'admin');
+    const isKleiderwart  = computed(() => ['admin', 'kleiderwart'].includes(userRole.value));
     const canEdit        = computed(() => isKleiderwart.value);
     const myKameradId    = computed(() => {
-      if (currentUser.value?.Rolle !== 'User') return null;
+      if (userRole.value !== 'user') return null;
       return currentUser.value?.KameradId || null;
     });
     const myKameradName  = computed(() => {
