@@ -967,7 +967,7 @@
             <tr v-if="!benutzer.length">
               <td colspan="5" class="px-4 py-8 text-center text-gray-400 dark:text-gray-500">Keine Benutzer vorhanden</td>
             </tr>
-            <tr v-for="b in benutzer" :key="b.Id" class="hover:bg-gray-50 dark:hover:bg-gray-700/30">
+            <tr v-for="b in benutzer" :key="b.Id" class="group hover:bg-gray-50 dark:hover:bg-gray-700/30">
               <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">
                 {{ b.Benutzername }}
                 <span v-if="b.Id === currentUser?.Id" class="ml-1 text-xs text-gray-400">(du)</span>
@@ -989,7 +989,7 @@
                 </span>
               </td>
               <td class="px-4 py-3 text-right">
-                <div class="flex items-center justify-end gap-1">
+                <div class="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                   <button @click="openBenutzerForm(b)" title="Bearbeiten" class="icon-btn hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 dark:hover:text-blue-400">
                     <i class="ph ph-pencil-simple text-base"></i>
                   </button>
