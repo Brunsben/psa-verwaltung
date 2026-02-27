@@ -1,0 +1,26 @@
+{
+  "name": "n8n",
+  "version": "1.0.0",
+  "description": "Webbasierte Verwaltungssoftware für persönliche Schutzausrüstung (PSA) bei Freiwilligen Feuerwehren. Verwaltet Ausrüstungsstücke, Kameraden, Prüftermine, Ausgaben und Wäschen – läuft komplett selbst gehostet auf einem Raspberry Pi oder jedem Linux-Server.",
+  "main": "index.js",
+  "scripts": {
+    "build:css": "tailwindcss -i tailwind.input.css -o frontend/vendor/tailwind.min.css --minify",
+    "watch:css": "tailwindcss -i tailwind.input.css -o frontend/vendor/tailwind.min.css --watch"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Brunsben/psa-verwaltung.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Brunsben/psa-verwaltung/issues"
+  },
+  "homepage": "https://github.com/Brunsben/psa-verwaltung#readme",
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.2.1",
+    "tailwindcss": "^4.2.1"
+  }
+}

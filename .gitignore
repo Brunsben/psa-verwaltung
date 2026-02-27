@@ -13,6 +13,9 @@ setup/backups/
 .DS_Store
 Thumbs.db
 
+# Node.js
+node_modules/
+
 # Editor
 .vscode/
 *.swp

@@ -10,9 +10,8 @@
   <meta name="apple-mobile-web-app-title" content="PSA-Verwaltung" />
   <link rel="manifest" href="/manifest.json" />
   <title>PSA-Verwaltung – FF Wietmarschen</title>
-  <script src="/vendor/tailwind.cdn.js"></script>
+  <link rel="stylesheet" href="/vendor/tailwind.min.css">
   <script>
-    tailwind.config = { darkMode: 'class' };
     if (localStorage.getItem('darkMode') === 'true') document.documentElement.classList.add('dark');
   </script>
   <script src="/vendor/vue.global.prod.js"></script>

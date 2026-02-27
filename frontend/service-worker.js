@@ -1,9 +1,9 @@
 // PSA-Verwaltung Service Worker – Offline-Cache
-const CACHE_NAME = 'psa-v5';
+const CACHE_NAME = 'psa-v6';
 
 // Nur schwere Vendor-Dateien cachen (ändern sich nie)
 const VENDOR_ASSETS = [
-  '/vendor/tailwind.cdn.js',
+  '/vendor/tailwind.min.css',
   '/vendor/vue.global.prod.js',
   '/vendor/chart.umd.min.js',
   '/vendor/phosphor/style.css',
