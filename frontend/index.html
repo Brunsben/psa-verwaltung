@@ -1196,8 +1196,8 @@
           <div v-if="normenFuerAktuellenTyp.length">
             <select v-model="form.typ._normWahl" class="input" @change="onNormSelected">
               <option value="">– Norm wählen –</option>
-              <option v-for="n in normenFuerAktuellenTyp" :key="n.norm" :value="n.norm">
-                {{ n.norm }}
+              <option v-for="n in normenFuerAktuellenTyp" :key="n.Id" :value="n.Bezeichnung">
+                {{ n.Bezeichnung }}
               </option>
               <option value="__frei__">Freie Eingabe…</option>
             </select>
