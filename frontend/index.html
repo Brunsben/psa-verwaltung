@@ -256,7 +256,7 @@
   </div>
 
     <main class="flex-1 px-4 md:px-6 py-6">
-    <transition name="fade" mode="out-in">
+    <transition name="fade" mode="out-in" @after-enter="onPageEnter">
     <div :key="page">
 
     <!-- ══ DASHBOARD ══════════════════════════════════════ -->
@@ -1981,8 +1981,8 @@ createApp({
         changelog.value    = val(7);
         benutzer.value     = val(8);
 
-        // Charts rendern nach Datenlade
-        requestAnimationFrame(() => requestAnimationFrame(() => renderCharts()));
+        // Charts rendern nach Datenlade (nach Vue DOM-Update)
+        Vue.nextTick(renderCharts);
       });
     }
 
@@ -3266,14 +3266,13 @@ createApp({
 
     onMounted(fetchAll);
 
-    // Charts neu rendern wenn Statistiken- oder Dashboard-Seite geöffnet wird
-    // requestAnimationFrame: Browser muss Layout NACH DOM-Update berechnen
-    // bevor Chart.js die Canvas-Breite lesen kann
-    watch(page, (newPage) => {
-      if (newPage === 'statistiken' || newPage === 'dashboard') {
-        requestAnimationFrame(() => requestAnimationFrame(() => renderCharts()));
+    // Charts rendern wenn Seiten-Transition abgeschlossen ist
+    // (mode="out-in": neuer Inhalt wird erst NACH Ausblend-Animation eingefügt)
+    function onPageEnter() {
+      if (page.value === 'statistiken' || page.value === 'dashboard') {
+        renderCharts();
       }
-    }, { flush: 'post' });
+    }
 
     // ── Login aus localStorage wiederherstellen ──
     const savedUser = localStorage.getItem('psa_user');
@@ -3325,7 +3324,7 @@ createApp({
       loggedIn, currentUser, loginForm, doLogin, doLogout,
       changelog, benutzer, filterChangelog, changelogFiltered,
       qrResult, qrError, startQrScanner, stopQrScanner,
-      exportPDF, onPruefungFoto, renderCharts,
+      exportPDF, onPruefungFoto, renderCharts, onPageEnter,
       window,
     };
   }
