@@ -1038,7 +1038,7 @@
 
       <!-- Vorschau-Tabelle -->
       <div v-if="form.csvImport.rows.length">
-        <div class="flex items-center gap-3 mb-2">
+        <div class="flex items-center gap-3 mb-2 flex-wrap">
           <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
             Vorschau: {{ form.csvImport.rows.filter(r => !r._error).length }} gültige /
             {{ form.csvImport.rows.length }} Zeilen gesamt
@@ -1046,6 +1046,10 @@
           <span v-if="form.csvImport.rows.some(r => r._error)"
             class="text-xs text-red-600 dark:text-red-400">
             (Zeilen mit ✗ werden übersprungen)
+          </span>
+          <span v-if="form.csvImport.rows.some(r => r._duplicate)"
+            class="text-xs text-orange-600 dark:text-orange-400 font-medium">
+            ⚠ {{ form.csvImport.rows.filter(r => r._duplicate).length }} mögliche Dublette(n)
           </span>
         </div>
         <div class="overflow-auto max-h-64 rounded-lg border border-gray-200 dark:border-gray-700">
@@ -1055,6 +1059,7 @@
                 <th class="px-3 py-2 text-left text-gray-400 dark:text-gray-500 font-semibold w-8"></th>
                 <th class="px-3 py-2 text-left text-gray-400 dark:text-gray-500 font-semibold">Vorname</th>
                 <th class="px-3 py-2 text-left text-gray-400 dark:text-gray-500 font-semibold">Name</th>
+                <th class="px-3 py-2 text-left text-gray-400 dark:text-gray-500 font-semibold">Dienstgrad</th>
                 <th class="px-3 py-2 text-left text-gray-400 dark:text-gray-500 font-semibold">Jacke</th>
                 <th class="px-3 py-2 text-left text-gray-400 dark:text-gray-500 font-semibold">Hose</th>
                 <th class="px-3 py-2 text-left text-gray-400 dark:text-gray-500 font-semibold">Stiefel</th>
@@ -1064,12 +1069,15 @@
             </thead>
             <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
               <tr v-for="(row, i) in form.csvImport.rows" :key="i"
-                :class="row._error ? 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300'">
-                <td class="px-3 py-1.5 text-center font-bold" :title="row._error">
-                  {{ row._error ? '✗' : '✓' }}
+                :class="row._error ? 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400' : row._duplicate ? 'bg-orange-50 dark:bg-orange-900/20 text-gray-700 dark:text-gray-300' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300'">
+                <td class="px-3 py-1.5 text-center font-bold" :title="row._error || (row._duplicate ? 'Mögliche Dublette' : '')">
+                  <span v-if="row._error">✗</span>
+                  <span v-else-if="row._duplicate" class="text-orange-500">⚠</span>
+                  <span v-else>✓</span>
                 </td>
                 <td class="px-3 py-1.5">{{ row._Vorname || '—' }}</td>
                 <td class="px-3 py-1.5">{{ row._Name || '—' }}</td>
+                <td class="px-3 py-1.5 text-gray-400 dark:text-gray-500">{{ row.Dienstgrad || row.dienstgrad || '—' }}</td>
                 <td class="px-3 py-1.5 text-gray-400 dark:text-gray-500">{{ row.Jacke_Groesse || '—' }}</td>
                 <td class="px-3 py-1.5 text-gray-400 dark:text-gray-500">{{ row.Hose_Groesse || '—' }}</td>
                 <td class="px-3 py-1.5 text-gray-400 dark:text-gray-500">{{ row.Stiefel_Groesse || '—' }}</td>
@@ -2284,10 +2292,10 @@ createApp({
 
     // ── CSV Import Kameraden ──
     function downloadBeispielCSV() {
-      const header = 'Vorname;Name;Jacke_Groesse;Hose_Groesse;Stiefel_Groesse;Handschuh_Groesse;Hemd_Groesse;Poloshirt_Groesse;Fleece_Groesse;Aktiv';
+      const header = 'Vorname;Name;Dienstgrad;Jacke_Groesse;Hose_Groesse;Stiefel_Groesse;Handschuh_Groesse;Hemd_Groesse;Poloshirt_Groesse;Fleece_Groesse;Aktiv';
       const rows   = [
-        'Max;Mustermann;52;52;42;L;40/41;L;L;ja',
-        'Anna;Musterfrau;40;38;37;S;36/37;S;S;ja',
+        'Max;Mustermann;Hauptfeuerwehrmann;52;52;42;L;40/41;L;L;ja',
+        'Anna;Musterfrau;Feuerwehrfrau;40;38;37;S;36/37;S;S;ja',
       ];
       const csv  = '\uFEFF' + [header, ...rows].join('\n');
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -2318,9 +2326,14 @@ createApp({
           const vals = lines[i].split(delim).map(v => v.trim().replace(/^"|"$/g, ''));
           const row  = {};
           headers.forEach((h, idx) => { row[h] = vals[idx] ?? ''; });
-          row._Vorname = row.Vorname || row.vorname || '';
-          row._Name    = row.Name    || row.name    || '';
-          row._error   = (!row._Vorname || !row._Name) ? 'Vorname und Name sind Pflichtfelder' : '';
+          row._Vorname   = row.Vorname || row.vorname || '';
+          row._Name      = row.Name    || row.name    || '';
+          row._error     = (!row._Vorname || !row._Name) ? 'Vorname und Name sind Pflichtfelder' : '';
+          // Dublikatsprüfung gegen vorhandene Kameraden
+          row._duplicate = !row._error && kameraden.value.some(k =>
+            k.Vorname?.toLowerCase() === row._Vorname.toLowerCase() &&
+            k.Name?.toLowerCase()    === row._Name.toLowerCase()
+          );
           rows.push(row);
         }
         form.csvImport.rows = rows;
@@ -2331,8 +2344,16 @@ createApp({
     }
 
     async function importKameraden() {
-      const valid = form.csvImport.rows.filter(r => !r._error);
+      const valid      = form.csvImport.rows.filter(r => !r._error);
+      const duplicates = valid.filter(r => r._duplicate);
       if (!valid.length) { showToast('Keine gültigen Zeilen zum Importieren', 'error'); return; }
+      if (duplicates.length) {
+        const namen = duplicates.map(r => `${r._Vorname} ${r._Name}`).join(', ');
+        const ok = window.confirm(
+          `${duplicates.length} Kamerad${duplicates.length !== 1 ? 'en' : ''} bereits vorhanden:\n${namen}\n\nTrotzdem importieren (Duplikate anlegen)?`
+        );
+        if (!ok) return;
+      }
       await load(async () => {
         for (const row of valid) {
           const aktivRaw = (row.Aktiv || row.aktiv || 'ja').toLowerCase().trim();
@@ -2340,6 +2361,7 @@ createApp({
           await post('Kameraden', {
             Vorname:           row._Vorname,
             Name:              row._Name,
+            Dienstgrad:        row.Dienstgrad || row.dienstgrad || null,
             Jacke_Groesse:     row.Jacke_Groesse     || null,
             Hose_Groesse:      row.Hose_Groesse      || null,
             Stiefel_Groesse:   row.Stiefel_Groesse   ? Number(row.Stiefel_Groesse) : null,
