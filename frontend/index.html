@@ -875,22 +875,22 @@
         <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Statistiken</h1>
         <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Übersicht & Auswertungen</p>
       </div>
-      <div class="grid md:grid-cols-2 gap-6">
+      <div class="grid md:grid-cols-2 gap-6 items-start">
         <div class="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm border border-gray-100 dark:border-gray-700">
           <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Status-Verteilung</h3>
-          <canvas id="chartStatusPage" height="260"></canvas>
+          <canvas id="chartStatusPage"></canvas>
         </div>
         <div class="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm border border-gray-100 dark:border-gray-700">
           <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Prüfungen pro Monat</h3>
-          <canvas id="chartPruefungenPage" height="260"></canvas>
+          <canvas id="chartPruefungenPage"></canvas>
         </div>
         <div class="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm border border-gray-100 dark:border-gray-700">
           <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Ausrüstung pro Typ-Kategorie</h3>
-          <canvas id="chartTypen" height="260"></canvas>
+          <canvas id="chartTypen"></canvas>
         </div>
         <div class="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm border border-gray-100 dark:border-gray-700">
           <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Wäschen pro Monat</h3>
-          <canvas id="chartWaeschen" height="260"></canvas>
+          <canvas id="chartWaeschen"></canvas>
         </div>
       </div>
     </section>
@@ -3205,7 +3205,7 @@ createApp({
             labels: Object.keys(statusCounts),
             datasets: [{ data: Object.values(statusCounts), backgroundColor: Object.keys(statusCounts).map(s => colorMap[s] || '#9ca3af') }]
           },
-          options: { responsive: true, aspectRatio: 2, plugins: { legend: { position: 'bottom', labels: { padding: 12, font: { size: 11 } } } } }
+          options: { responsive: true, aspectRatio: 2.5, plugins: { legend: { position: 'bottom', labels: { padding: 12, font: { size: 11 } } } } }
         });
       });
 
@@ -3231,7 +3231,7 @@ createApp({
             labels: Object.keys(months).map(m => { const [y,mo] = m.split('-'); return `${mo}/${y.slice(2)}`; }),
             datasets: [{ label: 'Prüfungen', data: Object.values(months), backgroundColor: '#f97316', borderRadius: 4 }]
           },
-          options: { responsive: true, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }, plugins: { legend: { display: false } } }
+          options: { responsive: true, aspectRatio: 2.5, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }, plugins: { legend: { display: false } } }
         });
       });
 
@@ -3252,7 +3252,7 @@ createApp({
             labels: Object.keys(typCounts),
             datasets: [{ data: Object.values(typCounts), backgroundColor: colors.slice(0, Object.keys(typCounts).length) }]
           },
-          options: { responsive: true, aspectRatio: 2, plugins: { legend: { position: 'bottom', labels: { padding: 12, font: { size: 11 } } } } }
+          options: { responsive: true, aspectRatio: 2.5, plugins: { legend: { position: 'bottom', labels: { padding: 12, font: { size: 11 } } } } }
         });
       }
 
@@ -3277,7 +3277,7 @@ createApp({
             labels: Object.keys(months).map(m => { const [y,mo] = m.split('-'); return `${mo}/${y.slice(2)}`; }),
             datasets: [{ label: 'Wäschen', data: Object.values(months), backgroundColor: '#14b8a6', borderRadius: 4 }]
           },
-          options: { responsive: true, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }, plugins: { legend: { display: false } } }
+          options: { responsive: true, aspectRatio: 2.5, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }, plugins: { legend: { display: false } } }
         });
       }
     }
