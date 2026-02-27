@@ -153,7 +153,7 @@
           <input v-model="loginForm.username" class="input" placeholder="Benutzername" @keyup.enter="doLogin" />
         </div>
         <div>
-          <label class="label">PIN / Passwort</label>
+          <label class="label">Passwort</label>
           <input v-model="loginForm.pin" type="password" class="input" placeholder="••••" @keyup.enter="doLogin" />
         </div>
         <div v-if="loginForm.error" class="text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 rounded-lg px-3 py-2">
@@ -1088,8 +1088,8 @@
           <input v-model="form.benutzer.Benutzername" class="input" placeholder="max.mustermann" autocomplete="off" />
         </div>
         <div class="col-span-2">
-          <label class="label">PIN *</label>
-          <input v-model="form.benutzer.PIN" class="input" placeholder="z.B. 1234" type="password" autocomplete="new-password" />
+          <label class="label">Passwort *</label>
+          <input v-model="form.benutzer.PIN" class="input" placeholder="Passwort eingeben" type="password" autocomplete="new-password" />
         </div>
         <div>
           <label class="label">Rolle</label>
@@ -1103,13 +1103,13 @@
           <input type="checkbox" v-model="form.benutzer.Aktiv" id="benutzerAktiv" class="w-4 h-4 accent-red-600" />
           <label for="benutzerAktiv" class="label mb-0">Aktiv</label>
         </div>
-        <div class="col-span-2" v-if="form.benutzer.Rolle === 'User'">
-          <label class="label">Verknüpfter Kamerad (ID)</label>
+        <div class="col-span-2">
+          <label class="label">Verknüpfter Kamerad</label>
           <select v-model="form.benutzer.KameradId" class="input">
             <option value="">– Kein Kamerad –</option>
             <option v-for="k in kameraden" :key="k.Id" :value="String(k.Id)">{{ k.Vorname }} {{ k.Name }}</option>
           </select>
-          <p class="text-xs text-gray-400 mt-1">Nur nötig für Rolle "User" – zeigt dem Benutzer seine eigene Ausrüstung</p>
+          <p class="text-xs text-gray-400 mt-1">Für Rolle "User": zeigt nur die eigene Ausrüstung</p>
         </div>
       </div>
       <div class="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-100 dark:border-gray-700">
@@ -3130,7 +3130,7 @@ createApp({
     async function doLogin() {
       loginForm.error = '';
       if (!loginForm.username || !loginForm.pin) {
-        loginForm.error = 'Bitte Benutzername und PIN eingeben.';
+        loginForm.error = 'Bitte Benutzername und Passwort eingeben.';
         return;
       }
       await load(async () => {
@@ -3142,7 +3142,7 @@ createApp({
             u.PIN === loginForm.pin
           );
           if (!user) {
-            loginForm.error = 'Benutzername oder PIN falsch.';
+            loginForm.error = 'Benutzername oder Passwort falsch.';
             return;
           }
           if (!user.Aktiv) {
@@ -3186,7 +3186,7 @@ createApp({
 
     async function saveBenutzer() {
       if (!form.benutzer.Benutzername.trim() || !form.benutzer.PIN.trim()) {
-        showToast('Benutzername und PIN sind Pflichtfelder', 'error'); return;
+        showToast('Benutzername und Passwort sind Pflichtfelder', 'error'); return;
       }
       await load(async () => {
         const payload = {
