@@ -1990,7 +1990,7 @@ createApp({
       { id: 'warnungen',   label: 'Warnungen',          icon: '<i class="ph ph-bell-ringing"></i>',             roles: ['Admin','Kleiderwart'] },
       { id: 'statistiken', label: 'Statistiken',        icon: '<i class="ph ph-chart-bar"></i>',                roles: ['Admin','Kleiderwart'] },
       { id: 'changelog',   label: 'Changelog',          icon: '<i class="ph ph-clock-counter-clockwise"></i>',  roles: ['Admin','Kleiderwart'] },
-      { id: 'benutzer',    label: 'Benutzer',           icon: '<i class="ph ph-users-gear"></i>',               roles: ['Admin'] },
+      { id: 'benutzer',    label: 'Benutzer',           icon: '<i class="ph ph-user-gear"></i>',                roles: ['Admin'] },
     ];
     const visiblePages = computed(() => {
       const role = (currentUser.value?.Rolle || '').toLowerCase();
