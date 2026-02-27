@@ -1994,6 +1994,7 @@ createApp({
     ];
     const visiblePages = computed(() => {
       const role = (currentUser.value?.Rolle || '').toLowerCase();
+      if (!role) return pages.filter(p => p.id !== 'benutzer');
       return pages.filter(p => !p.roles || p.roles.some(r => r.toLowerCase() === role));
     });
 
