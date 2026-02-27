@@ -3160,7 +3160,8 @@ createApp({
     // ── Dashboard-Charts ──
     let chartInstances = {};
     function renderCharts() {
-      if (typeof Chart === 'undefined') return;
+      console.log('[Charts] aufgerufen – Chart:', typeof Chart, '| ausruestung:', ausruestung.value.length, '| page:', page.value);
+      if (typeof Chart === 'undefined') { console.error('[Charts] Chart.js nicht geladen!'); return; }
       const isDark = document.documentElement.classList.contains('dark');
       const gridColor = isDark ? 'rgba(75,85,99,0.3)' : 'rgba(229,231,235,0.8)';
       const textColor = isDark ? '#9ca3af' : '#6b7280';
