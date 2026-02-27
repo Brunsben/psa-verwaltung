@@ -2995,11 +2995,12 @@ createApp({
       });
     }
 
-    function stopQrScanner() {
+    async function stopQrScanner() {
       if (qrScanner) {
-        qrScanner.stop().catch(() => {});
-        qrScanner.clear().catch(() => {});
+        const s = qrScanner;
         qrScanner = null;
+        try { await s.stop(); } catch(e) {}
+        try { s.clear(); } catch(e) {}
       }
       modal.qrScanner = false;
       qrResult.value = '';
