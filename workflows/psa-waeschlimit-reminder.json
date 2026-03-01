@@ -1,0 +1,185 @@
+{
+  "name": "PSA: Wäschlimit-Reminder (wöchentlich)",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "weeks",
+              "triggerAtDay": [1],
+              "triggerAtHour": 7
+            }
+          ]
+        }
+      },
+      "id": "wl-schedule",
+      "name": "Montag 07:00 Uhr",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [208, 304]
+    },
+    {
+      "parameters": {
+        "url": "https://nocodb.brunsben.org/api/v1/db/data/noco/pxicv3djlauluse/m6gby0ep5khzyzg",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            { "name": "limit", "value": "500" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "wl-http-stuecke",
+      "name": "NocoDB: Ausrüstungsstücke laden",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [432, 304],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "lUyuLGutalKUKvNP",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://nocodb.brunsben.org/api/v1/db/data/noco/pxicv3djlauluse/mv97zr52e65li0f",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            { "name": "limit", "value": "200" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "wl-http-typen",
+      "name": "NocoDB: Ausrüstungstypen laden",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [640, 304],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "lUyuLGutalKUKvNP",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://nocodb.brunsben.org/api/v1/db/data/noco/pxicv3djlauluse/m3e70ipbmh7zre0",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            { "name": "limit", "value": "5000" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "wl-http-waesche",
+      "name": "NocoDB: Wäsche laden",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [864, 304],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "lUyuLGutalKUKvNP",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const stuecke = $('NocoDB: Ausrüstungsstücke laden').first().json.list || [];\nconst typen = $('NocoDB: Ausrüstungstypen laden').first().json.list || [];\nconst waescheList = $input.first().json.list || [];\n\nconst maxMap = {};\nfor (const t of typen) {\n  if (t.Bezeichnung && t.Max_Waeschen) maxMap[t.Bezeichnung] = t.Max_Waeschen;\n}\n\nconst countMap = {};\nfor (const w of waescheList) {\n  const id = w.Ausruestungstueck_Id;\n  if (id) countMap[id] = (countMap[id] || 0) + 1;\n}\n\nconst THRESHOLD = 0.9;\nconst items = stuecke\n  .filter(a => {\n    const max = maxMap[a.Ausruestungstyp];\n    if (!max) return false;\n    const count = countMap[a.Id] || 0;\n    return count >= max * THRESHOLD;\n  })\n  .map(a => {\n    const max = maxMap[a.Ausruestungstyp];\n    const count = countMap[a.Id] || 0;\n    const pct = Math.round(count / max * 100);\n    return { ...a, _count: count, _max: max, _pct: pct };\n  })\n  .sort((a, b) => b._pct - a._pct);\n\nif (items.length === 0) {\n  return [{ json: { anzahl: 0, betreff: '', html: '' } }];\n}\n\nconst atLimit = items.filter(a => a._pct >= 100).length;\nconst betreff = atLimit > 0\n  ? 'PSA: ' + atLimit + ' Stueck Waeschlimit erreicht + ' + (items.length - atLimit) + ' naehern sich dem Limit'\n  : 'PSA: ' + items.length + ' Stueck naehern sich dem Waeschlimit (>=90%)';\n\nconst rows = items.map(a => {\n  const color = a._pct >= 100 ? '#ef4444' : '#f97316';\n  return '<tr>'\n    + '<td style=\"padding:8px;border-bottom:1px solid #e5e7eb\">' + (a.Seriennummer || '-') + '</td>'\n    + '<td style=\"padding:8px;border-bottom:1px solid #e5e7eb\">' + (a.Ausruestungstyp || '-') + '</td>'\n    + '<td style=\"padding:8px;border-bottom:1px solid #e5e7eb\">' + (a.Kamerad || '-') + '</td>'\n    + '<td style=\"padding:8px;border-bottom:1px solid #e5e7eb;color:' + color + ';font-weight:600\">' + a._count + ' / ' + a._max + ' (' + a._pct + '%)</td>'\n    + '</tr>';\n}).join('');\n\nconst html = '<html><body style=\"font-family:sans-serif;max-width:600px;margin:0 auto;padding:20px;color:#111827\">'\n  + '<h2 style=\"margin-top:0;color:#1e3a5f\">PSA-Waeschlimit-Reminder</h2>'\n  + '<p>Folgende Ausruestungsstuecke haben 90% oder mehr ihrer maximalen Waesche-Zyklen erreicht:</p>'\n  + '<table style=\"width:100%;border-collapse:collapse;font-size:14px\">'\n  + '<thead><tr style=\"background:#f3f4f6;text-align:left\">'\n  + '<th style=\"padding:8px\">Seriennummer</th>'\n  + '<th style=\"padding:8px\">Typ</th>'\n  + '<th style=\"padding:8px\">Kamerad</th>'\n  + '<th style=\"padding:8px\">Waeschen</th>'\n  + '</tr></thead>'\n  + '<tbody>' + rows + '</tbody>'\n  + '</table>'\n  + '<p style=\"margin-top:24px;font-size:12px;color:#6b7280\">Dieser Reminder wird automatisch jeden Montag versandt.<br>'\n  + '<a href=\"https://psa.ofwietmarschen.org\" style=\"color:#3b82f6\">PSA-Verwaltung oeffnen</a></p>'\n  + '</body></html>';\n\nreturn [{ json: { anzahl: items.length, betreff, html } }];"
+      },
+      "id": "wl-code",
+      "name": "Limit-Überschreitung prüfen & E-Mail aufbauen",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1088, 304]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "cond-anzahl",
+              "leftValue": "={{ $json.anzahl }}",
+              "rightValue": 0,
+              "operator": { "type": "number", "operation": "gt" }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "wl-if",
+      "name": "Hat Limit-Überschreitungen?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [1312, 304]
+    },
+    {
+      "parameters": {
+        "fromEmail": "psa@brunsben.org",
+        "toEmail": "brunsben@gmail.com",
+        "subject": "={{ $json.betreff }}",
+        "html": "={{ $json.html }}",
+        "options": {}
+      },
+      "id": "wl-email",
+      "name": "Wäschlimit-Reminder senden",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [1520, 224],
+      "credentials": {
+        "smtp": {
+          "id": "WODz1zMPZi3WItkA",
+          "name": "SMTP account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Montag 07:00 Uhr": {
+      "main": [[{ "node": "NocoDB: Ausrüstungsstücke laden", "type": "main", "index": 0 }]]
+    },
+    "NocoDB: Ausrüstungsstücke laden": {
+      "main": [[{ "node": "NocoDB: Ausrüstungstypen laden", "type": "main", "index": 0 }]]
+    },
+    "NocoDB: Ausrüstungstypen laden": {
+      "main": [[{ "node": "NocoDB: Wäsche laden", "type": "main", "index": 0 }]]
+    },
+    "NocoDB: Wäsche laden": {
+      "main": [[{ "node": "Limit-Überschreitung prüfen & E-Mail aufbauen", "type": "main", "index": 0 }]]
+    },
+    "Limit-Überschreitung prüfen & E-Mail aufbauen": {
+      "main": [[{ "node": "Hat Limit-Überschreitungen?", "type": "main", "index": 0 }]]
+    },
+    "Hat Limit-Überschreitungen?": {
+      "main": [
+        [{ "node": "Wäschlimit-Reminder senden", "type": "main", "index": 0 }],
+        []
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Europe/Berlin",
+    "callerPolicy": "workflowsFromSameOwner"
+  }
+}

@@ -1,0 +1,139 @@
+{
+  "name": "PSA: Lebensende-Warnung",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "weeks",
+              "triggerAtDay": [1],
+              "triggerAtHour": 8
+            }
+          ]
+        }
+      },
+      "id": "trigger",
+      "name": "Montags 08:00 Uhr",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [240, 304]
+    },
+    {
+      "parameters": {
+        "url": "https://nocodb.brunsben.org/api/v1/db/data/noco/pxicv3djlauluse/m6gby0ep5khzyzg",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "where",
+              "value": "(Lebensende_Datum,lt,{{ $now.plus(180, 'days').toISO() }})"
+            },
+            {
+              "name": "where",
+              "value": "(Status,neq,Ausgesondert)"
+            },
+            {
+              "name": "fields",
+              "value": "Kamerad,Ausruestungstyp,Seriennummer,Herstellungsdatum,Lebensende_Datum,Status"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "fetch_old",
+      "name": "NocoDB: Ausrüstung nahe Lebensende",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [464, 304],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "lUyuLGutalKUKvNP",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "has_items",
+              "leftValue": "={{ $json.list.length }}",
+              "rightValue": 0,
+              "operator": { "type": "number", "operation": "gt" }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "check_results",
+      "name": "Einträge vorhanden?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [688, 304]
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.first().json.list;\nconst heute = new Date();\n\nlet zeilen = items.map(item => {\n  const ablauf = new Date(item.Lebensende_Datum);\n  const tage = Math.ceil((ablauf - heute) / (1000 * 60 * 60 * 24));\n  const ablaufStr = ablauf.toLocaleDateString('de-DE');\n  const warnLevel = tage <= 0 ? '🔴 UEBERFAELLIG' : tage <= 30 ? '🟠 DRINGEND' : '🟡 IN KUERZE';\n  const ort = item.Kamerad ? 'Ausgegeben an: ' + item.Kamerad : 'Im Lager';\n  return warnLevel + ' ' + item.Ausruestungstyp + ' (SN: ' + item.Seriennummer + ')\\n  '\n    + ort + ' - Lebensende: ' + ablaufStr + ' ('\n    + (tage > 0 ? 'in ' + tage + ' Tagen' : Math.abs(tage) + ' Tage ueberfaellig') + ')';\n}).join('\\n\\n');\n\nconst datum = heute.toLocaleDateString('de-DE');\n\nreturn [{\n  json: {\n    subject: '[Feuerwehr Wietmarschen] PSA Lebensende - ' + items.length + ' Stueck zur Aussonderung',\n    html: '<h2>PSA naehert sich dem Lebensende</h2>'\n      + '<p>Folgende Ausruestungsstuecke erreichen in den naechsten 6 Monaten ihr Lebensende und muessen ausgesondert werden:</p>'\n      + '<pre>' + zeilen + '</pre>'\n      + '<p>Bitte Ersatzbeschaffung einleiten und Ausruestung in der PSA-Verwaltung als &quot;Ausgesondert&quot; markieren.</p>'\n      + '<p><b>Rechtsgrundlage:</b> §11 DGUV Vorschrift 49 - Feuerwehren</p>'\n      + '<p><a href=\"https://psa.ofwietmarschen.org\">PSA-Verwaltung oeffnen</a></p>'\n      + '<p><small>Stand: ' + datum + ' | FF Wietmarschen - Bekleidungsverwaltung</small></p>'\n  }\n}];"
+      },
+      "id": "format_email",
+      "name": "E-Mail Text erstellen",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [912, 208]
+    },
+    {
+      "parameters": {
+        "fromEmail": "Material@feuerwehr-wietmarschen.de",
+        "toEmail": "Material@feuerwehr-wietmarschen.de",
+        "subject": "={{ $json.subject }}",
+        "html": "={{ $json.html }}",
+        "options": {}
+      },
+      "id": "send_email",
+      "name": "E-Mail senden",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [1120, 208],
+      "credentials": {
+        "smtp": {
+          "id": "WODz1zMPZi3WItkA",
+          "name": "SMTP account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Montags 08:00 Uhr": {
+      "main": [[{ "node": "NocoDB: Ausrüstung nahe Lebensende", "type": "main", "index": 0 }]]
+    },
+    "NocoDB: Ausrüstung nahe Lebensende": {
+      "main": [[{ "node": "Einträge vorhanden?", "type": "main", "index": 0 }]]
+    },
+    "Einträge vorhanden?": {
+      "main": [
+        [{ "node": "E-Mail Text erstellen", "type": "main", "index": 0 }],
+        []
+      ]
+    },
+    "E-Mail Text erstellen": {
+      "main": [[{ "node": "E-Mail senden", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Europe/Berlin",
+    "callerPolicy": "workflowsFromSameOwner"
+  }
+}

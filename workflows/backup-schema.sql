@@ -5,7 +5,7 @@
 --  Dieses Schema bildet die NocoDB-Tabellen auf dem Raspberry Pi
 --  als MySQL-Backup ab. Spalten sind synchron mit nocodb-setup.sh.
 --
---  Letzte Synchronisation: 2026-02-25
+--  Letzte Synchronisation: 2026-03-01
 -- ─────────────────────────────────────────────────────────────
 
 SET NAMES utf8mb4;
@@ -63,6 +63,7 @@ CREATE TABLE IF NOT EXISTS ausruestungstuecke (
   Kamerad VARCHAR(255) DEFAULT NULL COMMENT 'Referenz auf kameraden (Name Vorname)',
   Seriennummer VARCHAR(100) DEFAULT NULL,
   QR_Code VARCHAR(255) DEFAULT NULL,
+  Groesse VARCHAR(50) DEFAULT NULL COMMENT 'Konfektionsgröße des Stücks (z.B. XL, 52, 42/170)',
   Herstellungsdatum DATE DEFAULT NULL,
   Lebensende_Datum DATE DEFAULT NULL,
   Naechste_Pruefung DATE DEFAULT NULL,
