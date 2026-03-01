@@ -6,18 +6,11 @@
         <div class="grid gap-3">
           <div>
             <label class="label">Kategorie</label>
-            <select v-model="form.typ.Typ" class="input" @change="onTypChange">
-              <option value="">– Typ wählen –</option>
-              <option>Helm</option>
-              <option>Jacke</option>
-              <option>Hose</option>
-              <option>Stiefel</option>
-              <option>Handschuh</option>
-              <option>Hemd</option>
-              <option>Poloshirt</option>
-              <option>Fleece/Softshell</option>
-              <option>Flammschutzhaube</option>
-            </select>
+            <input v-model="form.typ.Typ" class="input" list="typ-kat-list"
+              placeholder="z.B. Jacke, Helm, Flammschutzhaube …" @change="onTypChange" />
+            <datalist id="typ-kat-list">
+              <option v-for="k in typenKategorien" :key="k" :value="k" />
+            </datalist>
           </div>
           <div class="grid grid-cols-2 gap-3">
             <div>
@@ -73,5 +66,5 @@
 </template>
 
 <script setup>
-import { modal, form, normenFuerAktuellenTyp, onTypChange, onNormSelected, saveTyp } from '../../store.js'
+import { modal, form, typenKategorien, normenFuerAktuellenTyp, onTypChange, onNormSelected, saveTyp } from '../../store.js'
 </script>

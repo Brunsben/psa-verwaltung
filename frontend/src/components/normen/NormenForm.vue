@@ -10,10 +10,11 @@
           </div>
           <div>
             <label class="label">Kategorie (Ausrüstungstyp)</label>
-            <select v-model="form.norm.Ausruestungstyp_Kategorie" class="input">
-              <option value="">– keine Zuordnung –</option>
-              <option v-for="k in normenKategorien" :key="k" :value="k">{{ k }}</option>
-            </select>
+            <input v-model="form.norm.Ausruestungstyp_Kategorie" class="input" list="norm-kat-list"
+              placeholder="z.B. Jacke, Helm, Flammschutzhaube …" />
+            <datalist id="norm-kat-list">
+              <option v-for="k in typenKategorien" :key="k" :value="k" />
+            </datalist>
           </div>
           <div class="grid grid-cols-3 gap-3">
             <div>
@@ -44,5 +45,5 @@
 </template>
 
 <script setup>
-import { modal, form, normenKategorien, saveNorm } from '../../store.js'
+import { modal, form, typenKategorien, saveNorm } from '../../store.js'
 </script>
