@@ -53,21 +53,21 @@ Located in `~/.claude/skills/`:
 
 - **URL (öffentlich):** `https://nocodb.brunsben.org` (via Cloudflare Tunnel)
 - **URL (lokal):** `http://10.10.1.238:8181` (Raspberry Pi direkt)
-- **API Token:** `bsI_4ApQe_kBggcvb5V44SPE875OfCSg0BFV6WUy` (Header: `xc-token`)
-- **API Endpoint:** `https://nocodb.brunsben.org/api/v1/db/meta/projects/`
-- **Projekt ID:** `p962d7ujd8wbfvi`
+- **API Token:** `y8gqusXb01THwcj2WcAg_04hEfIV-DfgY25INewY` (Header: `xc-token`)
+- **API Endpoint:** `https://nocodb.brunsben.org/api/v2/meta/bases/`
+- **Base ID:** `pxicv3djlauluse`
 
 | Tabelle | ID |
 | - | - |
-| Kameraden | `m1ky1mz0xyfth5m` |
-| Ausruestungstypen | `murbf56gzv4ii0u` |
-| Ausruestungstuecke | `mhskteevunob1r0` |
-| Ausgaben | `mrwlggxzb88opar` |
-| Pruefungen | `mkb11hw0mzcib6y` |
-| Waesche | `m38ul9qugdihrhx` |
-| Normen | `mrgq8jsdlaqg1r9` |
-| Benutzer | `mv1i1ofa9j09jqf` |
-| Changelog | `m8dlu49dv8wf8uo` |
+| Kameraden | `mbfq6ec4y5mroif` |
+| Ausruestungstypen | `mv97zr52e65li0f` |
+| Ausruestungstuecke | `m6gby0ep5khzyzg` |
+| Ausgaben | `m6rtooq3l4fshif` |
+| Pruefungen | `mvpg0wcptqd4gk9` |
+| Waesche | `m3e70ipbmh7zre0` |
+| Normen | `m548rfn3cyooaa7` |
+| Benutzer | `mvcs3jnd76tm4ad` |
+| Changelog | `mf2aln0bbnynp0m` |
 
 > Cloudflare Tunnel läuft als Systemdienst auf dem Pi (`sudo systemctl status cloudflared`). Startet automatisch nach Neustart.
 
