@@ -137,6 +137,11 @@ add_norm "EN 137:2006" "Atemschutz" "12" "15" "" \
 add_norm "EN 14387:2004+A1:2008" "Atemschutz" "" "" "" \
   "Gasfilter und Kombinationsfilter. Typen: A (org. Gase), B (anorg. Gase/Dämpfe), E (SO₂), K (Ammoniak), P (Partikel). Klassen 1/2/3. Für Fluchtgeräte und Halbmasken im leichten Atemschutz."
 
+# ── Flammschutzhaube ─────────────────────────────────────────────────────────
+echo "▸ Flammschutzhaube"
+add_norm "EN 13911:2017" "Haube" "12" "10" "20" \
+  "Schutzkleidung für die Feuerwehr – Anforderungen und Prüfverfahren für Flammschutzhauben. Schützt Hals, Kinn und Ohren unter dem Feuerwehrhelm. Prüfanforderungen: begrenzte Flammenausbreitung, Wärmedurchgangswiderstand, Zugfestigkeit, Dehnung. Wird als Ergänzung zu EN 469 und EN 443 getragen."
+
 # ── Hemd / Unterziehbekleidung ────────────────────────────────────────────────
 echo "▸ Hemd / Unterziehbekleidung"
 add_norm "EN ISO 14116:2015" "Hemd" "" "" "50" \
