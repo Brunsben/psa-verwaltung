@@ -761,6 +761,7 @@ export async function saveAusruestung() {
       Ausruestungstyp:   form.ausruestung.Ausruestungstyp  || null,
       Kamerad:           form.ausruestung.Kamerad           || null,
       Seriennummer:      form.ausruestung.Seriennummer      || null,
+      Groesse:           form.ausruestung.Groesse           || null,
       QR_Code:           form.ausruestung.QR_Code           || null,
       Herstellungsdatum: form.ausruestung.Herstellungsdatum || null,
       Lebensende_Datum:  form.ausruestung.Lebensende_Datum  || null,
