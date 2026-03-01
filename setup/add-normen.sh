@@ -139,7 +139,7 @@ add_norm "EN 14387:2004+A1:2008" "Atemschutz" "" "" "" \
 
 # ── Flammschutzhaube ─────────────────────────────────────────────────────────
 echo "▸ Flammschutzhaube"
-add_norm "EN 13911:2017" "Haube" "12" "10" "20" \
+add_norm "EN 13911:2017" "Flammschutzhaube" "12" "10" "20" \
   "Schutzkleidung für die Feuerwehr – Anforderungen und Prüfverfahren für Flammschutzhauben. Schützt Hals, Kinn und Ohren unter dem Feuerwehrhelm. Prüfanforderungen: begrenzte Flammenausbreitung, Wärmedurchgangswiderstand, Zugfestigkeit, Dehnung. Wird als Ergänzung zu EN 469 und EN 443 getragen."
 
 # ── Hemd / Unterziehbekleidung ────────────────────────────────────────────────
