@@ -34,7 +34,7 @@
       },
       "parameters": {
         "method": "GET",
-        "url": "https://nocodb.brunsben.org/api/v1/db/data/noco/p962d7ujd8wbfvi/mhskteevunob1r0",
+        "url": "https://nocodb.brunsben.org/api/v1/db/data/noco/pxicv3djlauluse/m6gby0ep5khzyzg",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendQuery": true,
