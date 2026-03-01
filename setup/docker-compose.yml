@@ -1,6 +1,6 @@
 services:
   nocodb:
-    image: nocodb/nocodb:2026.01.1
+    image: nocodb/nocodb:0.301.3
     container_name: nocodb
     ports:
       - "8181:8080"
