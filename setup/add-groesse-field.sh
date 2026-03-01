@@ -39,7 +39,7 @@ echo "📋 Tabelle Ausruestungstuecke: $TABLE_ID"
 echo "🔧 Füge Feld 'Groesse' hinzu..."
 
 RESP=$(curl -s -w "\n%{http_code}" -X POST \
-  "$BASE_URL/api/v2/meta/tables/$TABLE_ID/fields" \
+  "$BASE_URL/api/v1/db/meta/tables/$TABLE_ID/columns" \
   -H "xc-token: $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"title": "Groesse", "uidt": "SingleLineText"}')
