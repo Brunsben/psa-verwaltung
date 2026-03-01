@@ -31,14 +31,15 @@ services:
     restart: unless-stopped
 
   frontend:
-    image: nginx:1.28-alpine
+    build:
+      context: ../frontend
     container_name: psa_frontend
     ports:
       - "8182:80"
     volumes:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
       - ./nginx-ratelimit.conf:/etc/nginx/conf.d/ratelimit.conf:ro
-      - ../frontend:/usr/share/nginx/html:ro
+      - ../frontend/config.js:/usr/share/nginx/html/config.js:ro
     depends_on:
       - nocodb
     healthcheck:

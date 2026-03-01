@@ -13,8 +13,10 @@ setup/backups/
 .DS_Store
 Thumbs.db
 
-# Node.js
+# Node.js / Vite
 node_modules/
+frontend/dist/
+frontend/public/
 
 # Editor
 .vscode/

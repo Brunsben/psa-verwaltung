@@ -1,0 +1,77 @@
+<template>
+  <Teleport to="body">
+    <div v-if="modal.typForm" class="modal-backdrop">
+      <div class="modal-box">
+        <h2 class="text-lg font-bold mb-5">{{ form.typ.Id ? 'Typ bearbeiten' : 'Neuer Typ' }}</h2>
+        <div class="grid gap-3">
+          <div>
+            <label class="label">Kategorie</label>
+            <select v-model="form.typ.Typ" class="input" @change="onTypChange">
+              <option value="">– Typ wählen –</option>
+              <option>Helm</option>
+              <option>Jacke</option>
+              <option>Hose</option>
+              <option>Stiefel</option>
+              <option>Handschuh</option>
+              <option>Hemd</option>
+              <option>Poloshirt</option>
+              <option>Fleece/Softshell</option>
+              <option>Flammschutzhaube</option>
+            </select>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="label">Bezeichnung / Modell</label>
+              <input v-model="form.typ.Bezeichnung" class="input" placeholder="z.B. F130" />
+            </div>
+            <div>
+              <label class="label">Hersteller</label>
+              <input v-model="form.typ.Hersteller" class="input" placeholder="z.B. Schubert" />
+            </div>
+          </div>
+          <div>
+            <label class="label">Norm</label>
+            <div v-if="normenFuerAktuellenTyp.length">
+              <select v-model="form.typ._normWahl" class="input" @change="onNormSelected">
+                <option value="">– Norm wählen –</option>
+                <option v-for="n in normenFuerAktuellenTyp" :key="n.Id" :value="n.Bezeichnung">{{ n.Bezeichnung }}</option>
+                <option value="__frei__">Freie Eingabe…</option>
+              </select>
+              <input v-if="form.typ._normWahl === '__frei__'" v-model="form.typ.Norm" class="input mt-2" placeholder="Norm eingeben…" />
+              <div v-if="form.typ._normHinweis" class="text-xs text-amber-600 dark:text-amber-400 mt-1.5 bg-amber-50 dark:bg-amber-900/20 p-2 rounded-lg">
+                ℹ️ {{ form.typ._normHinweis }}
+              </div>
+            </div>
+            <input v-else v-model="form.typ.Norm" class="input" placeholder="z.B. DIN EN 469" />
+          </div>
+          <div class="grid grid-cols-3 gap-3">
+            <div>
+              <label class="label">Max. Lebensdauer (Jahre)</label>
+              <input v-model.number="form.typ.Max_Lebensdauer_Jahre" type="number" class="input" />
+            </div>
+            <div>
+              <label class="label">Prüfintervall (Monate)</label>
+              <input v-model.number="form.typ.Pruefintervall_Monate" type="number" class="input" />
+            </div>
+            <div>
+              <label class="label">Max. Wäschen</label>
+              <input v-model.number="form.typ.Max_Waeschen" type="number" class="input" placeholder="z.B. 50" />
+            </div>
+          </div>
+          <div>
+            <label class="label">Beschreibung</label>
+            <textarea v-model="form.typ.Beschreibung" rows="2" class="input resize-none"></textarea>
+          </div>
+        </div>
+        <div class="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-100 dark:border-gray-700">
+          <button @click="modal.typForm = false" class="btn-secondary">Abbrechen</button>
+          <button @click="saveTyp" class="btn-primary">Speichern</button>
+        </div>
+      </div>
+    </div>
+  </Teleport>
+</template>
+
+<script setup>
+import { modal, form, normenFuerAktuellenTyp, onTypChange, onNormSelected, saveTyp } from '../../store.js'
+</script>

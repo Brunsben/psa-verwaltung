@@ -1,0 +1,119 @@
+@import "tailwindcss";
+
+/* Dark mode über class-Strategie */
+@variant dark (&:where(.dark, .dark *));
+
+[v-cloak] { display: none; }
+
+/* ── Übergänge ──────────────────────────────────────────────────── */
+.fade-enter-active { transition: opacity .15s ease, transform .15s ease; }
+.fade-leave-active { transition: opacity .1s ease; }
+.fade-enter-from   { opacity: 0; transform: translateY(8px); }
+.fade-leave-to     { opacity: 0; }
+
+/* ── Modal ──────────────────────────────────────────────────────── */
+.modal-backdrop {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(3px);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 50; padding: 1rem;
+}
+.modal-box {
+  background: white;
+  border-radius: 1rem;
+  box-shadow: 0 25px 60px -12px rgba(0,0,0,0.3);
+  width: 100%; max-width: 32rem;
+  padding: 1.5rem;
+  max-height: 90vh; overflow-y: auto;
+}
+.dark .modal-box {
+  background: #1f2937;
+  color: #f9fafb;
+  box-shadow: 0 25px 60px -12px rgba(0,0,0,0.6);
+}
+.modal-box::-webkit-scrollbar { width: 5px; }
+.modal-box::-webkit-scrollbar-track { background: transparent; }
+.modal-box::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 3px; }
+.dark .modal-box::-webkit-scrollbar-thumb { background: #4b5563; }
+
+/* ── Eingabefelder ──────────────────────────────────────────────── */
+.input {
+  display: block; width: 100%;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  background: white; color: #111827;
+  transition: border-color .15s, box-shadow .15s;
+}
+.input:focus { outline: none; border-color: #ef4444; box-shadow: 0 0 0 3px rgba(239,68,68,0.15); }
+.dark .input { background: #374151; border-color: #4b5563; color: #f9fafb; }
+.dark .input::placeholder { color: #9ca3af; }
+.dark .input:focus { border-color: #ef4444; box-shadow: 0 0 0 3px rgba(239,68,68,0.2); }
+
+.label {
+  display: block; font-size: 0.7rem; font-weight: 700;
+  color: #6b7280; margin-bottom: 0.3rem;
+  text-transform: uppercase; letter-spacing: 0.06em;
+}
+.dark .label { color: #9ca3af; }
+
+/* ── Buttons ────────────────────────────────────────────────────── */
+.btn-primary {
+  display: inline-flex; align-items: center; gap: 0.35rem;
+  background: #dc2626;
+  color: white; padding: 0.5rem 1.25rem;
+  border-radius: 0.5rem; font-size: 0.875rem; font-weight: 600;
+  cursor: pointer; border: none;
+  transition: background .15s;
+}
+.btn-primary:hover { background: #b91c1c; }
+.btn-primary:active { background: #991b1b; }
+.btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.btn-secondary {
+  display: inline-flex; align-items: center; gap: 0.35rem;
+  background: #f9fafb; color: #374151; padding: 0.5rem 1.25rem;
+  border-radius: 0.5rem; font-size: 0.875rem; font-weight: 600;
+  cursor: pointer; border: 1px solid #e5e7eb; transition: all .15s;
+}
+.btn-secondary:hover { background: #f3f4f6; border-color: #d1d5db; }
+.dark .btn-secondary { background: #374151; color: #e5e7eb; border-color: #4b5563; }
+.dark .btn-secondary:hover { background: #4b5563; }
+
+.icon-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 1.75rem; height: 1.75rem; border-radius: 0.375rem;
+  border: none; background: transparent; cursor: pointer; padding: 0;
+  color: #9ca3af; transition: background .12s, color .12s;
+}
+.dark .icon-btn { color: #6b7280; }
+
+/* ── Navigation ─────────────────────────────────────────────────── */
+.nav-icon { display: flex; align-items: center; justify-content: center; width: 1.25rem; height: 1.25rem; flex-shrink: 0; font-size: 1.25rem; }
+
+/* ── Druckstile ─────────────────────────────────────────────────── */
+@media print {
+  aside, header { display: none !important; }
+  .content-main { padding-left: 0 !important; }
+  .no-print { display: none !important; }
+  .modal-backdrop {
+    position: static !important;
+    background: none !important;
+    display: block !important;
+    padding: 0 !important;
+  }
+  .modal-box {
+    max-width: 100% !important;
+    max-height: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    padding: 1rem !important;
+    background: white !important;
+    color: black !important;
+  }
+  body, html { background: white !important; }
+  .print-title { display: block !important; font-size: 1.25rem; font-weight: bold; margin-bottom: 1rem; }
+}
+.print-title { display: none; }
