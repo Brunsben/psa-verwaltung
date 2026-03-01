@@ -22,7 +22,7 @@ if [ -z "$TOKEN" ]; then
 fi
 
 echo "🔌 Teste Verbindung zu NocoDB ($BASE_URL)..."
-STATUS=$(curl -s -o /dev/null -w "%{http_code}" -H "xc-token: $TOKEN" "$BASE_URL/api/v1/meta/bases/")
+STATUS=$(curl -s -o /dev/null -w "%{http_code}" -H "xc-token: $TOKEN" "$BASE_URL/api/v2/meta/bases/")
 if [ "$STATUS" != "200" ]; then
   echo "❌ Fehler: Token ungültig oder NocoDB nicht erreichbar (HTTP $STATUS)"
   echo "   Stelle sicher dass NocoDB läuft: docker compose up -d"
@@ -32,7 +32,7 @@ echo "✅ Verbindung OK"
 
 echo ""
 echo "📁 Erstelle Base 'Feuerwehr PSA-Verwaltung'..."
-BASE_RESP=$(curl -s -X POST "$BASE_URL/api/v1/meta/bases/" \
+BASE_RESP=$(curl -s -X POST "$BASE_URL/api/v2/meta/bases/" \
   -H "xc-token: $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"title": "Feuerwehr PSA-Verwaltung"}')
@@ -41,7 +41,7 @@ BASE_ID=$(echo "$BASE_RESP" | python3 -c "import sys,json; d=json.load(sys.stdin
 
 if [ -z "$BASE_ID" ]; then
   echo "⚠️  Suche vorhandene Base..."
-  BASES=$(curl -s -H "xc-token: $TOKEN" "$BASE_URL/api/v1/meta/bases/")
+  BASES=$(curl -s -H "xc-token: $TOKEN" "$BASE_URL/api/v2/meta/bases/")
   BASE_ID=$(echo "$BASES" | python3 -c "
 import sys,json
 d=json.load(sys.stdin)
@@ -68,7 +68,7 @@ create_table() {
   local COLUMNS="$2"
   echo ""
   echo "📋 Erstelle Tabelle: $NAME ..."
-  RESP=$(curl -s -X POST "$BASE_URL/api/v1/meta/bases/$BASE_ID/tables" \
+  RESP=$(curl -s -X POST "$BASE_URL/api/v2/meta/bases/$BASE_ID/tables" \
     -H "xc-token: $TOKEN" \
     -H "Content-Type: application/json" \
     -d "{\"title\": \"$NAME\", \"columns\": $COLUMNS}")
