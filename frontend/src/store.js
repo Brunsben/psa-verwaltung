@@ -373,6 +373,23 @@ export const warnungen = computed(() => {
           detail: `Kamerad: ${a.Kamerad||'–'} · ${wi.count}/${wi.max} Wäschen (${wi.max - wi.count} verbleibend)` })
       }
     }
+    // Größen-Abweichung: Ausrüstungsgröße ≠ hinterlegte Kamerad-Größe
+    if (a.Kamerad && a.Groesse && a.Status === 'Ausgegeben') {
+      const k = kameraden.value.find(x => `${x.Vorname} ${x.Name}` === a.Kamerad)
+      if (k) {
+        const typ = typen.value.find(t => t.Bezeichnung === a.Ausruestungstyp)
+        const entry = GROESSE_KAT_MAP[typ?.Typ]
+        if (entry) {
+          const kGroesse = k[entry.field] ? String(k[entry.field]) : ''
+          const aGroesse = String(a.Groesse).trim()
+          if (kGroesse && kGroesse.toLowerCase() !== aGroesse.toLowerCase()) {
+            w.push({ id: `gr-${a.Id}`, prio: 'gelb', ausruestungId: a.Id,
+              titel: `Größe passt nicht: ${a.Ausruestungstyp||'?'} (${a.Seriennummer||''})`,
+              detail: `Kamerad: ${a.Kamerad} · Stück: ${aGroesse} · Erwartet: ${kGroesse}` })
+          }
+        }
+      }
+    }
   })
   return w.sort((a, b) => ({ rot: 0, orange: 1, gelb: 2 }[a.prio] - { rot: 0, orange: 1, gelb: 2 }[b.prio]))
 })
@@ -383,27 +400,29 @@ export const alleAusgewaehlt = computed(() =>
   ausruestungFiltered.value.every(a => selectedIds.value.includes(a.Id))
 )
 
-// ── Computed: Größen-Hinweis ───────────────────────────────────────────────
+// ── Größen-Mapping (Typ-Kategorie → Kamerad-Feld) ─────────────────────────
+export const GROESSE_KAT_MAP = {
+  'Jacke':            { label: 'Jacke',        field: 'Jacke_Groesse' },
+  'Hose':             { label: 'Hose',         field: 'Hose_Groesse' },
+  'Stiefel':          { label: 'Stiefel (EU)', field: 'Stiefel_Groesse' },
+  'Handschuh':        { label: 'Handschuh',    field: 'Handschuh_Groesse' },
+  'Hemd':             { label: 'Hemd',         field: 'Hemd_Groesse' },
+  'Poloshirt':        { label: 'Poloshirt',    field: 'Poloshirt_Groesse' },
+  'Fleece/Softshell': { label: 'Fleece',       field: 'Fleece_Groesse' },
+}
+
+// ── Computed: Größen-Hinweis (Ausgabe-Formular) ────────────────────────────
 export const ausruestungGroesseHint = computed(() => {
   if (!form.ausgabe.kamerad) return null
   const k = kameraden.value.find(x => `${x.Vorname} ${x.Name}` === form.ausgabe.kamerad)
   if (!k) return null
   const typ = typen.value.find(t => t.Bezeichnung === form.aktion.Ausruestungstyp)
-  const kat = typ?.Typ
-  const map = {
-    'Jacke':            { label: 'Jacke',        val: k.Jacke_Groesse },
-    'Hose':             { label: 'Hose',          val: k.Hose_Groesse },
-    'Stiefel':          { label: 'Stiefel (EU)',  val: k.Stiefel_Groesse },
-    'Handschuh':        { label: 'Handschuh',     val: k.Handschuh_Groesse },
-    'Hemd':             { label: 'Hemd',          val: k.Hemd_Groesse },
-    'Poloshirt':        { label: 'Poloshirt',     val: k.Poloshirt_Groesse },
-    'Fleece/Softshell': { label: 'Fleece',        val: k.Fleece_Groesse },
-  }
-  const hint = map[kat] || null
-  if (!hint) return null
-  const ausrGroesse = form.aktion?.Groesse || form.aktion?.Seriennummer || ''
-  const mismatch = hint.val && ausrGroesse && !ausrGroesse.toString().toLowerCase().includes(hint.val.toString().toLowerCase())
-  return { ...hint, mismatch }
+  const entry = GROESSE_KAT_MAP[typ?.Typ]
+  if (!entry) return null
+  const kGroesse = k[entry.field] ? String(k[entry.field]) : ''
+  const ausrGroesse = form.aktion?.Groesse ? String(form.aktion.Groesse).trim() : ''
+  const mismatch = !!(kGroesse && ausrGroesse && kGroesse.toLowerCase() !== ausrGroesse.toLowerCase())
+  return { label: entry.label, val: kGroesse, mismatch }
 })
 
 // ── Helper-Funktionen ──────────────────────────────────────────────────────

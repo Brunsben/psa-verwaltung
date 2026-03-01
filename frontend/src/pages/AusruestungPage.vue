@@ -53,6 +53,7 @@
             <th @click="sortBy('Seriennummer')" class="px-4 py-2.5 text-left text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider cursor-pointer select-none hover:text-gray-600 dark:hover:text-gray-300">Seriennr. <span v-if="sortAusruestung.field==='Seriennummer'">{{ sortAusruestung.dir==='asc' ? '↑' : '↓' }}</span></th>
             <th @click="sortBy('Ausruestungstyp')" class="px-4 py-2.5 text-left text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider cursor-pointer select-none hover:text-gray-600 dark:hover:text-gray-300">Typ <span v-if="sortAusruestung.field==='Ausruestungstyp'">{{ sortAusruestung.dir==='asc' ? '↑' : '↓' }}</span></th>
             <th @click="sortBy('Kamerad')" class="px-4 py-2.5 text-left text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider cursor-pointer select-none hover:text-gray-600 dark:hover:text-gray-300">Kamerad <span v-if="sortAusruestung.field==='Kamerad'">{{ sortAusruestung.dir==='asc' ? '↑' : '↓' }}</span></th>
+            <th @click="sortBy('Groesse')" class="px-4 py-2.5 text-left text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider cursor-pointer select-none hover:text-gray-600 dark:hover:text-gray-300">Größe <span v-if="sortAusruestung.field==='Groesse'">{{ sortAusruestung.dir==='asc' ? '↑' : '↓' }}</span></th>
             <th @click="sortBy('Status')" class="px-4 py-2.5 text-left text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider cursor-pointer select-none hover:text-gray-600 dark:hover:text-gray-300">Status <span v-if="sortAusruestung.field==='Status'">{{ sortAusruestung.dir==='asc' ? '↑' : '↓' }}</span></th>
             <th @click="sortBy('Naechste_Pruefung')" class="px-4 py-2.5 text-left text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider cursor-pointer select-none hover:text-gray-600 dark:hover:text-gray-300">Nächste Prüfung <span v-if="sortAusruestung.field==='Naechste_Pruefung'">{{ sortAusruestung.dir==='asc' ? '↑' : '↓' }}</span></th>
             <th @click="sortBy('Lebensende_Datum')" class="px-4 py-2.5 text-left text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider cursor-pointer select-none hover:text-gray-600 dark:hover:text-gray-300">Lebensende <span v-if="sortAusruestung.field==='Lebensende_Datum'">{{ sortAusruestung.dir==='asc' ? '↑' : '↓' }}</span></th>
@@ -74,6 +75,7 @@
               </template>
             </td>
             <td class="px-4 py-2 text-gray-600 dark:text-gray-400">{{ a.Kamerad || '–' }}</td>
+            <td class="px-4 py-2 text-sm text-gray-600 dark:text-gray-400">{{ a.Groesse || '–' }}</td>
             <td class="px-4 py-2">
               <select :value="a.Status" @change="quickStatus(a, $event.target.value)"
                 :class="statusBadge(a.Status)"

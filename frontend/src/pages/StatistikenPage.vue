@@ -29,9 +29,6 @@
     <div>
       <h2 class="text-base font-semibold text-gray-700 dark:text-gray-300 mb-4">
         Bestandsübersicht nach Größe
-        <span class="text-xs font-normal text-gray-400 dark:text-gray-500 ml-2">
-          Größe wird aus dem zugewiesenen Kameraden abgeleitet
-        </span>
       </h2>
 
       <div v-if="!groesseStats.length" class="text-sm text-gray-400 dark:text-gray-500 py-6 text-center">
@@ -72,7 +69,7 @@
                   class="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
                   <td class="px-4 py-2 font-semibold text-gray-800 dark:text-gray-200">
                     {{ row.size }}
-                    <span v-if="row.size === '–'" class="text-xs font-normal text-gray-400">(kein Kamerad)</span>
+                    <span v-if="row.size === '–'" class="text-xs font-normal text-gray-400">(keine Größe)</span>
                   </td>
                   <td class="px-3 py-2 text-center">
                     <span v-if="row.lager" class="font-semibold text-gray-700 dark:text-gray-200">{{ row.lager }}</span>
@@ -125,22 +122,10 @@
 
 <script setup>
 import { computed, onMounted, watch, nextTick } from 'vue'
-import { ausruestung, pruefungen, waescheListe, typen, kameraden } from '../store.js'
-
-// ── Größen-Mapping: Typ-Kategorie → Kameraden-Feld ──────────────────────────
-const GROESSE_FIELD_MAP = {
-  'Jacke':            'Jacke_Groesse',
-  'Hose':             'Hose_Groesse',
-  'Stiefel':          'Stiefel_Groesse',
-  'Handschuh':        'Handschuh_Groesse',
-  'Hemd':             'Hemd_Groesse',
-  'Poloshirt':        'Poloshirt_Groesse',
-  'Fleece/Softshell': 'Fleece_Groesse',
-}
+import { ausruestung, pruefungen, waescheListe, typen } from '../store.js'
 
 // ── Bestandsübersicht berechnen ──────────────────────────────────────────────
 const groesseStats = computed(() => {
-  // Ausrüstung nach Bezeichnung gruppieren
   const byTyp = {}
   ausruestung.value.forEach(a => {
     if (!a.Ausruestungstyp) return
@@ -152,27 +137,17 @@ const groesseStats = computed(() => {
     .sort(([a], [b]) => a.localeCompare(b, 'de'))
     .map(([bezeichnung, stuecke]) => {
       const typ = typen.value.find(t => t.Bezeichnung === bezeichnung)
-      const groesseField = GROESSE_FIELD_MAP[typ?.Typ]
-
-      // Zähler pro Größe
       const sizeMap = {}
-      // Einfache Status-Zähler (für Typen ohne Größen-Mapping)
       const statusCounts = { lager: 0, ausgegeben: 0, sonstige: 0 }
+      let anyGroesse = false
 
       stuecke.forEach(a => {
-        // Status zählen
         if (a.Status === 'Lager') statusCounts.lager++
         else if (a.Status === 'Ausgegeben') statusCounts.ausgegeben++
         else statusCounts.sonstige++
 
-        if (!groesseField) return
-
-        // Größe ermitteln: nur wenn Kamerad zugewiesen
-        let size = '–'
-        if (a.Kamerad) {
-          const k = kameraden.value.find(x => `${x.Vorname} ${x.Name}` === a.Kamerad)
-          size = k?.[groesseField] ? String(k[groesseField]) : '–'
-        }
+        const size = a.Groesse ? String(a.Groesse).trim() : '–'
+        if (size !== '–') anyGroesse = true
 
         if (!sizeMap[size]) sizeMap[size] = { gesamt: 0, lager: 0, ausgegeben: 0, sonstige: 0 }
         sizeMap[size].gesamt++
@@ -181,7 +156,6 @@ const groesseStats = computed(() => {
         else sizeMap[size].sonstige++
       })
 
-      // Größen sortieren (numerisch wenn möglich, '–' ans Ende)
       const sizes = Object.entries(sizeMap)
         .sort(([a], [b]) => {
           if (a === '–') return 1
@@ -192,7 +166,7 @@ const groesseStats = computed(() => {
         })
         .map(([size, counts]) => ({ size, ...counts }))
 
-      return { bezeichnung, typ: typ?.Typ || '', gesamt: stuecke.length, hatGroessen: !!groesseField, sizes, statusCounts }
+      return { bezeichnung, typ: typ?.Typ || '', gesamt: stuecke.length, hatGroessen: anyGroesse, sizes, statusCounts }
     })
 })
 
