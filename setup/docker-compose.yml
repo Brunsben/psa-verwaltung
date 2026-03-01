@@ -15,7 +15,7 @@ services:
     restart: unless-stopped
 
   postgres:
-    image: postgres:15-alpine
+    image: postgres:17-alpine
     container_name: nocodb_postgres
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-nocodb}
@@ -31,7 +31,7 @@ services:
     restart: unless-stopped
 
   frontend:
-    image: nginx:1.27-alpine
+    image: nginx:1.28-alpine
     container_name: psa_frontend
     ports:
       - "8182:80"
