@@ -52,8 +52,7 @@ Located in `~/.claude/skills/`:
 ## NocoDB (Feuerwehr Bekleidungsverwaltung)
 
 - **URL (öffentlich):** `https://nocodb.brunsben.org` (via Cloudflare Tunnel)
-- **URL (lokal):** `http://10.10.1.238:8181` (Raspberry Pi direkt)
-- **API Token:** `y8gqusXb01THwcj2WcAg_04hEfIV-DfgY25INewY` (Header: `xc-token`)
+- **API Token:** siehe `setup/.env` → `XC_TOKEN` (Header: `xc-token`)
 - **API Endpoint:** `https://nocodb.brunsben.org/api/v2/meta/bases/`
 - **Base ID:** `pxicv3djlauluse`
 
