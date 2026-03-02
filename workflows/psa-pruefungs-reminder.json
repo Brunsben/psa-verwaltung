@@ -34,7 +34,7 @@
       },
       "parameters": {
         "method": "GET",
-        "url": "https://nocodb.brunsben.org/api/v1/db/data/noco/pxicv3djlauluse/m6gby0ep5khzyzg",
+        "url": "https://IHRE-NOCODB-URL/api/v1/db/data/noco/IHRE-BASE-ID/m6gby0ep5khzyzg",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendQuery": true,
@@ -70,7 +70,7 @@
       "typeVersion": 2,
       "position": [900, 240],
       "parameters": {
-        "jsCode": "const items = $input.all();\nconst list = items[0].json.list || [];\n\nconst today = new Date();\n\nconst rows = list.map(a => {\n  const pruefDatum = a.Naechste_Pruefung ? new Date(a.Naechste_Pruefung) : null;\n  const diffDays = pruefDatum ? Math.round((pruefDatum - today) / 86400000) : null;\n  const statusEmoji = diffDays !== null && diffDays < 0 ? '🔴' : diffDays !== null && diffDays <= 7 ? '🟠' : '🟡';\n  const datumStr = pruefDatum ? pruefDatum.toLocaleDateString('de-DE') : '–';\n  const diffStr = diffDays !== null ? (diffDays < 0 ? `${Math.abs(diffDays)} Tage überfällig` : `in ${diffDays} Tagen`) : '';\n  return `${statusEmoji} ${a.Ausruestungstyp || '–'} | Nr: ${a.Seriennummer || '–'} | Kamerad: ${a.Kamerad || 'Lager'} | Prüfung: ${datumStr} (${diffStr})`;\n}).join('\\n');\n\nconst subject = `PSA-Prüfung: ${list.length} fällige${list.length === 1 ? 's' : ''} Ausrüstungsstück${list.length === 1 ? '' : 'e'}`;\nconst body = `Hallo,\\n\\nfolgende PSA-Ausrüstungsstücke haben eine Prüfung innerhalb der nächsten 30 Tage oder sind bereits überfällig:\\n\\n${rows}\\n\\nBitte die Prüfungen zeitnah durchführen und in der PSA-Verwaltung dokumentieren.\\n\\n→ https://psa.ofwietmarschen.org\\n\\nGrüße,\\nPSA-Verwaltung FF Wietmarschen`;\n\nreturn [{ json: { subject, body, count: list.length } }];"
+        "jsCode": "const items = $input.all();\nconst list = items[0].json.list || [];\n\nconst today = new Date();\n\nconst rows = list.map(a => {\n  const pruefDatum = a.Naechste_Pruefung ? new Date(a.Naechste_Pruefung) : null;\n  const diffDays = pruefDatum ? Math.round((pruefDatum - today) / 86400000) : null;\n  const statusEmoji = diffDays !== null && diffDays < 0 ? '🔴' : diffDays !== null && diffDays <= 7 ? '🟠' : '🟡';\n  const datumStr = pruefDatum ? pruefDatum.toLocaleDateString('de-DE') : '–';\n  const diffStr = diffDays !== null ? (diffDays < 0 ? `${Math.abs(diffDays)} Tage überfällig` : `in ${diffDays} Tagen`) : '';\n  return `${statusEmoji} ${a.Ausruestungstyp || '–'} | Nr: ${a.Seriennummer || '–'} | Kamerad: ${a.Kamerad || 'Lager'} | Prüfung: ${datumStr} (${diffStr})`;\n}).join('\\n');\n\nconst subject = `PSA-Prüfung: ${list.length} fällige${list.length === 1 ? 's' : ''} Ausrüstungsstück${list.length === 1 ? '' : 'e'}`;\nconst body = `Hallo,\\n\\nfolgende PSA-Ausrüstungsstücke haben eine Prüfung innerhalb der nächsten 30 Tage oder sind bereits überfällig:\\n\\n${rows}\\n\\nBitte die Prüfungen zeitnah durchführen und in der PSA-Verwaltung dokumentieren.\\n\\n→ https://IHRE-PSA-URL\\n\\nGrüße,\\nPSA-Verwaltung FF Musterort`;\n\nreturn [{ json: { subject, body, count: list.length } }];"
       }
     },
     {
@@ -80,7 +80,7 @@
       "typeVersion": 2.1,
       "position": [1120, 240],
       "parameters": {
-        "toEmail": "wart@ofwietmarschen.org",
+        "toEmail": "material@ihre-feuerwehr.de",
         "subject": "={{ $json.subject }}",
         "emailType": "text",
         "message": "={{ $json.body }}"

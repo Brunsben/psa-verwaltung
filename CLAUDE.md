@@ -8,9 +8,9 @@ This is an n8n workflow automation workspace. It uses the **n8n-mcp** MCP server
 
 ## Connected n8n Instance
 
-- **URL:** `https://n8n.brunsben.org`
+- **URL:** configured in `.mcp.json` (your n8n instance URL)
 - **API Key:** configured in `.mcp.json`
-- **API Key expiry:** 2026-03-19 — renew in n8n → Settings → API → Create API Key, then update `.mcp.json`
+- **API Key expiry:** renew in n8n → Settings → API → Create API Key, then update `.mcp.json`
 
 ## MCP Tools Available
 
@@ -49,12 +49,12 @@ Located in `~/.claude/skills/`:
 - **`/n8n-code-javascript`** — JavaScript in Code nodes (`$input`, `$helpers`, DateTime)
 - **`/n8n-code-python`** — Python in Code nodes and its limitations
 
-## NocoDB (Feuerwehr Bekleidungsverwaltung)
+## NocoDB (PSA-Verwaltung)
 
-- **URL (öffentlich):** `https://nocodb.brunsben.org` (via Cloudflare Tunnel)
+- **URL:** deine NocoDB-URL (via Cloudflare Tunnel oder lokal)
 - **API Token:** siehe `setup/.env` → `XC_TOKEN` (Header: `xc-token`)
-- **API Endpoint:** `https://nocodb.brunsben.org/api/v2/meta/bases/`
-- **Base ID:** `pxicv3djlauluse`
+- **API Endpoint:** `https://DEINE-NOCODB-URL/api/v2/meta/bases/`
+- **Base ID:** siehe `setup/.nocodb_table_ids` (wird beim Install generiert)
 
 | Tabelle | ID |
 | - | - |

@@ -23,7 +23,7 @@
     },
     {
       "parameters": {
-        "url": "https://nocodb.brunsben.org/api/v1/db/data/noco/pxicv3djlauluse/mbfq6ec4y5mroif",
+        "url": "https://IHRE-NOCODB-URL/api/v1/db/data/noco/IHRE-BASE-ID/mbfq6ec4y5mroif",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendQuery": true,
@@ -55,7 +55,7 @@
     },
     {
       "parameters": {
-        "url": "https://nocodb.brunsben.org/api/v1/db/data/noco/pxicv3djlauluse/mv97zr52e65li0f",
+        "url": "https://IHRE-NOCODB-URL/api/v1/db/data/noco/IHRE-BASE-ID/mv97zr52e65li0f",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendQuery": true,
@@ -87,7 +87,7 @@
     },
     {
       "parameters": {
-        "url": "https://nocodb.brunsben.org/api/v1/db/data/noco/pxicv3djlauluse/m6gby0ep5khzyzg",
+        "url": "https://IHRE-NOCODB-URL/api/v1/db/data/noco/IHRE-BASE-ID/m6gby0ep5khzyzg",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendQuery": true,
@@ -119,7 +119,7 @@
     },
     {
       "parameters": {
-        "url": "https://nocodb.brunsben.org/api/v1/db/data/noco/pxicv3djlauluse/m6rtooq3l4fshif",
+        "url": "https://IHRE-NOCODB-URL/api/v1/db/data/noco/IHRE-BASE-ID/m6rtooq3l4fshif",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendQuery": true,
@@ -151,7 +151,7 @@
     },
     {
       "parameters": {
-        "url": "https://nocodb.brunsben.org/api/v1/db/data/noco/pxicv3djlauluse/mvpg0wcptqd4gk9",
+        "url": "https://IHRE-NOCODB-URL/api/v1/db/data/noco/IHRE-BASE-ID/mvpg0wcptqd4gk9",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendQuery": true,
@@ -183,7 +183,7 @@
     },
     {
       "parameters": {
-        "url": "https://nocodb.brunsben.org/api/v1/db/data/noco/pxicv3djlauluse/m3e70ipbmh7zre0",
+        "url": "https://IHRE-NOCODB-URL/api/v1/db/data/noco/IHRE-BASE-ID/m3e70ipbmh7zre0",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendQuery": true,
@@ -215,7 +215,7 @@
     },
     {
       "parameters": {
-        "url": "https://nocodb.brunsben.org/api/v1/db/data/noco/pxicv3djlauluse/m548rfn3cyooaa7",
+        "url": "https://IHRE-NOCODB-URL/api/v1/db/data/noco/IHRE-BASE-ID/m548rfn3cyooaa7",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendQuery": true,
