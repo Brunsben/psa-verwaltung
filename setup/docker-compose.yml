@@ -17,7 +17,7 @@ services:
     restart: unless-stopped
 
   postgrest:
-    image: postgrest/postgrest:v13.0
+    image: postgrest/postgrest:v14.5
     container_name: psa_postgrest
     environment:
       PGRST_DB_URI: "postgresql://psa_auth:${POSTGREST_DB_PASSWORD}@postgres:5432/${POSTGRES_DB:-nocodb}"
