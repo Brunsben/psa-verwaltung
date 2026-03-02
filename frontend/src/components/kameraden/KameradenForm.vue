@@ -37,7 +37,7 @@
           </div>
           <div>
             <label class="label">Handschuh</label>
-            <input v-model="form.kamerad.Handschuh_Groesse" placeholder="z.B. L" class="input" />
+            <input v-model="form.kamerad.Handschuh_Groesse" placeholder="z.B. 9" class="input" />
           </div>
           <div>
             <label class="label">Hemd</label>

@@ -664,8 +664,8 @@ export async function deleteKamerad(k) {
 export function downloadBeispielCSV() {
   const header = 'Vorname;Name;Dienstgrad;Jacke_Groesse;Hose_Groesse;Stiefel_Groesse;Handschuh_Groesse;Hemd_Groesse;Poloshirt_Groesse;Fleece_Groesse;Aktiv'
   const rows   = [
-    'Max;Mustermann;Hauptfeuerwehrmann;52;52;42;L;40/41;L;L;ja',
-    'Anna;Musterfrau;Feuerwehrfrau;40;38;37;S;36/37;S;S;ja',
+    'Max;Mustermann;Hauptfeuerwehrmann;52;52;42;9;40/41;L;L;ja',
+    'Anna;Musterfrau;Feuerwehrfrau;40;38;37;7;36/37;S;S;ja',
   ]
   const csv  = '\uFEFF' + [header, ...rows].join('\n')
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
