@@ -155,6 +155,38 @@ CREATE TABLE IF NOT EXISTS normen (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
   COMMENT='DIN-Normen für Ausrüstungstypen mit Prüf- und Lebensdauer-Vorgaben';
 
+-- ─── 8. Benutzer ─────────────────────────────────────────────────────────
+-- Synchron mit: nocodb-setup.sh Tabelle "Benutzer"
+CREATE TABLE IF NOT EXISTS benutzer (
+  Id INT PRIMARY KEY AUTO_INCREMENT,
+  CreatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+  UpdatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  Benutzername VARCHAR(100) NOT NULL,
+  PIN VARCHAR(50) DEFAULT NULL COMMENT 'PIN-Code (ggf. gehasht)',
+  Rolle VARCHAR(50) DEFAULT NULL COMMENT 'z.B. Admin, Benutzer',
+  Aktiv TINYINT(1) DEFAULT 1,
+  INDEX idx_benutzer_name (Benutzername)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+  COMMENT='Benutzerkonten für die PSA-Verwaltung';
+
+-- ─── 9. Changelog ─────────────────────────────────────────────────────────
+-- Synchron mit: nocodb-setup.sh Tabelle "Changelog"
+CREATE TABLE IF NOT EXISTS changelog (
+  Id INT PRIMARY KEY AUTO_INCREMENT,
+  CreatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+  UpdatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  Zeitpunkt DATETIME DEFAULT NULL,
+  Benutzer VARCHAR(255) DEFAULT NULL,
+  Tabelle VARCHAR(100) DEFAULT NULL,
+  Aktion VARCHAR(50) DEFAULT NULL COMMENT 'Erstellt, Geaendert, Geloescht',
+  Details TEXT DEFAULT NULL,
+  Datensatz_Id INT DEFAULT NULL,
+  INDEX idx_cl_zeitpunkt (Zeitpunkt),
+  INDEX idx_cl_tabelle (Tabelle),
+  INDEX idx_cl_benutzer (Benutzer)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+  COMMENT='Audit-Log aller Änderungen in der PSA-Verwaltung';
+
 SET FOREIGN_KEY_CHECKS = 1;
 
 -- ─────────────────────────────────────────────────────────────

@@ -1,0 +1,58 @@
+{
+  "name": "PSA: Backup Fehler-Benachrichtigung",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "err-trigger",
+      "name": "Fehler-Trigger",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [240, 304]
+    },
+    {
+      "parameters": {
+        "jsCode": "const wf = $json.workflow || {};\nconst exec = $json.execution || {};\nconst err = $json.error || {};\nconst datum = new Date().toLocaleString('de-DE', { timeZone: 'Europe/Berlin' });\n\nconst subject = '[PSA-Backup] Fehler beim NocoDB → MySQL Backup';\nconst html = '<h2 style=\"color:#ef4444\">Backup fehlgeschlagen</h2>'\n  + '<p>Der automatische PSA-Backup-Workflow ist fehlgeschlagen.</p>'\n  + '<table style=\"border-collapse:collapse;font-size:14px\">'\n  + '<tr><td style=\"padding:4px 12px 4px 0;font-weight:600\">Zeitpunkt:</td><td>' + datum + '</td></tr>'\n  + '<tr><td style=\"padding:4px 12px 4px 0;font-weight:600\">Workflow:</td><td>' + (wf.name || 'PSA: NocoDB → MySQL Backup') + '</td></tr>'\n  + '<tr><td style=\"padding:4px 12px 4px 0;font-weight:600\">Fehler:</td><td>' + (err.message || 'Unbekannter Fehler') + '</td></tr>'\n  + '<tr><td style=\"padding:4px 12px 4px 0;font-weight:600\">Node:</td><td>' + (err.node ? err.node.name : '-') + '</td></tr>'\n  + '</table>'\n  + '<p style=\"margin-top:16px\">Bitte n8n öffnen und den Fehler prüfen.</p>';\n\nreturn [{ json: { subject, html } }];"
+      },
+      "id": "err-code",
+      "name": "Fehlermeldung aufbauen",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [464, 304]
+    },
+    {
+      "parameters": {
+        "fromEmail": "absender@ihre-feuerwehr.de",
+        "toEmail": "empfaenger@ihre-feuerwehr.de",
+        "subject": "={{ $json.subject }}",
+        "html": "={{ $json.html }}",
+        "options": {}
+      },
+      "id": "err-email",
+      "name": "Fehler-E-Mail senden",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [688, 304],
+      "credentials": {
+        "smtp": {
+          "id": "WODz1zMPZi3WItkA",
+          "name": "SMTP account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Fehler-Trigger": {
+      "main": [[{ "node": "Fehlermeldung aufbauen", "type": "main", "index": 0 }]]
+    },
+    "Fehlermeldung aufbauen": {
+      "main": [[{ "node": "Fehler-E-Mail senden", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Europe/Berlin",
+    "callerPolicy": "workflowsFromSameOwner"
+  }
+}

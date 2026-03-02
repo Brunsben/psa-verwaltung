@@ -238,6 +238,70 @@
       "id": "ins-n", "name": "INSERT normen",
       "type": "n8n-nodes-base.mySql", "typeVersion": 2.5, "position": [6160, 304],
       "credentials": { "mySql": { "id": "P3na8KmeCqRdqyCP", "name": "MySQL account" } }
+    },
+    {
+      "parameters": { "operation": "executeQuery", "query": "TRUNCATE TABLE benutzer", "options": {} },
+      "id": "trunc-b", "name": "TRUNCATE benutzer",
+      "type": "n8n-nodes-base.mySql", "typeVersion": 2.5, "position": [6384, 304],
+      "credentials": { "mySql": { "id": "P3na8KmeCqRdqyCP", "name": "MySQL account" } }
+    },
+    {
+      "parameters": {
+        "url": "https://IHRE-NOCODB-URL/api/v1/db/data/noco/IHRE-BASE-ID/mvcs3jnd76tm4ad",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": { "parameters": [{ "name": "limit", "value": "25000" }] },
+        "options": {}
+      },
+      "id": "http-b", "name": "Fetch Benutzer",
+      "type": "n8n-nodes-base.httpRequest", "typeVersion": 4.2, "position": [6608, 304],
+      "credentials": { "httpHeaderAuth": { "id": "lUyuLGutalKUKvNP", "name": "Header Auth account" } }
+    },
+    {
+      "parameters": {
+        "jsCode": "const list = $input.first().json.list || [];\nif (!list.length) return [{ json: { query: 'SELECT 1' } }];\nfunction esc(v) {\n  if (v === null || v === undefined) return 'NULL';\n  if (typeof v === 'boolean') return v ? 1 : 0;\n  if (typeof v === 'number') return v;\n  return \"'\" + String(v).replace(/\\\\/g, '\\\\\\\\').replace(/'/g, \"\\\\'\") + \"'\";\n}\nconst cols = 'Id,CreatedAt,UpdatedAt,Benutzername,PIN,Rolle,Aktiv';\nconst rows = list.map(r => '(' + [esc(r.Id),esc(r.CreatedAt),esc(r.UpdatedAt),esc(r.Benutzername),esc(r.PIN),esc(r.Rolle),(r.Aktiv?1:0)].join(',') + ')');\nreturn [{ json: { query: 'INSERT INTO benutzer (' + cols + ') VALUES ' + rows.join(',') } }];"
+      },
+      "id": "code-b", "name": "Transform Benutzer",
+      "type": "n8n-nodes-base.code", "typeVersion": 2, "position": [6832, 304]
+    },
+    {
+      "parameters": { "operation": "executeQuery", "query": "={{ $json.query }}", "options": {} },
+      "id": "ins-b", "name": "INSERT benutzer",
+      "type": "n8n-nodes-base.mySql", "typeVersion": 2.5, "position": [7040, 304],
+      "credentials": { "mySql": { "id": "P3na8KmeCqRdqyCP", "name": "MySQL account" } }
+    },
+    {
+      "parameters": { "operation": "executeQuery", "query": "TRUNCATE TABLE changelog", "options": {} },
+      "id": "trunc-cl", "name": "TRUNCATE changelog",
+      "type": "n8n-nodes-base.mySql", "typeVersion": 2.5, "position": [7264, 304],
+      "credentials": { "mySql": { "id": "P3na8KmeCqRdqyCP", "name": "MySQL account" } }
+    },
+    {
+      "parameters": {
+        "url": "https://IHRE-NOCODB-URL/api/v1/db/data/noco/IHRE-BASE-ID/mf2aln0bbnynp0m",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": { "parameters": [{ "name": "limit", "value": "25000" }] },
+        "options": {}
+      },
+      "id": "http-cl", "name": "Fetch Changelog",
+      "type": "n8n-nodes-base.httpRequest", "typeVersion": 4.2, "position": [7488, 304],
+      "credentials": { "httpHeaderAuth": { "id": "lUyuLGutalKUKvNP", "name": "Header Auth account" } }
+    },
+    {
+      "parameters": {
+        "jsCode": "const list = $input.first().json.list || [];\nif (!list.length) return [{ json: { query: 'SELECT 1' } }];\nfunction esc(v) {\n  if (v === null || v === undefined) return 'NULL';\n  if (typeof v === 'boolean') return v ? 1 : 0;\n  if (typeof v === 'number') return v;\n  var s = String(v);\n  var r = [39];\n  for (var i = 0; i < s.length; i++) {\n    var c = s.charCodeAt(i);\n    if (c === 39) { r.push(92, 39); } else if (c === 92) { r.push(92, 92); } else { r.push(c); }\n  }\n  r.push(39);\n  return String.fromCharCode.apply(null, r);\n}\nconst cols = 'Id,CreatedAt,UpdatedAt,Zeitpunkt,Benutzer,Tabelle,Aktion,Details,Datensatz_Id';\nconst rows = list.map(r => '(' + [esc(r.Id),esc(r.CreatedAt),esc(r.UpdatedAt),esc(r.Zeitpunkt),esc(r.Benutzer),esc(r.Tabelle),esc(r.Aktion),esc(r.Details),esc(r.Datensatz_Id)].join(',') + ')');\nreturn [{ json: { query: 'INSERT INTO changelog (' + cols + ') VALUES ' + rows.join(',') } }];"
+      },
+      "id": "code-cl", "name": "Transform Changelog",
+      "type": "n8n-nodes-base.code", "typeVersion": 2, "position": [7712, 304]
+    },
+    {
+      "parameters": { "operation": "executeQuery", "query": "={{ $json.query }}", "options": {} },
+      "id": "ins-cl", "name": "INSERT changelog",
+      "type": "n8n-nodes-base.mySql", "typeVersion": 2.5, "position": [7920, 304],
+      "credentials": { "mySql": { "id": "P3na8KmeCqRdqyCP", "name": "MySQL account" } }
     }
   ],
   "pinData": {},
@@ -269,7 +333,15 @@
     "INSERT waesche": { "main": [[{ "node": "TRUNCATE normen", "type": "main", "index": 0 }]] },
     "TRUNCATE normen": { "main": [[{ "node": "Fetch Normen", "type": "main", "index": 0 }]] },
     "Fetch Normen": { "main": [[{ "node": "Transform Normen", "type": "main", "index": 0 }]] },
-    "Transform Normen": { "main": [[{ "node": "INSERT normen", "type": "main", "index": 0 }]] }
+    "Transform Normen": { "main": [[{ "node": "INSERT normen", "type": "main", "index": 0 }]] },
+    "INSERT normen": { "main": [[{ "node": "TRUNCATE benutzer", "type": "main", "index": 0 }]] },
+    "TRUNCATE benutzer": { "main": [[{ "node": "Fetch Benutzer", "type": "main", "index": 0 }]] },
+    "Fetch Benutzer": { "main": [[{ "node": "Transform Benutzer", "type": "main", "index": 0 }]] },
+    "Transform Benutzer": { "main": [[{ "node": "INSERT benutzer", "type": "main", "index": 0 }]] },
+    "INSERT benutzer": { "main": [[{ "node": "TRUNCATE changelog", "type": "main", "index": 0 }]] },
+    "TRUNCATE changelog": { "main": [[{ "node": "Fetch Changelog", "type": "main", "index": 0 }]] },
+    "Fetch Changelog": { "main": [[{ "node": "Transform Changelog", "type": "main", "index": 0 }]] },
+    "Transform Changelog": { "main": [[{ "node": "INSERT changelog", "type": "main", "index": 0 }]] }
   },
   "active": true,
   "settings": {
