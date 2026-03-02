@@ -37,6 +37,8 @@ export function toggleDark() {
 export const loggedIn    = ref(!!localStorage.getItem('psa_user'))
 export const currentUser = ref(JSON.parse(localStorage.getItem('psa_user') || 'null'))
 export const loginForm   = reactive({ username: '', pin: '', error: '' })
+export const needsSetup  = ref(false)
+export const setupForm   = reactive({ username: '', pin: '', pinConfirm: '', error: '' })
 
 export const userRole      = computed(() => (currentUser.value?.Rolle || '').toLowerCase())
 export const isAdmin       = computed(() => userRole.value === 'admin')
@@ -512,6 +514,10 @@ export async function fetchAll(renderChartsCallback) {
     benutzer.value     = val(8)
     isOffline.value    = false
     saveOfflineSnapshot()
+    // First-Run-Check: Benutzer-Tabelle konfiguriert aber noch leer?
+    if (!loggedIn.value && TABLES.Benutzer && benutzer.value.length === 0) {
+      needsSetup.value = true
+    }
     if (renderChartsCallback) {
       import('vue').then(({ nextTick }) => nextTick(renderChartsCallback))
     }
@@ -536,6 +542,7 @@ export async function doLogin() {
   await load(async () => {
     if (TABLES.Benutzer) {
       const users = await getAll('Benutzer')
+      if (users.length === 0) { needsSetup.value = true; return }
       const user = users.find(u =>
         u.Benutzername?.toLowerCase() === loginForm.username.toLowerCase() &&
         u.PIN === loginForm.pin
@@ -544,17 +551,41 @@ export async function doLogin() {
       if (!user.Aktiv) { loginForm.error = 'Benutzer deaktiviert.'; return }
       currentUser.value = user
     } else {
-      if (loginForm.username.toLowerCase() === 'admin' && loginForm.pin === '1234') {
-        currentUser.value = { Benutzername: 'admin', Rolle: 'Admin' }
-      } else {
-        loginForm.error = 'Benutzer-Tabelle nicht eingerichtet. Standard: admin / 1234'
-        return
-      }
+      loginForm.error = 'Benutzer-Tabelle nicht konfiguriert. Bitte config.js prüfen.'
+      return
     }
     localStorage.setItem('psa_user', JSON.stringify(currentUser.value))
     loggedIn.value     = true
     loginForm.username = ''
     loginForm.pin      = ''
+    await fetchAll()
+  })
+}
+
+export async function doSetup() {
+  setupForm.error = ''
+  if (!setupForm.username.trim() || !setupForm.pin.trim()) {
+    setupForm.error = 'Bitte Benutzername und Passwort eingeben.'
+    return
+  }
+  if (setupForm.pin !== setupForm.pinConfirm) {
+    setupForm.error = 'Passwörter stimmen nicht überein.'
+    return
+  }
+  await load(async () => {
+    const created = await post('Benutzer', {
+      Benutzername: setupForm.username.trim(),
+      PIN:          setupForm.pin.trim(),
+      Rolle:        'Admin',
+      Aktiv:        true,
+    })
+    currentUser.value    = created
+    localStorage.setItem('psa_user', JSON.stringify(created))
+    needsSetup.value     = false
+    loggedIn.value       = true
+    setupForm.username   = ''
+    setupForm.pin        = ''
+    setupForm.pinConfirm = ''
     await fetchAll()
   })
 }

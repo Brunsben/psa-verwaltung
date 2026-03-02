@@ -1,7 +1,7 @@
 <template>
   <div>
     <!-- Login Screen -->
-    <div v-if="!loggedIn" class="fixed inset-0 z-50 bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-4">
+    <div v-if="!loggedIn && !needsSetup" class="fixed inset-0 z-50 bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-4">
       <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 w-full max-w-sm border border-gray-100 dark:border-gray-700">
         <div class="text-center mb-6">
           <span class="text-4xl">🔥</span>
@@ -22,6 +22,40 @@
           </div>
           <button @click="doLogin" class="btn-primary w-full justify-center mt-2" :disabled="loading">
             <i class="ph ph-sign-in"></i> Anmelden
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Ersteinrichtung (leere Benutzer-Tabelle) -->
+    <div v-else-if="needsSetup" class="fixed inset-0 z-50 bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-4">
+      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 w-full max-w-sm border border-gray-100 dark:border-gray-700">
+        <div class="text-center mb-6">
+          <span class="text-4xl">🔥</span>
+          <h1 class="text-xl font-bold text-gray-900 dark:text-white mt-2">PSA-Verwaltung</h1>
+          <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Ersteinrichtung</p>
+        </div>
+        <p class="text-sm text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-900/20 rounded-lg px-3 py-2 mb-4">
+          Noch kein Benutzer-Account vorhanden.<br>Lege jetzt den ersten Admin-Account an.
+        </p>
+        <div class="grid gap-3">
+          <div>
+            <label class="label">Benutzername</label>
+            <input v-model="setupForm.username" class="input" placeholder="z.B. admin" @keyup.enter="doSetup" autocomplete="username" />
+          </div>
+          <div>
+            <label class="label">Passwort</label>
+            <input v-model="setupForm.pin" type="password" class="input" placeholder="••••" @keyup.enter="doSetup" autocomplete="new-password" />
+          </div>
+          <div>
+            <label class="label">Passwort bestätigen</label>
+            <input v-model="setupForm.pinConfirm" type="password" class="input" placeholder="••••" @keyup.enter="doSetup" autocomplete="new-password" />
+          </div>
+          <div v-if="setupForm.error" class="text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 rounded-lg px-3 py-2">
+            {{ setupForm.error }}
+          </div>
+          <button @click="doSetup" class="btn-primary w-full justify-center mt-2" :disabled="loading">
+            <i class="ph ph-user-plus"></i> Admin-Account anlegen
           </button>
         </div>
       </div>
@@ -73,7 +107,9 @@
 
 <script setup>
 import { ref, computed, nextTick, onMounted } from 'vue'
-import { page, loggedIn, loginForm, loading, doLogin, modal, fetchAll } from './store.js'
+import { page, loggedIn, loginForm, loading, doLogin,
+         needsSetup, setupForm, doSetup,
+         modal, fetchAll } from './store.js'
 
 // Layout
 import Sidebar from './components/layout/Sidebar.vue'
