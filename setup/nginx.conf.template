@@ -26,11 +26,10 @@ server {
         add_header Cache-Control "public, immutable";
     }
 
-    # ── NocoDB API Proxy ──────────────────────────────────
+    # ── PostgREST API Proxy ───────────────────────────────
     location /api/ {
         limit_req zone=api burst=60 nodelay;
-        proxy_pass http://nocodb:8080/api/;
-        proxy_set_header xc-token "${XC_TOKEN}";
+        proxy_pass http://postgrest:3000/;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
