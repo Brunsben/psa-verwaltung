@@ -15,39 +15,33 @@
     },
     {
       "parameters": {
-        "url": "https://IHRE-NOCODB-URL/api/v1/db/data/noco/IHRE-BASE-ID/ID_AUSRUESTUNGSTUECKE",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
+        "url": "http://10.10.1.238:8182/api/Ausruestungstuecke",
         "sendQuery": true,
         "queryParameters": { "parameters": [{ "name": "limit", "value": "500" }] },
         "options": {}
       },
       "id": "pk-http-ast",
-      "name": "NocoDB: Ausrüstungsstücke laden",
+      "name": "PostgREST: Ausrüstungsstücke laden",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [432, 304],
-      "credentials": { "httpHeaderAuth": { "id": "IHRE_HEADER_AUTH_ID", "name": "Header Auth account" } }
+      "position": [432, 304]
     },
     {
       "parameters": {
-        "url": "https://IHRE-NOCODB-URL/api/v1/db/data/noco/IHRE-BASE-ID/ID_KAMERADEN",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
+        "url": "http://10.10.1.238:8182/api/Kameraden",
         "sendQuery": true,
         "queryParameters": { "parameters": [{ "name": "limit", "value": "200" }] },
         "options": {}
       },
       "id": "pk-http-kam",
-      "name": "NocoDB: Kameraden laden",
+      "name": "PostgREST: Kameraden laden",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [656, 304],
-      "credentials": { "httpHeaderAuth": { "id": "IHRE_HEADER_AUTH_ID", "name": "Header Auth account" } }
+      "position": [656, 304]
     },
     {
       "parameters": {
-        "jsCode": "const stuecke = $('NocoDB: Ausrüstungsstücke laden').first().json.list || [];\nconst kameraden = $input.first().json.list || [];\n\nconst today = new Date();\ntoday.setHours(0, 0, 0, 0);\nconst horizon = new Date(today);\nhorizon.setDate(horizon.getDate() + 30);\n\n// E-Mail-Lookup: 'Vorname Name' und 'Name Vorname' → email\nconst emailMap = {};\nfor (const k of kameraden) {\n  if (!k.Email) continue;\n  emailMap[(k.Vorname + ' ' + k.Name).trim()] = k.Email;\n  emailMap[(k.Name + ' ' + k.Vorname).trim()] = k.Email;\n}\n\n// Fällige Stücke (nur mit Kamerad-Zuweisung)\nconst faellig = stuecke.filter(a => {\n  if (!a.Naechste_Pruefung || !a.Kamerad) return false;\n  const d = new Date(a.Naechste_Pruefung);\n  return d <= horizon;\n}).map(a => {\n  const d = new Date(a.Naechste_Pruefung);\n  const days = Math.round((d - today) / 86400000);\n  return { ...a, _days: days };\n});\n\n// Gruppiere nach Kamerad\nconst grouped = {};\nfor (const a of faellig) {\n  const name = a.Kamerad;\n  if (!grouped[name]) grouped[name] = { name, email: emailMap[name] || null, items: [] };\n  grouped[name].items.push(a);\n}\n\n// Nur Kameraden mit E-Mail-Adresse\nconst result = Object.values(grouped).filter(g => g.email);\nif (!result.length) return [{ json: { anzahl: 0 } }];\n\nreturn result.map(g => ({ json: g }));"
+        "jsCode": "const stuecke = $('PostgREST: Ausrüstungsstücke laden').first().json;\nconst kameraden = $input.first().json;\n\nconst today = new Date();\ntoday.setHours(0, 0, 0, 0);\nconst horizon = new Date(today);\nhorizon.setDate(horizon.getDate() + 30);\n\n// E-Mail-Lookup: 'Vorname Name' und 'Name Vorname' → email\nconst emailMap = {};\nfor (const k of kameraden) {\n  if (!k.Email) continue;\n  emailMap[(k.Vorname + ' ' + k.Name).trim()] = k.Email;\n  emailMap[(k.Name + ' ' + k.Vorname).trim()] = k.Email;\n}\n\n// Fällige Stücke (nur mit Kamerad-Zuweisung)\nconst faellig = stuecke.filter(a => {\n  if (!a.Naechste_Pruefung || !a.Kamerad) return false;\n  const d = new Date(a.Naechste_Pruefung);\n  return d <= horizon;\n}).map(a => {\n  const d = new Date(a.Naechste_Pruefung);\n  const days = Math.round((d - today) / 86400000);\n  return { ...a, _days: days };\n});\n\n// Gruppiere nach Kamerad\nconst grouped = {};\nfor (const a of faellig) {\n  const name = a.Kamerad;\n  if (!grouped[name]) grouped[name] = { name, email: emailMap[name] || null, items: [] };\n  grouped[name].items.push(a);\n}\n\n// Nur Kameraden mit E-Mail-Adresse\nconst result = Object.values(grouped).filter(g => g.email);\nif (!result.length) return [{ json: { anzahl: 0 } }];\n\nreturn result.map(g => ({ json: g }));"
       },
       "id": "pk-code-group",
       "name": "Gruppiere nach Kamerad & prüfe Email",
@@ -98,9 +92,9 @@
   ],
   "pinData": {},
   "connections": {
-    "Montag 07:30 Uhr": { "main": [[{ "node": "NocoDB: Ausrüstungsstücke laden", "type": "main", "index": 0 }]] },
-    "NocoDB: Ausrüstungsstücke laden": { "main": [[{ "node": "NocoDB: Kameraden laden", "type": "main", "index": 0 }]] },
-    "NocoDB: Kameraden laden": { "main": [[{ "node": "Gruppiere nach Kamerad & prüfe Email", "type": "main", "index": 0 }]] },
+    "Montag 07:30 Uhr": { "main": [[{ "node": "PostgREST: Ausrüstungsstücke laden", "type": "main", "index": 0 }]] },
+    "PostgREST: Ausrüstungsstücke laden": { "main": [[{ "node": "PostgREST: Kameraden laden", "type": "main", "index": 0 }]] },
+    "PostgREST: Kameraden laden": { "main": [[{ "node": "Gruppiere nach Kamerad & prüfe Email", "type": "main", "index": 0 }]] },
     "Gruppiere nach Kamerad & prüfe Email": { "main": [[{ "node": "Kameraden mit E-Mail vorhanden?", "type": "main", "index": 0 }]] },
     "Kameraden mit E-Mail vorhanden?": {
       "main": [

@@ -21,22 +21,20 @@
     },
     {
       "parameters": {
-        "url": "https://IHRE-NOCODB-URL/api/v1/db/data/noco/IHRE-BASE-ID/m6gby0ep5khzyzg",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
+        "url": "http://10.10.1.238:8182/api/Ausruestungstuecke",
         "sendQuery": true,
         "queryParameters": {
           "parameters": [
             {
-              "name": "where",
-              "value": "(Lebensende_Datum,lt,{{ $now.plus(180, 'days').toISO() }})"
+              "name": "Lebensende_Datum",
+              "value": "lt.{{ $now.plus(180, 'days').toISODate() }}"
             },
             {
-              "name": "where",
-              "value": "(Status,neq,Ausgesondert)"
+              "name": "Status",
+              "value": "neq.Ausgesondert"
             },
             {
-              "name": "fields",
+              "name": "select",
               "value": "Kamerad,Ausruestungstyp,Seriennummer,Herstellungsdatum,Lebensende_Datum,Status"
             }
           ]
@@ -44,16 +42,10 @@
         "options": {}
       },
       "id": "fetch_old",
-      "name": "NocoDB: Ausrüstung nahe Lebensende",
+      "name": "PostgREST: Ausrüstung nahe Lebensende",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [464, 304],
-      "credentials": {
-        "httpHeaderAuth": {
-          "id": "lUyuLGutalKUKvNP",
-          "name": "Header Auth account"
-        }
-      }
+      "position": [464, 304]
     },
     {
       "parameters": {
@@ -66,7 +58,7 @@
           "conditions": [
             {
               "id": "has_items",
-              "leftValue": "={{ $json.list.length }}",
+              "leftValue": "={{ $json.length }}",
               "rightValue": 0,
               "operator": { "type": "number", "operation": "gt" }
             }
@@ -83,7 +75,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const items = $input.first().json.list;\nconst heute = new Date();\n\nlet zeilen = items.map(item => {\n  const ablauf = new Date(item.Lebensende_Datum);\n  const tage = Math.ceil((ablauf - heute) / (1000 * 60 * 60 * 24));\n  const ablaufStr = ablauf.toLocaleDateString('de-DE');\n  const warnLevel = tage <= 0 ? '🔴 UEBERFAELLIG' : tage <= 30 ? '🟠 DRINGEND' : '🟡 IN KUERZE';\n  const ort = item.Kamerad ? 'Ausgegeben an: ' + item.Kamerad : 'Im Lager';\n  return warnLevel + ' ' + item.Ausruestungstyp + ' (SN: ' + item.Seriennummer + ')\\n  '\n    + ort + ' - Lebensende: ' + ablaufStr + ' ('\n    + (tage > 0 ? 'in ' + tage + ' Tagen' : Math.abs(tage) + ' Tage ueberfaellig') + ')';\n}).join('\\n\\n');\n\nconst datum = heute.toLocaleDateString('de-DE');\n\nreturn [{\n  json: {\n    subject: '[Ihre Feuerwehr] PSA Lebensende - ' + items.length + ' Stueck zur Aussonderung',\n    html: '<h2>PSA naehert sich dem Lebensende</h2>'\n      + '<p>Folgende Ausruestungsstuecke erreichen in den naechsten 6 Monaten ihr Lebensende und muessen ausgesondert werden:</p>'\n      + '<pre>' + zeilen + '</pre>'\n      + '<p>Bitte Ersatzbeschaffung einleiten und Ausruestung in der PSA-Verwaltung als &quot;Ausgesondert&quot; markieren.</p>'\n      + '<p><b>Rechtsgrundlage:</b> §11 DGUV Vorschrift 49 - Feuerwehren</p>'\n      + '<p><a href=\"https://IHRE-PSA-URL\">PSA-Verwaltung oeffnen</a></p>'\n      + '<p><small>Stand: ' + datum + ' | FF Musterort - Bekleidungsverwaltung</small></p>'\n  }\n}];"
+        "jsCode": "const items = $input.first().json;\nconst heute = new Date();\n\nlet zeilen = items.map(item => {\n  const ablauf = new Date(item.Lebensende_Datum);\n  const tage = Math.ceil((ablauf - heute) / (1000 * 60 * 60 * 24));\n  const ablaufStr = ablauf.toLocaleDateString('de-DE');\n  const warnLevel = tage <= 0 ? '🔴 UEBERFAELLIG' : tage <= 30 ? '🟠 DRINGEND' : '🟡 IN KUERZE';\n  const ort = item.Kamerad ? 'Ausgegeben an: ' + item.Kamerad : 'Im Lager';\n  return warnLevel + ' ' + item.Ausruestungstyp + ' (SN: ' + item.Seriennummer + ')\\n  '\n    + ort + ' - Lebensende: ' + ablaufStr + ' ('\n    + (tage > 0 ? 'in ' + tage + ' Tagen' : Math.abs(tage) + ' Tage ueberfaellig') + ')';\n}).join('\\n\\n');\n\nconst datum = heute.toLocaleDateString('de-DE');\n\nreturn [{\n  json: {\n    subject: '[Ihre Feuerwehr] PSA Lebensende - ' + items.length + ' Stueck zur Aussonderung',\n    html: '<h2>PSA naehert sich dem Lebensende</h2>'\n      + '<p>Folgende Ausruestungsstuecke erreichen in den naechsten 6 Monaten ihr Lebensende und muessen ausgesondert werden:</p>'\n      + '<pre>' + zeilen + '</pre>'\n      + '<p>Bitte Ersatzbeschaffung einleiten und Ausruestung in der PSA-Verwaltung als &quot;Ausgesondert&quot; markieren.</p>'\n      + '<p><b>Rechtsgrundlage:</b> §11 DGUV Vorschrift 49 - Feuerwehren</p>'\n      + '<p><a href=\"https://IHRE-PSA-URL\">PSA-Verwaltung oeffnen</a></p>'\n      + '<p><small>Stand: ' + datum + ' | FF Musterort - Bekleidungsverwaltung</small></p>'\n  }\n}];"
       },
       "id": "format_email",
       "name": "E-Mail Text erstellen",
@@ -115,9 +107,9 @@
   "pinData": {},
   "connections": {
     "Montags 08:00 Uhr": {
-      "main": [[{ "node": "NocoDB: Ausrüstung nahe Lebensende", "type": "main", "index": 0 }]]
+      "main": [[{ "node": "PostgREST: Ausrüstung nahe Lebensende", "type": "main", "index": 0 }]]
     },
-    "NocoDB: Ausrüstung nahe Lebensende": {
+    "PostgREST: Ausrüstung nahe Lebensende": {
       "main": [[{ "node": "Einträge vorhanden?", "type": "main", "index": 0 }]]
     },
     "Einträge vorhanden?": {
