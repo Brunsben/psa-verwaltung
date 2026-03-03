@@ -1,327 +1,2356 @@
 {
-  "name": "PSA: NocoDB → MySQL Backup",
-  "nodes": [
-    {
-      "parameters": {
-        "rule": {
-          "interval": [
-            { "field": "cronExpression", "expression": "0 2 * * *" }
-          ]
+    "updatedAt": "2026-03-03T13:53:34.612Z",
+    "createdAt": "2026-02-24T21:19:25.375Z",
+    "id": "gHwdz3BnBnlpiWjA",
+    "name": "PSA: NocoDB \u2192 MySQL Backup",
+    "description": null,
+    "active": true,
+    "isArchived": false,
+    "nodes": [
+        {
+            "parameters": {
+                "rule": {
+                    "interval": [
+                        {
+                            "field": "cronExpression",
+                            "expression": "0 2 * * *"
+                        }
+                    ]
+                }
+            },
+            "id": "sched-001",
+            "name": "Schedule",
+            "type": "n8n-nodes-base.scheduleTrigger",
+            "typeVersion": 1.2,
+            "position": [
+                0,
+                304
+            ]
+        },
+        {
+            "parameters": {
+                "operation": "executeQuery",
+                "query": "TRUNCATE TABLE kameraden",
+                "options": {}
+            },
+            "id": "trunc-k",
+            "name": "TRUNCATE kameraden",
+            "type": "n8n-nodes-base.mySql",
+            "typeVersion": 2.5,
+            "position": [
+                224,
+                304
+            ],
+            "credentials": {
+                "mySql": {
+                    "id": "P3na8KmeCqRdqyCP",
+                    "name": "MySQL account"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "url": "http://10.10.1.238:8182/api/Kameraden",
+                "sendQuery": true,
+                "queryParameters": {
+                    "parameters": [
+                        {
+                            "name": "limit",
+                            "value": "25000"
+                        }
+                    ]
+                },
+                "options": {}
+            },
+            "id": "http-k",
+            "name": "Fetch Kameraden",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.2,
+            "position": [
+                448,
+                304
+            ]
+        },
+        {
+            "parameters": {
+                "jsCode": "const list = $input.first().json;\nif (!list.length) return [{ json: { query: 'SELECT 1' } }];\nfunction esc(v) {\n  if (v === null || v === undefined) return 'NULL';\n  if (typeof v === 'boolean') return v ? 1 : 0;\n  if (typeof v === 'number') return v;\n  return \"'\" + String(v).replace(/\\\\/g, '\\\\\\\\').replace(/'/g, \"\\\\'\") + \"'\";\n}\nconst cols = 'Id,CreatedAt,UpdatedAt,Name,Vorname,Email,Jacke_Groesse,Hose_Groesse,Stiefel_Groesse,Handschuh_Groesse,Aktiv,Hemd_Groesse,Poloshirt_Groesse,Fleece_Groesse,Dienstgrad';\nconst rows = list.map(r => '(' + [esc(r.Id),esc(r.CreatedAt),esc(r.UpdatedAt),esc(r.Name),esc(r.Vorname),esc(r.Email),esc(r.Jacke_Groesse),esc(r.Hose_Groesse),esc(r.Stiefel_Groesse),esc(r.Handschuh_Groesse),(r.Aktiv?1:0),esc(r.Hemd_Groesse),esc(r.Poloshirt_Groesse),esc(r.Fleece_Groesse),esc(r.Dienstgrad)].join(',') + ')');\nreturn [{ json: { query: 'INSERT INTO kameraden (' + cols + ') VALUES ' + rows.join(',') } }];"
+            },
+            "id": "code-k",
+            "name": "Transform Kameraden",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                672,
+                304
+            ]
+        },
+        {
+            "parameters": {
+                "operation": "executeQuery",
+                "query": "={{ $json.query }}",
+                "options": {}
+            },
+            "id": "ins-k",
+            "name": "INSERT kameraden",
+            "type": "n8n-nodes-base.mySql",
+            "typeVersion": 2.5,
+            "position": [
+                880,
+                304
+            ],
+            "credentials": {
+                "mySql": {
+                    "id": "P3na8KmeCqRdqyCP",
+                    "name": "MySQL account"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "operation": "executeQuery",
+                "query": "TRUNCATE TABLE ausruestungstypen",
+                "options": {}
+            },
+            "id": "trunc-at",
+            "name": "TRUNCATE ausruestungstypen",
+            "type": "n8n-nodes-base.mySql",
+            "typeVersion": 2.5,
+            "position": [
+                1104,
+                304
+            ],
+            "credentials": {
+                "mySql": {
+                    "id": "P3na8KmeCqRdqyCP",
+                    "name": "MySQL account"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "url": "http://10.10.1.238:8182/api/Ausruestungstypen",
+                "sendQuery": true,
+                "queryParameters": {
+                    "parameters": [
+                        {
+                            "name": "limit",
+                            "value": "25000"
+                        }
+                    ]
+                },
+                "options": {}
+            },
+            "id": "http-at",
+            "name": "Fetch Ausruestungstypen",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.2,
+            "position": [
+                1328,
+                304
+            ]
+        },
+        {
+            "parameters": {
+                "jsCode": "const list = $input.first().json;\nif (!list.length) return [{ json: { query: 'SELECT 1' } }];\nfunction esc(v) {\n  if (v === null || v === undefined) return 'NULL';\n  if (typeof v === 'boolean') return v ? 1 : 0;\n  if (typeof v === 'number') return v;\n  var s = String(v);\n  var r = [39];\n  for (var i = 0; i < s.length; i++) {\n    var c = s.charCodeAt(i);\n    if (c === 39) { r.push(92, 39); } else if (c === 92) { r.push(92, 92); } else { r.push(c); }\n  }\n  r.push(39);\n  return String.fromCharCode.apply(null, r);\n}\nconst cols = 'Id,CreatedAt,UpdatedAt,Bezeichnung,Norm,Max_Lebensdauer_Jahre,Max_Waeschen,Pruefintervall_Monate,Beschreibung,Typ,Hersteller';\nconst rows = list.map(row => '(' + [esc(row.Id),esc(row.CreatedAt),esc(row.UpdatedAt),esc(row.Bezeichnung),esc(row.Norm),esc(row.Max_Lebensdauer_Jahre),esc(row.Max_Waeschen),esc(row.Pruefintervall_Monate),esc(row.Beschreibung),esc(row.Typ),esc(row.Hersteller)].join(',') + ')');\nreturn [{ json: { query: 'INSERT INTO ausruestungstypen (' + cols + ') VALUES ' + rows.join(',') } }];"
+            },
+            "id": "code-at",
+            "name": "Transform Ausruestungstypen",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                1552,
+                304
+            ]
+        },
+        {
+            "parameters": {
+                "operation": "executeQuery",
+                "query": "={{ $json.query }}",
+                "options": {}
+            },
+            "id": "ins-at",
+            "name": "INSERT ausruestungstypen",
+            "type": "n8n-nodes-base.mySql",
+            "typeVersion": 2.5,
+            "position": [
+                1760,
+                304
+            ],
+            "credentials": {
+                "mySql": {
+                    "id": "P3na8KmeCqRdqyCP",
+                    "name": "MySQL account"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "operation": "executeQuery",
+                "query": "TRUNCATE TABLE ausruestungstuecke",
+                "options": {}
+            },
+            "id": "trunc-ast",
+            "name": "TRUNCATE ausruestungstuecke",
+            "type": "n8n-nodes-base.mySql",
+            "typeVersion": 2.5,
+            "position": [
+                1984,
+                304
+            ],
+            "credentials": {
+                "mySql": {
+                    "id": "P3na8KmeCqRdqyCP",
+                    "name": "MySQL account"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "url": "http://10.10.1.238:8182/api/Ausruestungstuecke",
+                "sendQuery": true,
+                "queryParameters": {
+                    "parameters": [
+                        {
+                            "name": "limit",
+                            "value": "25000"
+                        }
+                    ]
+                },
+                "options": {}
+            },
+            "id": "http-ast",
+            "name": "Fetch Ausruestungstuecke",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.2,
+            "position": [
+                2208,
+                304
+            ]
+        },
+        {
+            "parameters": {
+                "jsCode": "const list = $input.first().json;\nif (!list.length) return [{ json: { query: 'SELECT 1' } }];\nfunction esc(v) {\n  if (v === null || v === undefined) return 'NULL';\n  if (typeof v === 'boolean') return v ? 1 : 0;\n  if (typeof v === 'number') return v;\n  return \"'\" + String(v).replace(/\\\\/g, '\\\\\\\\').replace(/'/g, \"\\\\'\") + \"'\";\n}\nconst cols = 'Id,CreatedAt,UpdatedAt,Seriennummer,QR_Code,Groesse,Herstellungsdatum,Lebensende_Datum,Status,Notizen,Kamerad,Naechste_Pruefung,Ausruestungstyp';\nconst rows = list.map(r => '(' + [esc(r.Id),esc(r.CreatedAt),esc(r.UpdatedAt),esc(r.Seriennummer),esc(r.QR_Code),esc(r.Groesse),esc(r.Herstellungsdatum),esc(r.Lebensende_Datum),esc(r.Status),esc(r.Notizen),esc(r.Kamerad),esc(r.Naechste_Pruefung),esc(r.Ausruestungstyp)].join(',') + ')');\nreturn [{ json: { query: 'INSERT INTO ausruestungstuecke (' + cols + ') VALUES ' + rows.join(',') } }];"
+            },
+            "id": "code-ast",
+            "name": "Transform Ausruestungstuecke",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                2432,
+                304
+            ]
+        },
+        {
+            "parameters": {
+                "operation": "executeQuery",
+                "query": "={{ $json.query }}",
+                "options": {}
+            },
+            "id": "ins-ast",
+            "name": "INSERT ausruestungstuecke",
+            "type": "n8n-nodes-base.mySql",
+            "typeVersion": 2.5,
+            "position": [
+                2640,
+                304
+            ],
+            "credentials": {
+                "mySql": {
+                    "id": "P3na8KmeCqRdqyCP",
+                    "name": "MySQL account"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "operation": "executeQuery",
+                "query": "TRUNCATE TABLE ausgaben",
+                "options": {}
+            },
+            "id": "trunc-aug",
+            "name": "TRUNCATE ausgaben",
+            "type": "n8n-nodes-base.mySql",
+            "typeVersion": 2.5,
+            "position": [
+                2864,
+                304
+            ],
+            "credentials": {
+                "mySql": {
+                    "id": "P3na8KmeCqRdqyCP",
+                    "name": "MySQL account"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "url": "http://10.10.1.238:8182/api/Ausgaben",
+                "sendQuery": true,
+                "queryParameters": {
+                    "parameters": [
+                        {
+                            "name": "limit",
+                            "value": "25000"
+                        }
+                    ]
+                },
+                "options": {}
+            },
+            "id": "http-aug",
+            "name": "Fetch Ausgaben",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.2,
+            "position": [
+                3088,
+                304
+            ]
+        },
+        {
+            "parameters": {
+                "jsCode": "const list = $input.first().json;\nif (!list.length) return [{ json: { query: 'SELECT 1' } }];\nfunction esc(v) {\n  if (v === null || v === undefined) return 'NULL';\n  if (typeof v === 'boolean') return v ? 1 : 0;\n  if (typeof v === 'number') return v;\n  var s = String(v);\n  var r = [39];\n  for (var i = 0; i < s.length; i++) {\n    var c = s.charCodeAt(i);\n    if (c === 39) { r.push(92, 39); } else if (c === 92) { r.push(92, 92); } else { r.push(c); }\n  }\n  r.push(39);\n  return String.fromCharCode.apply(null, r);\n}\nconst cols = 'Id,CreatedAt,UpdatedAt,Ausgabedatum,Rueckgabedatum,Notizen,Ausruestungstueck_Id,Kamerad,Ausruestungstyp,Seriennummer';\nconst rows = list.map(row => '(' + [esc(row.Id),esc(row.CreatedAt),esc(row.UpdatedAt),esc(row.Ausgabedatum),esc(row.Rueckgabedatum),esc(row.Notizen),esc(row.Ausruestungstueck_Id),esc(row.Kamerad),esc(row.Ausruestungstyp),esc(row.Seriennummer)].join(',') + ')');\nreturn [{ json: { query: 'INSERT INTO ausgaben (' + cols + ') VALUES ' + rows.join(',') } }];"
+            },
+            "id": "code-aug",
+            "name": "Transform Ausgaben",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                3312,
+                304
+            ]
+        },
+        {
+            "parameters": {
+                "operation": "executeQuery",
+                "query": "={{ $json.query }}",
+                "options": {}
+            },
+            "id": "ins-aug",
+            "name": "INSERT ausgaben",
+            "type": "n8n-nodes-base.mySql",
+            "typeVersion": 2.5,
+            "position": [
+                3520,
+                304
+            ],
+            "credentials": {
+                "mySql": {
+                    "id": "P3na8KmeCqRdqyCP",
+                    "name": "MySQL account"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "operation": "executeQuery",
+                "query": "TRUNCATE TABLE pruefungen",
+                "options": {}
+            },
+            "id": "trunc-p",
+            "name": "TRUNCATE pruefungen",
+            "type": "n8n-nodes-base.mySql",
+            "typeVersion": 2.5,
+            "position": [
+                3744,
+                304
+            ],
+            "credentials": {
+                "mySql": {
+                    "id": "P3na8KmeCqRdqyCP",
+                    "name": "MySQL account"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "url": "http://10.10.1.238:8182/api/Pruefungen",
+                "sendQuery": true,
+                "queryParameters": {
+                    "parameters": [
+                        {
+                            "name": "limit",
+                            "value": "25000"
+                        }
+                    ]
+                },
+                "options": {}
+            },
+            "id": "http-p",
+            "name": "Fetch Pruefungen",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.2,
+            "position": [
+                3968,
+                304
+            ]
+        },
+        {
+            "parameters": {
+                "jsCode": "const list = $input.first().json;\nif (!list.length) return [{ json: { query: 'SELECT 1' } }];\nfunction esc(v) {\n  if (v === null || v === undefined) return 'NULL';\n  if (typeof v === 'boolean') return v ? 1 : 0;\n  if (typeof v === 'number') return v;\n  return \"'\" + String(v).replace(/\\\\/g, '\\\\\\\\').replace(/'/g, \"\\\\'\") + \"'\";\n}\nconst cols = 'Id,CreatedAt,UpdatedAt,Datum,Ergebnis,Pruefer,Naechste_Pruefung,Notizen,Ausruestungstueck_Id,Kamerad,Ausruestungstyp,Seriennummer';\nconst rows = list.map(r => '(' + [esc(r.Id),esc(r.CreatedAt),esc(r.UpdatedAt),esc(r.Datum),esc(r.Ergebnis),esc(r.Pruefer),esc(r.Naechste_Pruefung),esc(r.Notizen),esc(r.Ausruestungstueck_Id),esc(r.Kamerad),esc(r.Ausruestungstyp),esc(r.Seriennummer)].join(',') + ')');\nreturn [{ json: { query: 'INSERT INTO pruefungen (' + cols + ') VALUES ' + rows.join(',') } }];"
+            },
+            "id": "code-p",
+            "name": "Transform Pruefungen",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                4192,
+                304
+            ]
+        },
+        {
+            "parameters": {
+                "operation": "executeQuery",
+                "query": "={{ $json.query }}",
+                "options": {}
+            },
+            "id": "ins-p",
+            "name": "INSERT pruefungen",
+            "type": "n8n-nodes-base.mySql",
+            "typeVersion": 2.5,
+            "position": [
+                4400,
+                304
+            ],
+            "credentials": {
+                "mySql": {
+                    "id": "P3na8KmeCqRdqyCP",
+                    "name": "MySQL account"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "operation": "executeQuery",
+                "query": "TRUNCATE TABLE waesche",
+                "options": {}
+            },
+            "id": "trunc-w",
+            "name": "TRUNCATE waesche",
+            "type": "n8n-nodes-base.mySql",
+            "typeVersion": 2.5,
+            "position": [
+                4624,
+                304
+            ],
+            "credentials": {
+                "mySql": {
+                    "id": "P3na8KmeCqRdqyCP",
+                    "name": "MySQL account"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "url": "http://10.10.1.238:8182/api/Waesche",
+                "sendQuery": true,
+                "queryParameters": {
+                    "parameters": [
+                        {
+                            "name": "limit",
+                            "value": "25000"
+                        }
+                    ]
+                },
+                "options": {}
+            },
+            "id": "http-w",
+            "name": "Fetch Waesche",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.2,
+            "position": [
+                4848,
+                304
+            ]
+        },
+        {
+            "parameters": {
+                "jsCode": "const list = $input.first().json;\nif (!list.length) return [{ json: { query: 'SELECT 1' } }];\nfunction esc(v) {\n  if (v === null || v === undefined) return 'NULL';\n  if (typeof v === 'boolean') return v ? 1 : 0;\n  if (typeof v === 'number') return v;\n  return \"'\" + String(v).replace(/\\\\/g, '\\\\\\\\').replace(/'/g, \"\\\\'\") + \"'\";\n}\nconst cols = 'Id,CreatedAt,UpdatedAt,Datum,Waescheart,Notizen,Ausruestungstueck_Id,Kamerad,Ausruestungstyp,Seriennummer';\nconst rows = list.map(r => '(' + [esc(r.Id),esc(r.CreatedAt),esc(r.UpdatedAt),esc(r.Datum),esc(r.Waescheart),esc(r.Notizen),esc(r.Ausruestungstueck_Id),esc(r.Kamerad),esc(r.Ausruestungstyp),esc(r.Seriennummer)].join(',') + ')');\nreturn [{ json: { query: 'INSERT INTO waesche (' + cols + ') VALUES ' + rows.join(',') } }];"
+            },
+            "id": "code-w",
+            "name": "Transform Waesche",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                5072,
+                304
+            ]
+        },
+        {
+            "parameters": {
+                "operation": "executeQuery",
+                "query": "={{ $json.query }}",
+                "options": {}
+            },
+            "id": "ins-w",
+            "name": "INSERT waesche",
+            "type": "n8n-nodes-base.mySql",
+            "typeVersion": 2.5,
+            "position": [
+                5280,
+                304
+            ],
+            "credentials": {
+                "mySql": {
+                    "id": "P3na8KmeCqRdqyCP",
+                    "name": "MySQL account"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "operation": "executeQuery",
+                "query": "TRUNCATE TABLE normen",
+                "options": {}
+            },
+            "id": "trunc-n",
+            "name": "TRUNCATE normen",
+            "type": "n8n-nodes-base.mySql",
+            "typeVersion": 2.5,
+            "position": [
+                5504,
+                304
+            ],
+            "credentials": {
+                "mySql": {
+                    "id": "P3na8KmeCqRdqyCP",
+                    "name": "MySQL account"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "url": "http://10.10.1.238:8182/api/Normen",
+                "sendQuery": true,
+                "queryParameters": {
+                    "parameters": [
+                        {
+                            "name": "limit",
+                            "value": "25000"
+                        }
+                    ]
+                },
+                "options": {}
+            },
+            "id": "http-n",
+            "name": "Fetch Normen",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.2,
+            "position": [
+                5728,
+                304
+            ]
+        },
+        {
+            "parameters": {
+                "jsCode": "const list = $input.first().json;\nif (!list.length) return [{ json: { query: 'SELECT 1' } }];\nfunction esc(v) {\n  if (v === null || v === undefined) return 'NULL';\n  if (typeof v === 'boolean') return v ? 1 : 0;\n  if (typeof v === 'number') return v;\n  var s = String(v);\n  var r = [39];\n  for (var i = 0; i < s.length; i++) {\n    var c = s.charCodeAt(i);\n    if (c === 39) { r.push(92, 39); } else if (c === 92) { r.push(92, 92); } else { r.push(c); }\n  }\n  r.push(39);\n  return String.fromCharCode.apply(null, r);\n}\nconst cols = 'Id,CreatedAt,UpdatedAt,Bezeichnung,Beschreibung,Pruefintervall_Monate,Max_Lebensdauer_Jahre,Max_Waeschen,Ausruestungstyp_Kategorie';\nconst rows = list.map(row => '(' + [esc(row.Id),esc(row.CreatedAt),esc(row.UpdatedAt),esc(row.Bezeichnung),esc(row.Beschreibung),esc(row.Pruefintervall_Monate),esc(row.Max_Lebensdauer_Jahre),esc(row.Max_Waeschen),esc(row.Ausruestungstyp_Kategorie)].join(',') + ')');\nreturn [{ json: { query: 'INSERT INTO normen (' + cols + ') VALUES ' + rows.join(',') } }];"
+            },
+            "id": "code-n",
+            "name": "Transform Normen",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                5952,
+                304
+            ]
+        },
+        {
+            "parameters": {
+                "operation": "executeQuery",
+                "query": "={{ $json.query }}",
+                "options": {}
+            },
+            "id": "ins-n",
+            "name": "INSERT normen",
+            "type": "n8n-nodes-base.mySql",
+            "typeVersion": 2.5,
+            "position": [
+                6160,
+                304
+            ],
+            "credentials": {
+                "mySql": {
+                    "id": "P3na8KmeCqRdqyCP",
+                    "name": "MySQL account"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "operation": "executeQuery",
+                "query": "TRUNCATE TABLE benutzer",
+                "options": {}
+            },
+            "id": "trunc-b",
+            "name": "TRUNCATE benutzer",
+            "type": "n8n-nodes-base.mySql",
+            "typeVersion": 2.5,
+            "position": [
+                6384,
+                304
+            ],
+            "credentials": {
+                "mySql": {
+                    "id": "P3na8KmeCqRdqyCP",
+                    "name": "MySQL account"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "url": "http://10.10.1.238:8182/api/Benutzer",
+                "sendQuery": true,
+                "queryParameters": {
+                    "parameters": [
+                        {
+                            "name": "limit",
+                            "value": "25000"
+                        }
+                    ]
+                },
+                "options": {}
+            },
+            "id": "http-b",
+            "name": "Fetch Benutzer",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.2,
+            "position": [
+                6608,
+                304
+            ]
+        },
+        {
+            "parameters": {
+                "jsCode": "const list = $input.first().json;\nif (!list.length) return [{ json: { query: 'SELECT 1' } }];\nfunction esc(v) {\n  if (v === null || v === undefined) return 'NULL';\n  if (typeof v === 'boolean') return v ? 1 : 0;\n  if (typeof v === 'number') return v;\n  return \"'\" + String(v).replace(/\\\\/g, '\\\\\\\\').replace(/'/g, \"\\\\'\") + \"'\";\n}\nconst cols = 'Id,CreatedAt,UpdatedAt,Benutzername,PIN,Rolle,Aktiv';\nconst rows = list.map(r => '(' + [esc(r.Id),esc(r.CreatedAt),esc(r.UpdatedAt),esc(r.Benutzername),esc(r.PIN),esc(r.Rolle),(r.Aktiv?1:0)].join(',') + ')');\nreturn [{ json: { query: 'INSERT INTO benutzer (' + cols + ') VALUES ' + rows.join(',') } }];"
+            },
+            "id": "code-b",
+            "name": "Transform Benutzer",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                6832,
+                304
+            ]
+        },
+        {
+            "parameters": {
+                "operation": "executeQuery",
+                "query": "={{ $json.query }}",
+                "options": {}
+            },
+            "id": "ins-b",
+            "name": "INSERT benutzer",
+            "type": "n8n-nodes-base.mySql",
+            "typeVersion": 2.5,
+            "position": [
+                7040,
+                304
+            ],
+            "credentials": {
+                "mySql": {
+                    "id": "P3na8KmeCqRdqyCP",
+                    "name": "MySQL account"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "operation": "executeQuery",
+                "query": "TRUNCATE TABLE changelog",
+                "options": {}
+            },
+            "id": "trunc-cl",
+            "name": "TRUNCATE changelog",
+            "type": "n8n-nodes-base.mySql",
+            "typeVersion": 2.5,
+            "position": [
+                7264,
+                304
+            ],
+            "credentials": {
+                "mySql": {
+                    "id": "P3na8KmeCqRdqyCP",
+                    "name": "MySQL account"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "url": "http://10.10.1.238:8182/api/Changelog",
+                "sendQuery": true,
+                "queryParameters": {
+                    "parameters": [
+                        {
+                            "name": "limit",
+                            "value": "25000"
+                        }
+                    ]
+                },
+                "options": {}
+            },
+            "id": "http-cl",
+            "name": "Fetch Changelog",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.2,
+            "position": [
+                7488,
+                304
+            ]
+        },
+        {
+            "parameters": {
+                "jsCode": "const list = $input.first().json;\nif (!list.length) return [{ json: { query: 'SELECT 1' } }];\nfunction esc(v) {\n  if (v === null || v === undefined) return 'NULL';\n  if (typeof v === 'boolean') return v ? 1 : 0;\n  if (typeof v === 'number') return v;\n  var s = String(v);\n  var r = [39];\n  for (var i = 0; i < s.length; i++) {\n    var c = s.charCodeAt(i);\n    if (c === 39) { r.push(92, 39); } else if (c === 92) { r.push(92, 92); } else { r.push(c); }\n  }\n  r.push(39);\n  return String.fromCharCode.apply(null, r);\n}\nconst cols = 'Id,CreatedAt,UpdatedAt,Zeitpunkt,Benutzer,Tabelle,Aktion,Details,Datensatz_Id';\nconst rows = list.map(r => '(' + [esc(r.Id),esc(r.CreatedAt),esc(r.UpdatedAt),esc(r.Zeitpunkt),esc(r.Benutzer),esc(r.Tabelle),esc(r.Aktion),esc(r.Details),esc(r.Datensatz_Id)].join(',') + ')');\nreturn [{ json: { query: 'INSERT INTO changelog (' + cols + ') VALUES ' + rows.join(',') } }];"
+            },
+            "id": "code-cl",
+            "name": "Transform Changelog",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                7712,
+                304
+            ]
+        },
+        {
+            "parameters": {
+                "operation": "executeQuery",
+                "query": "={{ $json.query }}",
+                "options": {}
+            },
+            "id": "ins-cl",
+            "name": "INSERT changelog",
+            "type": "n8n-nodes-base.mySql",
+            "typeVersion": 2.5,
+            "position": [
+                7920,
+                304
+            ],
+            "credentials": {
+                "mySql": {
+                    "id": "P3na8KmeCqRdqyCP",
+                    "name": "MySQL account"
+                }
+            }
         }
-      },
-      "id": "sched-001",
-      "name": "Schedule",
-      "type": "n8n-nodes-base.scheduleTrigger",
-      "typeVersion": 1.2,
-      "position": [0, 304]
+    ],
+    "connections": {
+        "Schedule": {
+            "main": [
+                [
+                    {
+                        "node": "TRUNCATE kameraden",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "TRUNCATE kameraden": {
+            "main": [
+                [
+                    {
+                        "node": "Fetch Kameraden",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Fetch Kameraden": {
+            "main": [
+                [
+                    {
+                        "node": "Transform Kameraden",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Transform Kameraden": {
+            "main": [
+                [
+                    {
+                        "node": "INSERT kameraden",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "INSERT kameraden": {
+            "main": [
+                [
+                    {
+                        "node": "TRUNCATE ausruestungstypen",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "TRUNCATE ausruestungstypen": {
+            "main": [
+                [
+                    {
+                        "node": "Fetch Ausruestungstypen",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Fetch Ausruestungstypen": {
+            "main": [
+                [
+                    {
+                        "node": "Transform Ausruestungstypen",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Transform Ausruestungstypen": {
+            "main": [
+                [
+                    {
+                        "node": "INSERT ausruestungstypen",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "INSERT ausruestungstypen": {
+            "main": [
+                [
+                    {
+                        "node": "TRUNCATE ausruestungstuecke",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "TRUNCATE ausruestungstuecke": {
+            "main": [
+                [
+                    {
+                        "node": "Fetch Ausruestungstuecke",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Fetch Ausruestungstuecke": {
+            "main": [
+                [
+                    {
+                        "node": "Transform Ausruestungstuecke",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Transform Ausruestungstuecke": {
+            "main": [
+                [
+                    {
+                        "node": "INSERT ausruestungstuecke",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "INSERT ausruestungstuecke": {
+            "main": [
+                [
+                    {
+                        "node": "TRUNCATE ausgaben",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "TRUNCATE ausgaben": {
+            "main": [
+                [
+                    {
+                        "node": "Fetch Ausgaben",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Fetch Ausgaben": {
+            "main": [
+                [
+                    {
+                        "node": "Transform Ausgaben",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Transform Ausgaben": {
+            "main": [
+                [
+                    {
+                        "node": "INSERT ausgaben",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "INSERT ausgaben": {
+            "main": [
+                [
+                    {
+                        "node": "TRUNCATE pruefungen",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "TRUNCATE pruefungen": {
+            "main": [
+                [
+                    {
+                        "node": "Fetch Pruefungen",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Fetch Pruefungen": {
+            "main": [
+                [
+                    {
+                        "node": "Transform Pruefungen",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Transform Pruefungen": {
+            "main": [
+                [
+                    {
+                        "node": "INSERT pruefungen",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "INSERT pruefungen": {
+            "main": [
+                [
+                    {
+                        "node": "TRUNCATE waesche",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "TRUNCATE waesche": {
+            "main": [
+                [
+                    {
+                        "node": "Fetch Waesche",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Fetch Waesche": {
+            "main": [
+                [
+                    {
+                        "node": "Transform Waesche",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Transform Waesche": {
+            "main": [
+                [
+                    {
+                        "node": "INSERT waesche",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "INSERT waesche": {
+            "main": [
+                [
+                    {
+                        "node": "TRUNCATE normen",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "TRUNCATE normen": {
+            "main": [
+                [
+                    {
+                        "node": "Fetch Normen",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Fetch Normen": {
+            "main": [
+                [
+                    {
+                        "node": "Transform Normen",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Transform Normen": {
+            "main": [
+                [
+                    {
+                        "node": "INSERT normen",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "INSERT normen": {
+            "main": [
+                [
+                    {
+                        "node": "TRUNCATE benutzer",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "TRUNCATE benutzer": {
+            "main": [
+                [
+                    {
+                        "node": "Fetch Benutzer",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Fetch Benutzer": {
+            "main": [
+                [
+                    {
+                        "node": "Transform Benutzer",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Transform Benutzer": {
+            "main": [
+                [
+                    {
+                        "node": "INSERT benutzer",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "INSERT benutzer": {
+            "main": [
+                [
+                    {
+                        "node": "TRUNCATE changelog",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "TRUNCATE changelog": {
+            "main": [
+                [
+                    {
+                        "node": "Fetch Changelog",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Fetch Changelog": {
+            "main": [
+                [
+                    {
+                        "node": "Transform Changelog",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Transform Changelog": {
+            "main": [
+                [
+                    {
+                        "node": "INSERT changelog",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
     },
-    {
-      "parameters": { "operation": "executeQuery", "query": "TRUNCATE TABLE kameraden", "options": {} },
-      "id": "trunc-k", "name": "TRUNCATE kameraden",
-      "type": "n8n-nodes-base.mySql", "typeVersion": 2.5, "position": [224, 304],
-      "credentials": { "mySql": { "id": "P3na8KmeCqRdqyCP", "name": "MySQL account" } }
+    "settings": {
+        "executionOrder": "v1",
+        "saveDataErrorExecution": "all",
+        "saveDataSuccessExecution": "all",
+        "saveManualExecutions": true,
+        "saveExecutionProgress": true,
+        "callerPolicy": "workflowsFromSameOwner",
+        "availableInMCP": false,
+        "errorWorkflow": "bH4qa1iA6I2DOWiy"
     },
-    {
-      "parameters": {
-        "url": "http://10.10.1.238:8182/api/Kameraden",
-        "sendQuery": true,
-        "queryParameters": { "parameters": [{ "name": "limit", "value": "25000" }] },
-        "options": {}
-      },
-      "id": "http-k", "name": "Fetch Kameraden",
-      "type": "n8n-nodes-base.httpRequest", "typeVersion": 4.2, "position": [448, 304]
+    "staticData": {
+        "node:Schedule": {
+            "recurrenceRules": []
+        }
     },
-    {
-      "parameters": {
-        "jsCode": "const list = $input.first().json;\nif (!list.length) return [{ json: { query: 'SELECT 1' } }];\nfunction esc(v) {\n  if (v === null || v === undefined) return 'NULL';\n  if (typeof v === 'boolean') return v ? 1 : 0;\n  if (typeof v === 'number') return v;\n  return \"'\" + String(v).replace(/\\\\/g, '\\\\\\\\').replace(/'/g, \"\\\\'\") + \"'\";\n}\nconst cols = 'Id,CreatedAt,UpdatedAt,Name,Vorname,Email,Jacke_Groesse,Hose_Groesse,Stiefel_Groesse,Handschuh_Groesse,Aktiv,Hemd_Groesse,Poloshirt_Groesse,Fleece_Groesse,Dienstgrad';\nconst rows = list.map(r => '(' + [esc(r.Id),esc(r.CreatedAt),esc(r.UpdatedAt),esc(r.Name),esc(r.Vorname),esc(r.Email),esc(r.Jacke_Groesse),esc(r.Hose_Groesse),esc(r.Stiefel_Groesse),esc(r.Handschuh_Groesse),(r.Aktiv?1:0),esc(r.Hemd_Groesse),esc(r.Poloshirt_Groesse),esc(r.Fleece_Groesse),esc(r.Dienstgrad)].join(',') + ')');\nreturn [{ json: { query: 'INSERT INTO kameraden (' + cols + ') VALUES ' + rows.join(',') } }];"
-      },
-      "id": "code-k", "name": "Transform Kameraden",
-      "type": "n8n-nodes-base.code", "typeVersion": 2, "position": [672, 304]
+    "meta": {
+        "templateCredsSetupCompleted": true
     },
-    {
-      "parameters": { "operation": "executeQuery", "query": "={{ $json.query }}", "options": {} },
-      "id": "ins-k", "name": "INSERT kameraden",
-      "type": "n8n-nodes-base.mySql", "typeVersion": 2.5, "position": [880, 304],
-      "credentials": { "mySql": { "id": "P3na8KmeCqRdqyCP", "name": "MySQL account" } }
-    },
-    {
-      "parameters": { "operation": "executeQuery", "query": "TRUNCATE TABLE ausruestungstypen", "options": {} },
-      "id": "trunc-at", "name": "TRUNCATE ausruestungstypen",
-      "type": "n8n-nodes-base.mySql", "typeVersion": 2.5, "position": [1104, 304],
-      "credentials": { "mySql": { "id": "P3na8KmeCqRdqyCP", "name": "MySQL account" } }
-    },
-    {
-      "parameters": {
-        "url": "http://10.10.1.238:8182/api/Ausruestungstypen",
-        "sendQuery": true,
-        "queryParameters": { "parameters": [{ "name": "limit", "value": "25000" }] },
-        "options": {}
-      },
-      "id": "http-at", "name": "Fetch Ausruestungstypen",
-      "type": "n8n-nodes-base.httpRequest", "typeVersion": 4.2, "position": [1328, 304]
-    },
-    {
-      "parameters": {
-        "jsCode": "const list = $input.first().json;\nif (!list.length) return [{ json: { query: 'SELECT 1' } }];\nfunction esc(v) {\n  if (v === null || v === undefined) return 'NULL';\n  if (typeof v === 'boolean') return v ? 1 : 0;\n  if (typeof v === 'number') return v;\n  var s = String(v);\n  var r = [39];\n  for (var i = 0; i < s.length; i++) {\n    var c = s.charCodeAt(i);\n    if (c === 39) { r.push(92, 39); } else if (c === 92) { r.push(92, 92); } else { r.push(c); }\n  }\n  r.push(39);\n  return String.fromCharCode.apply(null, r);\n}\nconst cols = 'Id,CreatedAt,UpdatedAt,Bezeichnung,Norm,Max_Lebensdauer_Jahre,Max_Waeschen,Pruefintervall_Monate,Beschreibung,Typ,Hersteller';\nconst rows = list.map(row => '(' + [esc(row.Id),esc(row.CreatedAt),esc(row.UpdatedAt),esc(row.Bezeichnung),esc(row.Norm),esc(row.Max_Lebensdauer_Jahre),esc(row.Max_Waeschen),esc(row.Pruefintervall_Monate),esc(row.Beschreibung),esc(row.Typ),esc(row.Hersteller)].join(',') + ')');\nreturn [{ json: { query: 'INSERT INTO ausruestungstypen (' + cols + ') VALUES ' + rows.join(',') } }];"
-      },
-      "id": "code-at", "name": "Transform Ausruestungstypen",
-      "type": "n8n-nodes-base.code", "typeVersion": 2, "position": [1552, 304]
-    },
-    {
-      "parameters": { "operation": "executeQuery", "query": "={{ $json.query }}", "options": {} },
-      "id": "ins-at", "name": "INSERT ausruestungstypen",
-      "type": "n8n-nodes-base.mySql", "typeVersion": 2.5, "position": [1760, 304],
-      "credentials": { "mySql": { "id": "P3na8KmeCqRdqyCP", "name": "MySQL account" } }
-    },
-    {
-      "parameters": { "operation": "executeQuery", "query": "TRUNCATE TABLE ausruestungstuecke", "options": {} },
-      "id": "trunc-ast", "name": "TRUNCATE ausruestungstuecke",
-      "type": "n8n-nodes-base.mySql", "typeVersion": 2.5, "position": [1984, 304],
-      "credentials": { "mySql": { "id": "P3na8KmeCqRdqyCP", "name": "MySQL account" } }
-    },
-    {
-      "parameters": {
-        "url": "http://10.10.1.238:8182/api/Ausruestungstuecke",
-        "sendQuery": true,
-        "queryParameters": { "parameters": [{ "name": "limit", "value": "25000" }] },
-        "options": {}
-      },
-      "id": "http-ast", "name": "Fetch Ausruestungstuecke",
-      "type": "n8n-nodes-base.httpRequest", "typeVersion": 4.2, "position": [2208, 304]
-    },
-    {
-      "parameters": {
-        "jsCode": "const list = $input.first().json;\nif (!list.length) return [{ json: { query: 'SELECT 1' } }];\nfunction esc(v) {\n  if (v === null || v === undefined) return 'NULL';\n  if (typeof v === 'boolean') return v ? 1 : 0;\n  if (typeof v === 'number') return v;\n  return \"'\" + String(v).replace(/\\\\/g, '\\\\\\\\').replace(/'/g, \"\\\\'\") + \"'\";\n}\nconst cols = 'Id,CreatedAt,UpdatedAt,Seriennummer,QR_Code,Groesse,Herstellungsdatum,Lebensende_Datum,Status,Notizen,Kamerad,Naechste_Pruefung,Ausruestungstyp';\nconst rows = list.map(r => '(' + [esc(r.Id),esc(r.CreatedAt),esc(r.UpdatedAt),esc(r.Seriennummer),esc(r.QR_Code),esc(r.Groesse),esc(r.Herstellungsdatum),esc(r.Lebensende_Datum),esc(r.Status),esc(r.Notizen),esc(r.Kamerad),esc(r.Naechste_Pruefung),esc(r.Ausruestungstyp)].join(',') + ')');\nreturn [{ json: { query: 'INSERT INTO ausruestungstuecke (' + cols + ') VALUES ' + rows.join(',') } }];"
-      },
-      "id": "code-ast", "name": "Transform Ausruestungstuecke",
-      "type": "n8n-nodes-base.code", "typeVersion": 2, "position": [2432, 304]
-    },
-    {
-      "parameters": { "operation": "executeQuery", "query": "={{ $json.query }}", "options": {} },
-      "id": "ins-ast", "name": "INSERT ausruestungstuecke",
-      "type": "n8n-nodes-base.mySql", "typeVersion": 2.5, "position": [2640, 304],
-      "credentials": { "mySql": { "id": "P3na8KmeCqRdqyCP", "name": "MySQL account" } }
-    },
-    {
-      "parameters": { "operation": "executeQuery", "query": "TRUNCATE TABLE ausgaben", "options": {} },
-      "id": "trunc-aug", "name": "TRUNCATE ausgaben",
-      "type": "n8n-nodes-base.mySql", "typeVersion": 2.5, "position": [2864, 304],
-      "credentials": { "mySql": { "id": "P3na8KmeCqRdqyCP", "name": "MySQL account" } }
-    },
-    {
-      "parameters": {
-        "url": "http://10.10.1.238:8182/api/Ausgaben",
-        "sendQuery": true,
-        "queryParameters": { "parameters": [{ "name": "limit", "value": "25000" }] },
-        "options": {}
-      },
-      "id": "http-aug", "name": "Fetch Ausgaben",
-      "type": "n8n-nodes-base.httpRequest", "typeVersion": 4.2, "position": [3088, 304]
-    },
-    {
-      "parameters": {
-        "jsCode": "const list = $input.first().json;\nif (!list.length) return [{ json: { query: 'SELECT 1' } }];\nfunction esc(v) {\n  if (v === null || v === undefined) return 'NULL';\n  if (typeof v === 'boolean') return v ? 1 : 0;\n  if (typeof v === 'number') return v;\n  var s = String(v);\n  var r = [39];\n  for (var i = 0; i < s.length; i++) {\n    var c = s.charCodeAt(i);\n    if (c === 39) { r.push(92, 39); } else if (c === 92) { r.push(92, 92); } else { r.push(c); }\n  }\n  r.push(39);\n  return String.fromCharCode.apply(null, r);\n}\nconst cols = 'Id,CreatedAt,UpdatedAt,Ausgabedatum,Rueckgabedatum,Notizen,Ausruestungstueck_Id,Kamerad,Ausruestungstyp,Seriennummer';\nconst rows = list.map(row => '(' + [esc(row.Id),esc(row.CreatedAt),esc(row.UpdatedAt),esc(row.Ausgabedatum),esc(row.Rueckgabedatum),esc(row.Notizen),esc(row.Ausruestungstueck_Id),esc(row.Kamerad),esc(row.Ausruestungstyp),esc(row.Seriennummer)].join(',') + ')');\nreturn [{ json: { query: 'INSERT INTO ausgaben (' + cols + ') VALUES ' + rows.join(',') } }];"
-      },
-      "id": "code-aug", "name": "Transform Ausgaben",
-      "type": "n8n-nodes-base.code", "typeVersion": 2, "position": [3312, 304]
-    },
-    {
-      "parameters": { "operation": "executeQuery", "query": "={{ $json.query }}", "options": {} },
-      "id": "ins-aug", "name": "INSERT ausgaben",
-      "type": "n8n-nodes-base.mySql", "typeVersion": 2.5, "position": [3520, 304],
-      "credentials": { "mySql": { "id": "P3na8KmeCqRdqyCP", "name": "MySQL account" } }
-    },
-    {
-      "parameters": { "operation": "executeQuery", "query": "TRUNCATE TABLE pruefungen", "options": {} },
-      "id": "trunc-p", "name": "TRUNCATE pruefungen",
-      "type": "n8n-nodes-base.mySql", "typeVersion": 2.5, "position": [3744, 304],
-      "credentials": { "mySql": { "id": "P3na8KmeCqRdqyCP", "name": "MySQL account" } }
-    },
-    {
-      "parameters": {
-        "url": "http://10.10.1.238:8182/api/Pruefungen",
-        "sendQuery": true,
-        "queryParameters": { "parameters": [{ "name": "limit", "value": "25000" }] },
-        "options": {}
-      },
-      "id": "http-p", "name": "Fetch Pruefungen",
-      "type": "n8n-nodes-base.httpRequest", "typeVersion": 4.2, "position": [3968, 304]
-    },
-    {
-      "parameters": {
-        "jsCode": "const list = $input.first().json;\nif (!list.length) return [{ json: { query: 'SELECT 1' } }];\nfunction esc(v) {\n  if (v === null || v === undefined) return 'NULL';\n  if (typeof v === 'boolean') return v ? 1 : 0;\n  if (typeof v === 'number') return v;\n  return \"'\" + String(v).replace(/\\\\/g, '\\\\\\\\').replace(/'/g, \"\\\\'\") + \"'\";\n}\nconst cols = 'Id,CreatedAt,UpdatedAt,Datum,Ergebnis,Pruefer,Naechste_Pruefung,Notizen,Ausruestungstueck_Id,Kamerad,Ausruestungstyp,Seriennummer';\nconst rows = list.map(r => '(' + [esc(r.Id),esc(r.CreatedAt),esc(r.UpdatedAt),esc(r.Datum),esc(r.Ergebnis),esc(r.Pruefer),esc(r.Naechste_Pruefung),esc(r.Notizen),esc(r.Ausruestungstueck_Id),esc(r.Kamerad),esc(r.Ausruestungstyp),esc(r.Seriennummer)].join(',') + ')');\nreturn [{ json: { query: 'INSERT INTO pruefungen (' + cols + ') VALUES ' + rows.join(',') } }];"
-      },
-      "id": "code-p", "name": "Transform Pruefungen",
-      "type": "n8n-nodes-base.code", "typeVersion": 2, "position": [4192, 304]
-    },
-    {
-      "parameters": { "operation": "executeQuery", "query": "={{ $json.query }}", "options": {} },
-      "id": "ins-p", "name": "INSERT pruefungen",
-      "type": "n8n-nodes-base.mySql", "typeVersion": 2.5, "position": [4400, 304],
-      "credentials": { "mySql": { "id": "P3na8KmeCqRdqyCP", "name": "MySQL account" } }
-    },
-    {
-      "parameters": { "operation": "executeQuery", "query": "TRUNCATE TABLE waesche", "options": {} },
-      "id": "trunc-w", "name": "TRUNCATE waesche",
-      "type": "n8n-nodes-base.mySql", "typeVersion": 2.5, "position": [4624, 304],
-      "credentials": { "mySql": { "id": "P3na8KmeCqRdqyCP", "name": "MySQL account" } }
-    },
-    {
-      "parameters": {
-        "url": "http://10.10.1.238:8182/api/Waesche",
-        "sendQuery": true,
-        "queryParameters": { "parameters": [{ "name": "limit", "value": "25000" }] },
-        "options": {}
-      },
-      "id": "http-w", "name": "Fetch Waesche",
-      "type": "n8n-nodes-base.httpRequest", "typeVersion": 4.2, "position": [4848, 304]
-    },
-    {
-      "parameters": {
-        "jsCode": "const list = $input.first().json;\nif (!list.length) return [{ json: { query: 'SELECT 1' } }];\nfunction esc(v) {\n  if (v === null || v === undefined) return 'NULL';\n  if (typeof v === 'boolean') return v ? 1 : 0;\n  if (typeof v === 'number') return v;\n  return \"'\" + String(v).replace(/\\\\/g, '\\\\\\\\').replace(/'/g, \"\\\\'\") + \"'\";\n}\nconst cols = 'Id,CreatedAt,UpdatedAt,Datum,Waescheart,Notizen,Ausruestungstueck_Id,Kamerad,Ausruestungstyp,Seriennummer';\nconst rows = list.map(r => '(' + [esc(r.Id),esc(r.CreatedAt),esc(r.UpdatedAt),esc(r.Datum),esc(r.Waescheart),esc(r.Notizen),esc(r.Ausruestungstueck_Id),esc(r.Kamerad),esc(r.Ausruestungstyp),esc(r.Seriennummer)].join(',') + ')');\nreturn [{ json: { query: 'INSERT INTO waesche (' + cols + ') VALUES ' + rows.join(',') } }];"
-      },
-      "id": "code-w", "name": "Transform Waesche",
-      "type": "n8n-nodes-base.code", "typeVersion": 2, "position": [5072, 304]
-    },
-    {
-      "parameters": { "operation": "executeQuery", "query": "={{ $json.query }}", "options": {} },
-      "id": "ins-w", "name": "INSERT waesche",
-      "type": "n8n-nodes-base.mySql", "typeVersion": 2.5, "position": [5280, 304],
-      "credentials": { "mySql": { "id": "P3na8KmeCqRdqyCP", "name": "MySQL account" } }
-    },
-    {
-      "parameters": { "operation": "executeQuery", "query": "TRUNCATE TABLE normen", "options": {} },
-      "id": "trunc-n", "name": "TRUNCATE normen",
-      "type": "n8n-nodes-base.mySql", "typeVersion": 2.5, "position": [5504, 304],
-      "credentials": { "mySql": { "id": "P3na8KmeCqRdqyCP", "name": "MySQL account" } }
-    },
-    {
-      "parameters": {
-        "url": "http://10.10.1.238:8182/api/Normen",
-        "sendQuery": true,
-        "queryParameters": { "parameters": [{ "name": "limit", "value": "25000" }] },
-        "options": {}
-      },
-      "id": "http-n", "name": "Fetch Normen",
-      "type": "n8n-nodes-base.httpRequest", "typeVersion": 4.2, "position": [5728, 304]
-    },
-    {
-      "parameters": {
-        "jsCode": "const list = $input.first().json;\nif (!list.length) return [{ json: { query: 'SELECT 1' } }];\nfunction esc(v) {\n  if (v === null || v === undefined) return 'NULL';\n  if (typeof v === 'boolean') return v ? 1 : 0;\n  if (typeof v === 'number') return v;\n  var s = String(v);\n  var r = [39];\n  for (var i = 0; i < s.length; i++) {\n    var c = s.charCodeAt(i);\n    if (c === 39) { r.push(92, 39); } else if (c === 92) { r.push(92, 92); } else { r.push(c); }\n  }\n  r.push(39);\n  return String.fromCharCode.apply(null, r);\n}\nconst cols = 'Id,CreatedAt,UpdatedAt,Bezeichnung,Beschreibung,Pruefintervall_Monate,Max_Lebensdauer_Jahre,Max_Waeschen,Ausruestungstyp_Kategorie';\nconst rows = list.map(row => '(' + [esc(row.Id),esc(row.CreatedAt),esc(row.UpdatedAt),esc(row.Bezeichnung),esc(row.Beschreibung),esc(row.Pruefintervall_Monate),esc(row.Max_Lebensdauer_Jahre),esc(row.Max_Waeschen),esc(row.Ausruestungstyp_Kategorie)].join(',') + ')');\nreturn [{ json: { query: 'INSERT INTO normen (' + cols + ') VALUES ' + rows.join(',') } }];"
-      },
-      "id": "code-n", "name": "Transform Normen",
-      "type": "n8n-nodes-base.code", "typeVersion": 2, "position": [5952, 304]
-    },
-    {
-      "parameters": { "operation": "executeQuery", "query": "={{ $json.query }}", "options": {} },
-      "id": "ins-n", "name": "INSERT normen",
-      "type": "n8n-nodes-base.mySql", "typeVersion": 2.5, "position": [6160, 304],
-      "credentials": { "mySql": { "id": "P3na8KmeCqRdqyCP", "name": "MySQL account" } }
-    },
-    {
-      "parameters": { "operation": "executeQuery", "query": "TRUNCATE TABLE benutzer", "options": {} },
-      "id": "trunc-b", "name": "TRUNCATE benutzer",
-      "type": "n8n-nodes-base.mySql", "typeVersion": 2.5, "position": [6384, 304],
-      "credentials": { "mySql": { "id": "P3na8KmeCqRdqyCP", "name": "MySQL account" } }
-    },
-    {
-      "parameters": {
-        "url": "http://10.10.1.238:8182/api/Benutzer",
-        "sendQuery": true,
-        "queryParameters": { "parameters": [{ "name": "limit", "value": "25000" }] },
-        "options": {}
-      },
-      "id": "http-b", "name": "Fetch Benutzer",
-      "type": "n8n-nodes-base.httpRequest", "typeVersion": 4.2, "position": [6608, 304]
-    },
-    {
-      "parameters": {
-        "jsCode": "const list = $input.first().json;\nif (!list.length) return [{ json: { query: 'SELECT 1' } }];\nfunction esc(v) {\n  if (v === null || v === undefined) return 'NULL';\n  if (typeof v === 'boolean') return v ? 1 : 0;\n  if (typeof v === 'number') return v;\n  return \"'\" + String(v).replace(/\\\\/g, '\\\\\\\\').replace(/'/g, \"\\\\'\") + \"'\";\n}\nconst cols = 'Id,CreatedAt,UpdatedAt,Benutzername,PIN,Rolle,Aktiv';\nconst rows = list.map(r => '(' + [esc(r.Id),esc(r.CreatedAt),esc(r.UpdatedAt),esc(r.Benutzername),esc(r.PIN),esc(r.Rolle),(r.Aktiv?1:0)].join(',') + ')');\nreturn [{ json: { query: 'INSERT INTO benutzer (' + cols + ') VALUES ' + rows.join(',') } }];"
-      },
-      "id": "code-b", "name": "Transform Benutzer",
-      "type": "n8n-nodes-base.code", "typeVersion": 2, "position": [6832, 304]
-    },
-    {
-      "parameters": { "operation": "executeQuery", "query": "={{ $json.query }}", "options": {} },
-      "id": "ins-b", "name": "INSERT benutzer",
-      "type": "n8n-nodes-base.mySql", "typeVersion": 2.5, "position": [7040, 304],
-      "credentials": { "mySql": { "id": "P3na8KmeCqRdqyCP", "name": "MySQL account" } }
-    },
-    {
-      "parameters": { "operation": "executeQuery", "query": "TRUNCATE TABLE changelog", "options": {} },
-      "id": "trunc-cl", "name": "TRUNCATE changelog",
-      "type": "n8n-nodes-base.mySql", "typeVersion": 2.5, "position": [7264, 304],
-      "credentials": { "mySql": { "id": "P3na8KmeCqRdqyCP", "name": "MySQL account" } }
-    },
-    {
-      "parameters": {
-        "url": "http://10.10.1.238:8182/api/Changelog",
-        "sendQuery": true,
-        "queryParameters": { "parameters": [{ "name": "limit", "value": "25000" }] },
-        "options": {}
-      },
-      "id": "http-cl", "name": "Fetch Changelog",
-      "type": "n8n-nodes-base.httpRequest", "typeVersion": 4.2, "position": [7488, 304]
-    },
-    {
-      "parameters": {
-        "jsCode": "const list = $input.first().json;\nif (!list.length) return [{ json: { query: 'SELECT 1' } }];\nfunction esc(v) {\n  if (v === null || v === undefined) return 'NULL';\n  if (typeof v === 'boolean') return v ? 1 : 0;\n  if (typeof v === 'number') return v;\n  var s = String(v);\n  var r = [39];\n  for (var i = 0; i < s.length; i++) {\n    var c = s.charCodeAt(i);\n    if (c === 39) { r.push(92, 39); } else if (c === 92) { r.push(92, 92); } else { r.push(c); }\n  }\n  r.push(39);\n  return String.fromCharCode.apply(null, r);\n}\nconst cols = 'Id,CreatedAt,UpdatedAt,Zeitpunkt,Benutzer,Tabelle,Aktion,Details,Datensatz_Id';\nconst rows = list.map(r => '(' + [esc(r.Id),esc(r.CreatedAt),esc(r.UpdatedAt),esc(r.Zeitpunkt),esc(r.Benutzer),esc(r.Tabelle),esc(r.Aktion),esc(r.Details),esc(r.Datensatz_Id)].join(',') + ')');\nreturn [{ json: { query: 'INSERT INTO changelog (' + cols + ') VALUES ' + rows.join(',') } }];"
-      },
-      "id": "code-cl", "name": "Transform Changelog",
-      "type": "n8n-nodes-base.code", "typeVersion": 2, "position": [7712, 304]
-    },
-    {
-      "parameters": { "operation": "executeQuery", "query": "={{ $json.query }}", "options": {} },
-      "id": "ins-cl", "name": "INSERT changelog",
-      "type": "n8n-nodes-base.mySql", "typeVersion": 2.5, "position": [7920, 304],
-      "credentials": { "mySql": { "id": "P3na8KmeCqRdqyCP", "name": "MySQL account" } }
+    "pinData": {},
+    "versionId": "b78477c6-5c1d-466e-bab7-165a26d35a5e",
+    "activeVersionId": "b78477c6-5c1d-466e-bab7-165a26d35a5e",
+    "versionCounter": 42,
+    "triggerCount": 1,
+    "shared": [
+        {
+            "updatedAt": "2026-02-24T21:19:25.416Z",
+            "createdAt": "2026-02-24T21:19:25.416Z",
+            "role": "workflow:owner",
+            "workflowId": "gHwdz3BnBnlpiWjA",
+            "projectId": "viwO0kwkZrPZoBTS",
+            "project": {
+                "updatedAt": "2025-07-21T14:22:06.251Z",
+                "createdAt": "2025-07-21T13:41:35.644Z",
+                "id": "viwO0kwkZrPZoBTS",
+                "name": "Benjamin Bruns <brunsben@gmail.com>",
+                "type": "personal",
+                "icon": null,
+                "description": null,
+                "creatorId": "66a4add3-c9f0-4325-be74-03a9d867281f",
+                "projectRelations": [
+                    {
+                        "updatedAt": "2025-07-21T13:41:35.645Z",
+                        "createdAt": "2025-07-21T13:41:35.645Z",
+                        "userId": "66a4add3-c9f0-4325-be74-03a9d867281f",
+                        "projectId": "viwO0kwkZrPZoBTS",
+                        "user": {
+                            "updatedAt": "2026-03-03T23:25:57.000Z",
+                            "createdAt": "2025-07-21T13:41:35.391Z",
+                            "id": "66a4add3-c9f0-4325-be74-03a9d867281f",
+                            "email": "brunsben@gmail.com",
+                            "firstName": "Benjamin",
+                            "lastName": "Bruns",
+                            "personalizationAnswers": {
+                                "version": "v4",
+                                "personalization_survey_submitted_at": "2025-07-21T14:22:13.098Z",
+                                "personalization_survey_n8n_version": "1.103.1",
+                                "companyType": "personal",
+                                "reportedSource": "google"
+                            },
+                            "settings": {
+                                "userActivated": true,
+                                "easyAIWorkflowOnboarded": true,
+                                "firstSuccessfulWorkflowId": "mMpEy8pu6OpUsHVU",
+                                "userActivatedAt": 1753134014106,
+                                "npsSurvey": {
+                                    "responded": true,
+                                    "lastShownAt": 1771619236876
+                                },
+                                "dismissedCallouts": {
+                                    "preBuiltAgentsModalCallout": true
+                                }
+                            },
+                            "disabled": false,
+                            "mfaEnabled": false,
+                            "lastActiveAt": "2026-03-03",
+                            "isPending": false
+                        }
+                    }
+                ]
+            }
+        }
+    ],
+    "tags": [],
+    "activeVersion": {
+        "updatedAt": "2026-03-03T13:53:34.613Z",
+        "createdAt": "2026-03-03T13:53:34.613Z",
+        "versionId": "b78477c6-5c1d-466e-bab7-165a26d35a5e",
+        "workflowId": "gHwdz3BnBnlpiWjA",
+        "nodes": [
+            {
+                "parameters": {
+                    "rule": {
+                        "interval": [
+                            {
+                                "field": "cronExpression",
+                                "expression": "0 2 * * *"
+                            }
+                        ]
+                    }
+                },
+                "id": "sched-001",
+                "name": "Schedule",
+                "type": "n8n-nodes-base.scheduleTrigger",
+                "typeVersion": 1.2,
+                "position": [
+                    0,
+                    304
+                ]
+            },
+            {
+                "parameters": {
+                    "operation": "executeQuery",
+                    "query": "TRUNCATE TABLE kameraden",
+                    "options": {}
+                },
+                "id": "trunc-k",
+                "name": "TRUNCATE kameraden",
+                "type": "n8n-nodes-base.mySql",
+                "typeVersion": 2.5,
+                "position": [
+                    224,
+                    304
+                ],
+                "credentials": {
+                    "mySql": {
+                        "id": "P3na8KmeCqRdqyCP",
+                        "name": "MySQL account"
+                    }
+                }
+            },
+            {
+                "parameters": {
+                    "url": "http://10.10.1.238:8182/api/Kameraden",
+                    "sendQuery": true,
+                    "queryParameters": {
+                        "parameters": [
+                            {
+                                "name": "limit",
+                                "value": "25000"
+                            }
+                        ]
+                    },
+                    "options": {}
+                },
+                "id": "http-k",
+                "name": "Fetch Kameraden",
+                "type": "n8n-nodes-base.httpRequest",
+                "typeVersion": 4.2,
+                "position": [
+                    448,
+                    304
+                ]
+            },
+            {
+                "parameters": {
+                    "jsCode": "const list = $input.first().json;\nif (!list.length) return [{ json: { query: 'SELECT 1' } }];\nfunction esc(v) {\n  if (v === null || v === undefined) return 'NULL';\n  if (typeof v === 'boolean') return v ? 1 : 0;\n  if (typeof v === 'number') return v;\n  return \"'\" + String(v).replace(/\\\\/g, '\\\\\\\\').replace(/'/g, \"\\\\'\") + \"'\";\n}\nconst cols = 'Id,CreatedAt,UpdatedAt,Name,Vorname,Email,Jacke_Groesse,Hose_Groesse,Stiefel_Groesse,Handschuh_Groesse,Aktiv,Hemd_Groesse,Poloshirt_Groesse,Fleece_Groesse,Dienstgrad';\nconst rows = list.map(r => '(' + [esc(r.Id),esc(r.CreatedAt),esc(r.UpdatedAt),esc(r.Name),esc(r.Vorname),esc(r.Email),esc(r.Jacke_Groesse),esc(r.Hose_Groesse),esc(r.Stiefel_Groesse),esc(r.Handschuh_Groesse),(r.Aktiv?1:0),esc(r.Hemd_Groesse),esc(r.Poloshirt_Groesse),esc(r.Fleece_Groesse),esc(r.Dienstgrad)].join(',') + ')');\nreturn [{ json: { query: 'INSERT INTO kameraden (' + cols + ') VALUES ' + rows.join(',') } }];"
+                },
+                "id": "code-k",
+                "name": "Transform Kameraden",
+                "type": "n8n-nodes-base.code",
+                "typeVersion": 2,
+                "position": [
+                    672,
+                    304
+                ]
+            },
+            {
+                "parameters": {
+                    "operation": "executeQuery",
+                    "query": "={{ $json.query }}",
+                    "options": {}
+                },
+                "id": "ins-k",
+                "name": "INSERT kameraden",
+                "type": "n8n-nodes-base.mySql",
+                "typeVersion": 2.5,
+                "position": [
+                    880,
+                    304
+                ],
+                "credentials": {
+                    "mySql": {
+                        "id": "P3na8KmeCqRdqyCP",
+                        "name": "MySQL account"
+                    }
+                }
+            },
+            {
+                "parameters": {
+                    "operation": "executeQuery",
+                    "query": "TRUNCATE TABLE ausruestungstypen",
+                    "options": {}
+                },
+                "id": "trunc-at",
+                "name": "TRUNCATE ausruestungstypen",
+                "type": "n8n-nodes-base.mySql",
+                "typeVersion": 2.5,
+                "position": [
+                    1104,
+                    304
+                ],
+                "credentials": {
+                    "mySql": {
+                        "id": "P3na8KmeCqRdqyCP",
+                        "name": "MySQL account"
+                    }
+                }
+            },
+            {
+                "parameters": {
+                    "url": "http://10.10.1.238:8182/api/Ausruestungstypen",
+                    "sendQuery": true,
+                    "queryParameters": {
+                        "parameters": [
+                            {
+                                "name": "limit",
+                                "value": "25000"
+                            }
+                        ]
+                    },
+                    "options": {}
+                },
+                "id": "http-at",
+                "name": "Fetch Ausruestungstypen",
+                "type": "n8n-nodes-base.httpRequest",
+                "typeVersion": 4.2,
+                "position": [
+                    1328,
+                    304
+                ]
+            },
+            {
+                "parameters": {
+                    "jsCode": "const list = $input.first().json;\nif (!list.length) return [{ json: { query: 'SELECT 1' } }];\nfunction esc(v) {\n  if (v === null || v === undefined) return 'NULL';\n  if (typeof v === 'boolean') return v ? 1 : 0;\n  if (typeof v === 'number') return v;\n  var s = String(v);\n  var r = [39];\n  for (var i = 0; i < s.length; i++) {\n    var c = s.charCodeAt(i);\n    if (c === 39) { r.push(92, 39); } else if (c === 92) { r.push(92, 92); } else { r.push(c); }\n  }\n  r.push(39);\n  return String.fromCharCode.apply(null, r);\n}\nconst cols = 'Id,CreatedAt,UpdatedAt,Bezeichnung,Norm,Max_Lebensdauer_Jahre,Max_Waeschen,Pruefintervall_Monate,Beschreibung,Typ,Hersteller';\nconst rows = list.map(row => '(' + [esc(row.Id),esc(row.CreatedAt),esc(row.UpdatedAt),esc(row.Bezeichnung),esc(row.Norm),esc(row.Max_Lebensdauer_Jahre),esc(row.Max_Waeschen),esc(row.Pruefintervall_Monate),esc(row.Beschreibung),esc(row.Typ),esc(row.Hersteller)].join(',') + ')');\nreturn [{ json: { query: 'INSERT INTO ausruestungstypen (' + cols + ') VALUES ' + rows.join(',') } }];"
+                },
+                "id": "code-at",
+                "name": "Transform Ausruestungstypen",
+                "type": "n8n-nodes-base.code",
+                "typeVersion": 2,
+                "position": [
+                    1552,
+                    304
+                ]
+            },
+            {
+                "parameters": {
+                    "operation": "executeQuery",
+                    "query": "={{ $json.query }}",
+                    "options": {}
+                },
+                "id": "ins-at",
+                "name": "INSERT ausruestungstypen",
+                "type": "n8n-nodes-base.mySql",
+                "typeVersion": 2.5,
+                "position": [
+                    1760,
+                    304
+                ],
+                "credentials": {
+                    "mySql": {
+                        "id": "P3na8KmeCqRdqyCP",
+                        "name": "MySQL account"
+                    }
+                }
+            },
+            {
+                "parameters": {
+                    "operation": "executeQuery",
+                    "query": "TRUNCATE TABLE ausruestungstuecke",
+                    "options": {}
+                },
+                "id": "trunc-ast",
+                "name": "TRUNCATE ausruestungstuecke",
+                "type": "n8n-nodes-base.mySql",
+                "typeVersion": 2.5,
+                "position": [
+                    1984,
+                    304
+                ],
+                "credentials": {
+                    "mySql": {
+                        "id": "P3na8KmeCqRdqyCP",
+                        "name": "MySQL account"
+                    }
+                }
+            },
+            {
+                "parameters": {
+                    "url": "http://10.10.1.238:8182/api/Ausruestungstuecke",
+                    "sendQuery": true,
+                    "queryParameters": {
+                        "parameters": [
+                            {
+                                "name": "limit",
+                                "value": "25000"
+                            }
+                        ]
+                    },
+                    "options": {}
+                },
+                "id": "http-ast",
+                "name": "Fetch Ausruestungstuecke",
+                "type": "n8n-nodes-base.httpRequest",
+                "typeVersion": 4.2,
+                "position": [
+                    2208,
+                    304
+                ]
+            },
+            {
+                "parameters": {
+                    "jsCode": "const list = $input.first().json;\nif (!list.length) return [{ json: { query: 'SELECT 1' } }];\nfunction esc(v) {\n  if (v === null || v === undefined) return 'NULL';\n  if (typeof v === 'boolean') return v ? 1 : 0;\n  if (typeof v === 'number') return v;\n  return \"'\" + String(v).replace(/\\\\/g, '\\\\\\\\').replace(/'/g, \"\\\\'\") + \"'\";\n}\nconst cols = 'Id,CreatedAt,UpdatedAt,Seriennummer,QR_Code,Groesse,Herstellungsdatum,Lebensende_Datum,Status,Notizen,Kamerad,Naechste_Pruefung,Ausruestungstyp';\nconst rows = list.map(r => '(' + [esc(r.Id),esc(r.CreatedAt),esc(r.UpdatedAt),esc(r.Seriennummer),esc(r.QR_Code),esc(r.Groesse),esc(r.Herstellungsdatum),esc(r.Lebensende_Datum),esc(r.Status),esc(r.Notizen),esc(r.Kamerad),esc(r.Naechste_Pruefung),esc(r.Ausruestungstyp)].join(',') + ')');\nreturn [{ json: { query: 'INSERT INTO ausruestungstuecke (' + cols + ') VALUES ' + rows.join(',') } }];"
+                },
+                "id": "code-ast",
+                "name": "Transform Ausruestungstuecke",
+                "type": "n8n-nodes-base.code",
+                "typeVersion": 2,
+                "position": [
+                    2432,
+                    304
+                ]
+            },
+            {
+                "parameters": {
+                    "operation": "executeQuery",
+                    "query": "={{ $json.query }}",
+                    "options": {}
+                },
+                "id": "ins-ast",
+                "name": "INSERT ausruestungstuecke",
+                "type": "n8n-nodes-base.mySql",
+                "typeVersion": 2.5,
+                "position": [
+                    2640,
+                    304
+                ],
+                "credentials": {
+                    "mySql": {
+                        "id": "P3na8KmeCqRdqyCP",
+                        "name": "MySQL account"
+                    }
+                }
+            },
+            {
+                "parameters": {
+                    "operation": "executeQuery",
+                    "query": "TRUNCATE TABLE ausgaben",
+                    "options": {}
+                },
+                "id": "trunc-aug",
+                "name": "TRUNCATE ausgaben",
+                "type": "n8n-nodes-base.mySql",
+                "typeVersion": 2.5,
+                "position": [
+                    2864,
+                    304
+                ],
+                "credentials": {
+                    "mySql": {
+                        "id": "P3na8KmeCqRdqyCP",
+                        "name": "MySQL account"
+                    }
+                }
+            },
+            {
+                "parameters": {
+                    "url": "http://10.10.1.238:8182/api/Ausgaben",
+                    "sendQuery": true,
+                    "queryParameters": {
+                        "parameters": [
+                            {
+                                "name": "limit",
+                                "value": "25000"
+                            }
+                        ]
+                    },
+                    "options": {}
+                },
+                "id": "http-aug",
+                "name": "Fetch Ausgaben",
+                "type": "n8n-nodes-base.httpRequest",
+                "typeVersion": 4.2,
+                "position": [
+                    3088,
+                    304
+                ]
+            },
+            {
+                "parameters": {
+                    "jsCode": "const list = $input.first().json;\nif (!list.length) return [{ json: { query: 'SELECT 1' } }];\nfunction esc(v) {\n  if (v === null || v === undefined) return 'NULL';\n  if (typeof v === 'boolean') return v ? 1 : 0;\n  if (typeof v === 'number') return v;\n  var s = String(v);\n  var r = [39];\n  for (var i = 0; i < s.length; i++) {\n    var c = s.charCodeAt(i);\n    if (c === 39) { r.push(92, 39); } else if (c === 92) { r.push(92, 92); } else { r.push(c); }\n  }\n  r.push(39);\n  return String.fromCharCode.apply(null, r);\n}\nconst cols = 'Id,CreatedAt,UpdatedAt,Ausgabedatum,Rueckgabedatum,Notizen,Ausruestungstueck_Id,Kamerad,Ausruestungstyp,Seriennummer';\nconst rows = list.map(row => '(' + [esc(row.Id),esc(row.CreatedAt),esc(row.UpdatedAt),esc(row.Ausgabedatum),esc(row.Rueckgabedatum),esc(row.Notizen),esc(row.Ausruestungstueck_Id),esc(row.Kamerad),esc(row.Ausruestungstyp),esc(row.Seriennummer)].join(',') + ')');\nreturn [{ json: { query: 'INSERT INTO ausgaben (' + cols + ') VALUES ' + rows.join(',') } }];"
+                },
+                "id": "code-aug",
+                "name": "Transform Ausgaben",
+                "type": "n8n-nodes-base.code",
+                "typeVersion": 2,
+                "position": [
+                    3312,
+                    304
+                ]
+            },
+            {
+                "parameters": {
+                    "operation": "executeQuery",
+                    "query": "={{ $json.query }}",
+                    "options": {}
+                },
+                "id": "ins-aug",
+                "name": "INSERT ausgaben",
+                "type": "n8n-nodes-base.mySql",
+                "typeVersion": 2.5,
+                "position": [
+                    3520,
+                    304
+                ],
+                "credentials": {
+                    "mySql": {
+                        "id": "P3na8KmeCqRdqyCP",
+                        "name": "MySQL account"
+                    }
+                }
+            },
+            {
+                "parameters": {
+                    "operation": "executeQuery",
+                    "query": "TRUNCATE TABLE pruefungen",
+                    "options": {}
+                },
+                "id": "trunc-p",
+                "name": "TRUNCATE pruefungen",
+                "type": "n8n-nodes-base.mySql",
+                "typeVersion": 2.5,
+                "position": [
+                    3744,
+                    304
+                ],
+                "credentials": {
+                    "mySql": {
+                        "id": "P3na8KmeCqRdqyCP",
+                        "name": "MySQL account"
+                    }
+                }
+            },
+            {
+                "parameters": {
+                    "url": "http://10.10.1.238:8182/api/Pruefungen",
+                    "sendQuery": true,
+                    "queryParameters": {
+                        "parameters": [
+                            {
+                                "name": "limit",
+                                "value": "25000"
+                            }
+                        ]
+                    },
+                    "options": {}
+                },
+                "id": "http-p",
+                "name": "Fetch Pruefungen",
+                "type": "n8n-nodes-base.httpRequest",
+                "typeVersion": 4.2,
+                "position": [
+                    3968,
+                    304
+                ]
+            },
+            {
+                "parameters": {
+                    "jsCode": "const list = $input.first().json;\nif (!list.length) return [{ json: { query: 'SELECT 1' } }];\nfunction esc(v) {\n  if (v === null || v === undefined) return 'NULL';\n  if (typeof v === 'boolean') return v ? 1 : 0;\n  if (typeof v === 'number') return v;\n  return \"'\" + String(v).replace(/\\\\/g, '\\\\\\\\').replace(/'/g, \"\\\\'\") + \"'\";\n}\nconst cols = 'Id,CreatedAt,UpdatedAt,Datum,Ergebnis,Pruefer,Naechste_Pruefung,Notizen,Ausruestungstueck_Id,Kamerad,Ausruestungstyp,Seriennummer';\nconst rows = list.map(r => '(' + [esc(r.Id),esc(r.CreatedAt),esc(r.UpdatedAt),esc(r.Datum),esc(r.Ergebnis),esc(r.Pruefer),esc(r.Naechste_Pruefung),esc(r.Notizen),esc(r.Ausruestungstueck_Id),esc(r.Kamerad),esc(r.Ausruestungstyp),esc(r.Seriennummer)].join(',') + ')');\nreturn [{ json: { query: 'INSERT INTO pruefungen (' + cols + ') VALUES ' + rows.join(',') } }];"
+                },
+                "id": "code-p",
+                "name": "Transform Pruefungen",
+                "type": "n8n-nodes-base.code",
+                "typeVersion": 2,
+                "position": [
+                    4192,
+                    304
+                ]
+            },
+            {
+                "parameters": {
+                    "operation": "executeQuery",
+                    "query": "={{ $json.query }}",
+                    "options": {}
+                },
+                "id": "ins-p",
+                "name": "INSERT pruefungen",
+                "type": "n8n-nodes-base.mySql",
+                "typeVersion": 2.5,
+                "position": [
+                    4400,
+                    304
+                ],
+                "credentials": {
+                    "mySql": {
+                        "id": "P3na8KmeCqRdqyCP",
+                        "name": "MySQL account"
+                    }
+                }
+            },
+            {
+                "parameters": {
+                    "operation": "executeQuery",
+                    "query": "TRUNCATE TABLE waesche",
+                    "options": {}
+                },
+                "id": "trunc-w",
+                "name": "TRUNCATE waesche",
+                "type": "n8n-nodes-base.mySql",
+                "typeVersion": 2.5,
+                "position": [
+                    4624,
+                    304
+                ],
+                "credentials": {
+                    "mySql": {
+                        "id": "P3na8KmeCqRdqyCP",
+                        "name": "MySQL account"
+                    }
+                }
+            },
+            {
+                "parameters": {
+                    "url": "http://10.10.1.238:8182/api/Waesche",
+                    "sendQuery": true,
+                    "queryParameters": {
+                        "parameters": [
+                            {
+                                "name": "limit",
+                                "value": "25000"
+                            }
+                        ]
+                    },
+                    "options": {}
+                },
+                "id": "http-w",
+                "name": "Fetch Waesche",
+                "type": "n8n-nodes-base.httpRequest",
+                "typeVersion": 4.2,
+                "position": [
+                    4848,
+                    304
+                ]
+            },
+            {
+                "parameters": {
+                    "jsCode": "const list = $input.first().json;\nif (!list.length) return [{ json: { query: 'SELECT 1' } }];\nfunction esc(v) {\n  if (v === null || v === undefined) return 'NULL';\n  if (typeof v === 'boolean') return v ? 1 : 0;\n  if (typeof v === 'number') return v;\n  return \"'\" + String(v).replace(/\\\\/g, '\\\\\\\\').replace(/'/g, \"\\\\'\") + \"'\";\n}\nconst cols = 'Id,CreatedAt,UpdatedAt,Datum,Waescheart,Notizen,Ausruestungstueck_Id,Kamerad,Ausruestungstyp,Seriennummer';\nconst rows = list.map(r => '(' + [esc(r.Id),esc(r.CreatedAt),esc(r.UpdatedAt),esc(r.Datum),esc(r.Waescheart),esc(r.Notizen),esc(r.Ausruestungstueck_Id),esc(r.Kamerad),esc(r.Ausruestungstyp),esc(r.Seriennummer)].join(',') + ')');\nreturn [{ json: { query: 'INSERT INTO waesche (' + cols + ') VALUES ' + rows.join(',') } }];"
+                },
+                "id": "code-w",
+                "name": "Transform Waesche",
+                "type": "n8n-nodes-base.code",
+                "typeVersion": 2,
+                "position": [
+                    5072,
+                    304
+                ]
+            },
+            {
+                "parameters": {
+                    "operation": "executeQuery",
+                    "query": "={{ $json.query }}",
+                    "options": {}
+                },
+                "id": "ins-w",
+                "name": "INSERT waesche",
+                "type": "n8n-nodes-base.mySql",
+                "typeVersion": 2.5,
+                "position": [
+                    5280,
+                    304
+                ],
+                "credentials": {
+                    "mySql": {
+                        "id": "P3na8KmeCqRdqyCP",
+                        "name": "MySQL account"
+                    }
+                }
+            },
+            {
+                "parameters": {
+                    "operation": "executeQuery",
+                    "query": "TRUNCATE TABLE normen",
+                    "options": {}
+                },
+                "id": "trunc-n",
+                "name": "TRUNCATE normen",
+                "type": "n8n-nodes-base.mySql",
+                "typeVersion": 2.5,
+                "position": [
+                    5504,
+                    304
+                ],
+                "credentials": {
+                    "mySql": {
+                        "id": "P3na8KmeCqRdqyCP",
+                        "name": "MySQL account"
+                    }
+                }
+            },
+            {
+                "parameters": {
+                    "url": "http://10.10.1.238:8182/api/Normen",
+                    "sendQuery": true,
+                    "queryParameters": {
+                        "parameters": [
+                            {
+                                "name": "limit",
+                                "value": "25000"
+                            }
+                        ]
+                    },
+                    "options": {}
+                },
+                "id": "http-n",
+                "name": "Fetch Normen",
+                "type": "n8n-nodes-base.httpRequest",
+                "typeVersion": 4.2,
+                "position": [
+                    5728,
+                    304
+                ]
+            },
+            {
+                "parameters": {
+                    "jsCode": "const list = $input.first().json;\nif (!list.length) return [{ json: { query: 'SELECT 1' } }];\nfunction esc(v) {\n  if (v === null || v === undefined) return 'NULL';\n  if (typeof v === 'boolean') return v ? 1 : 0;\n  if (typeof v === 'number') return v;\n  var s = String(v);\n  var r = [39];\n  for (var i = 0; i < s.length; i++) {\n    var c = s.charCodeAt(i);\n    if (c === 39) { r.push(92, 39); } else if (c === 92) { r.push(92, 92); } else { r.push(c); }\n  }\n  r.push(39);\n  return String.fromCharCode.apply(null, r);\n}\nconst cols = 'Id,CreatedAt,UpdatedAt,Bezeichnung,Beschreibung,Pruefintervall_Monate,Max_Lebensdauer_Jahre,Max_Waeschen,Ausruestungstyp_Kategorie';\nconst rows = list.map(row => '(' + [esc(row.Id),esc(row.CreatedAt),esc(row.UpdatedAt),esc(row.Bezeichnung),esc(row.Beschreibung),esc(row.Pruefintervall_Monate),esc(row.Max_Lebensdauer_Jahre),esc(row.Max_Waeschen),esc(row.Ausruestungstyp_Kategorie)].join(',') + ')');\nreturn [{ json: { query: 'INSERT INTO normen (' + cols + ') VALUES ' + rows.join(',') } }];"
+                },
+                "id": "code-n",
+                "name": "Transform Normen",
+                "type": "n8n-nodes-base.code",
+                "typeVersion": 2,
+                "position": [
+                    5952,
+                    304
+                ]
+            },
+            {
+                "parameters": {
+                    "operation": "executeQuery",
+                    "query": "={{ $json.query }}",
+                    "options": {}
+                },
+                "id": "ins-n",
+                "name": "INSERT normen",
+                "type": "n8n-nodes-base.mySql",
+                "typeVersion": 2.5,
+                "position": [
+                    6160,
+                    304
+                ],
+                "credentials": {
+                    "mySql": {
+                        "id": "P3na8KmeCqRdqyCP",
+                        "name": "MySQL account"
+                    }
+                }
+            },
+            {
+                "parameters": {
+                    "operation": "executeQuery",
+                    "query": "TRUNCATE TABLE benutzer",
+                    "options": {}
+                },
+                "id": "trunc-b",
+                "name": "TRUNCATE benutzer",
+                "type": "n8n-nodes-base.mySql",
+                "typeVersion": 2.5,
+                "position": [
+                    6384,
+                    304
+                ],
+                "credentials": {
+                    "mySql": {
+                        "id": "P3na8KmeCqRdqyCP",
+                        "name": "MySQL account"
+                    }
+                }
+            },
+            {
+                "parameters": {
+                    "url": "http://10.10.1.238:8182/api/Benutzer",
+                    "sendQuery": true,
+                    "queryParameters": {
+                        "parameters": [
+                            {
+                                "name": "limit",
+                                "value": "25000"
+                            }
+                        ]
+                    },
+                    "options": {}
+                },
+                "id": "http-b",
+                "name": "Fetch Benutzer",
+                "type": "n8n-nodes-base.httpRequest",
+                "typeVersion": 4.2,
+                "position": [
+                    6608,
+                    304
+                ]
+            },
+            {
+                "parameters": {
+                    "jsCode": "const list = $input.first().json;\nif (!list.length) return [{ json: { query: 'SELECT 1' } }];\nfunction esc(v) {\n  if (v === null || v === undefined) return 'NULL';\n  if (typeof v === 'boolean') return v ? 1 : 0;\n  if (typeof v === 'number') return v;\n  return \"'\" + String(v).replace(/\\\\/g, '\\\\\\\\').replace(/'/g, \"\\\\'\") + \"'\";\n}\nconst cols = 'Id,CreatedAt,UpdatedAt,Benutzername,PIN,Rolle,Aktiv';\nconst rows = list.map(r => '(' + [esc(r.Id),esc(r.CreatedAt),esc(r.UpdatedAt),esc(r.Benutzername),esc(r.PIN),esc(r.Rolle),(r.Aktiv?1:0)].join(',') + ')');\nreturn [{ json: { query: 'INSERT INTO benutzer (' + cols + ') VALUES ' + rows.join(',') } }];"
+                },
+                "id": "code-b",
+                "name": "Transform Benutzer",
+                "type": "n8n-nodes-base.code",
+                "typeVersion": 2,
+                "position": [
+                    6832,
+                    304
+                ]
+            },
+            {
+                "parameters": {
+                    "operation": "executeQuery",
+                    "query": "={{ $json.query }}",
+                    "options": {}
+                },
+                "id": "ins-b",
+                "name": "INSERT benutzer",
+                "type": "n8n-nodes-base.mySql",
+                "typeVersion": 2.5,
+                "position": [
+                    7040,
+                    304
+                ],
+                "credentials": {
+                    "mySql": {
+                        "id": "P3na8KmeCqRdqyCP",
+                        "name": "MySQL account"
+                    }
+                }
+            },
+            {
+                "parameters": {
+                    "operation": "executeQuery",
+                    "query": "TRUNCATE TABLE changelog",
+                    "options": {}
+                },
+                "id": "trunc-cl",
+                "name": "TRUNCATE changelog",
+                "type": "n8n-nodes-base.mySql",
+                "typeVersion": 2.5,
+                "position": [
+                    7264,
+                    304
+                ],
+                "credentials": {
+                    "mySql": {
+                        "id": "P3na8KmeCqRdqyCP",
+                        "name": "MySQL account"
+                    }
+                }
+            },
+            {
+                "parameters": {
+                    "url": "http://10.10.1.238:8182/api/Changelog",
+                    "sendQuery": true,
+                    "queryParameters": {
+                        "parameters": [
+                            {
+                                "name": "limit",
+                                "value": "25000"
+                            }
+                        ]
+                    },
+                    "options": {}
+                },
+                "id": "http-cl",
+                "name": "Fetch Changelog",
+                "type": "n8n-nodes-base.httpRequest",
+                "typeVersion": 4.2,
+                "position": [
+                    7488,
+                    304
+                ]
+            },
+            {
+                "parameters": {
+                    "jsCode": "const list = $input.first().json;\nif (!list.length) return [{ json: { query: 'SELECT 1' } }];\nfunction esc(v) {\n  if (v === null || v === undefined) return 'NULL';\n  if (typeof v === 'boolean') return v ? 1 : 0;\n  if (typeof v === 'number') return v;\n  var s = String(v);\n  var r = [39];\n  for (var i = 0; i < s.length; i++) {\n    var c = s.charCodeAt(i);\n    if (c === 39) { r.push(92, 39); } else if (c === 92) { r.push(92, 92); } else { r.push(c); }\n  }\n  r.push(39);\n  return String.fromCharCode.apply(null, r);\n}\nconst cols = 'Id,CreatedAt,UpdatedAt,Zeitpunkt,Benutzer,Tabelle,Aktion,Details,Datensatz_Id';\nconst rows = list.map(r => '(' + [esc(r.Id),esc(r.CreatedAt),esc(r.UpdatedAt),esc(r.Zeitpunkt),esc(r.Benutzer),esc(r.Tabelle),esc(r.Aktion),esc(r.Details),esc(r.Datensatz_Id)].join(',') + ')');\nreturn [{ json: { query: 'INSERT INTO changelog (' + cols + ') VALUES ' + rows.join(',') } }];"
+                },
+                "id": "code-cl",
+                "name": "Transform Changelog",
+                "type": "n8n-nodes-base.code",
+                "typeVersion": 2,
+                "position": [
+                    7712,
+                    304
+                ]
+            },
+            {
+                "parameters": {
+                    "operation": "executeQuery",
+                    "query": "={{ $json.query }}",
+                    "options": {}
+                },
+                "id": "ins-cl",
+                "name": "INSERT changelog",
+                "type": "n8n-nodes-base.mySql",
+                "typeVersion": 2.5,
+                "position": [
+                    7920,
+                    304
+                ],
+                "credentials": {
+                    "mySql": {
+                        "id": "P3na8KmeCqRdqyCP",
+                        "name": "MySQL account"
+                    }
+                }
+            }
+        ],
+        "connections": {
+            "Schedule": {
+                "main": [
+                    [
+                        {
+                            "node": "TRUNCATE kameraden",
+                            "type": "main",
+                            "index": 0
+                        }
+                    ]
+                ]
+            },
+            "TRUNCATE kameraden": {
+                "main": [
+                    [
+                        {
+                            "node": "Fetch Kameraden",
+                            "type": "main",
+                            "index": 0
+                        }
+                    ]
+                ]
+            },
+            "Fetch Kameraden": {
+                "main": [
+                    [
+                        {
+                            "node": "Transform Kameraden",
+                            "type": "main",
+                            "index": 0
+                        }
+                    ]
+                ]
+            },
+            "Transform Kameraden": {
+                "main": [
+                    [
+                        {
+                            "node": "INSERT kameraden",
+                            "type": "main",
+                            "index": 0
+                        }
+                    ]
+                ]
+            },
+            "INSERT kameraden": {
+                "main": [
+                    [
+                        {
+                            "node": "TRUNCATE ausruestungstypen",
+                            "type": "main",
+                            "index": 0
+                        }
+                    ]
+                ]
+            },
+            "TRUNCATE ausruestungstypen": {
+                "main": [
+                    [
+                        {
+                            "node": "Fetch Ausruestungstypen",
+                            "type": "main",
+                            "index": 0
+                        }
+                    ]
+                ]
+            },
+            "Fetch Ausruestungstypen": {
+                "main": [
+                    [
+                        {
+                            "node": "Transform Ausruestungstypen",
+                            "type": "main",
+                            "index": 0
+                        }
+                    ]
+                ]
+            },
+            "Transform Ausruestungstypen": {
+                "main": [
+                    [
+                        {
+                            "node": "INSERT ausruestungstypen",
+                            "type": "main",
+                            "index": 0
+                        }
+                    ]
+                ]
+            },
+            "INSERT ausruestungstypen": {
+                "main": [
+                    [
+                        {
+                            "node": "TRUNCATE ausruestungstuecke",
+                            "type": "main",
+                            "index": 0
+                        }
+                    ]
+                ]
+            },
+            "TRUNCATE ausruestungstuecke": {
+                "main": [
+                    [
+                        {
+                            "node": "Fetch Ausruestungstuecke",
+                            "type": "main",
+                            "index": 0
+                        }
+                    ]
+                ]
+            },
+            "Fetch Ausruestungstuecke": {
+                "main": [
+                    [
+                        {
+                            "node": "Transform Ausruestungstuecke",
+                            "type": "main",
+                            "index": 0
+                        }
+                    ]
+                ]
+            },
+            "Transform Ausruestungstuecke": {
+                "main": [
+                    [
+                        {
+                            "node": "INSERT ausruestungstuecke",
+                            "type": "main",
+                            "index": 0
+                        }
+                    ]
+                ]
+            },
+            "INSERT ausruestungstuecke": {
+                "main": [
+                    [
+                        {
+                            "node": "TRUNCATE ausgaben",
+                            "type": "main",
+                            "index": 0
+                        }
+                    ]
+                ]
+            },
+            "TRUNCATE ausgaben": {
+                "main": [
+                    [
+                        {
+                            "node": "Fetch Ausgaben",
+                            "type": "main",
+                            "index": 0
+                        }
+                    ]
+                ]
+            },
+            "Fetch Ausgaben": {
+                "main": [
+                    [
+                        {
+                            "node": "Transform Ausgaben",
+                            "type": "main",
+                            "index": 0
+                        }
+                    ]
+                ]
+            },
+            "Transform Ausgaben": {
+                "main": [
+                    [
+                        {
+                            "node": "INSERT ausgaben",
+                            "type": "main",
+                            "index": 0
+                        }
+                    ]
+                ]
+            },
+            "INSERT ausgaben": {
+                "main": [
+                    [
+                        {
+                            "node": "TRUNCATE pruefungen",
+                            "type": "main",
+                            "index": 0
+                        }
+                    ]
+                ]
+            },
+            "TRUNCATE pruefungen": {
+                "main": [
+                    [
+                        {
+                            "node": "Fetch Pruefungen",
+                            "type": "main",
+                            "index": 0
+                        }
+                    ]
+                ]
+            },
+            "Fetch Pruefungen": {
+                "main": [
+                    [
+                        {
+                            "node": "Transform Pruefungen",
+                            "type": "main",
+                            "index": 0
+                        }
+                    ]
+                ]
+            },
+            "Transform Pruefungen": {
+                "main": [
+                    [
+                        {
+                            "node": "INSERT pruefungen",
+                            "type": "main",
+                            "index": 0
+                        }
+                    ]
+                ]
+            },
+            "INSERT pruefungen": {
+                "main": [
+                    [
+                        {
+                            "node": "TRUNCATE waesche",
+                            "type": "main",
+                            "index": 0
+                        }
+                    ]
+                ]
+            },
+            "TRUNCATE waesche": {
+                "main": [
+                    [
+                        {
+                            "node": "Fetch Waesche",
+                            "type": "main",
+                            "index": 0
+                        }
+                    ]
+                ]
+            },
+            "Fetch Waesche": {
+                "main": [
+                    [
+                        {
+                            "node": "Transform Waesche",
+                            "type": "main",
+                            "index": 0
+                        }
+                    ]
+                ]
+            },
+            "Transform Waesche": {
+                "main": [
+                    [
+                        {
+                            "node": "INSERT waesche",
+                            "type": "main",
+                            "index": 0
+                        }
+                    ]
+                ]
+            },
+            "INSERT waesche": {
+                "main": [
+                    [
+                        {
+                            "node": "TRUNCATE normen",
+                            "type": "main",
+                            "index": 0
+                        }
+                    ]
+                ]
+            },
+            "TRUNCATE normen": {
+                "main": [
+                    [
+                        {
+                            "node": "Fetch Normen",
+                            "type": "main",
+                            "index": 0
+                        }
+                    ]
+                ]
+            },
+            "Fetch Normen": {
+                "main": [
+                    [
+                        {
+                            "node": "Transform Normen",
+                            "type": "main",
+                            "index": 0
+                        }
+                    ]
+                ]
+            },
+            "Transform Normen": {
+                "main": [
+                    [
+                        {
+                            "node": "INSERT normen",
+                            "type": "main",
+                            "index": 0
+                        }
+                    ]
+                ]
+            },
+            "INSERT normen": {
+                "main": [
+                    [
+                        {
+                            "node": "TRUNCATE benutzer",
+                            "type": "main",
+                            "index": 0
+                        }
+                    ]
+                ]
+            },
+            "TRUNCATE benutzer": {
+                "main": [
+                    [
+                        {
+                            "node": "Fetch Benutzer",
+                            "type": "main",
+                            "index": 0
+                        }
+                    ]
+                ]
+            },
+            "Fetch Benutzer": {
+                "main": [
+                    [
+                        {
+                            "node": "Transform Benutzer",
+                            "type": "main",
+                            "index": 0
+                        }
+                    ]
+                ]
+            },
+            "Transform Benutzer": {
+                "main": [
+                    [
+                        {
+                            "node": "INSERT benutzer",
+                            "type": "main",
+                            "index": 0
+                        }
+                    ]
+                ]
+            },
+            "INSERT benutzer": {
+                "main": [
+                    [
+                        {
+                            "node": "TRUNCATE changelog",
+                            "type": "main",
+                            "index": 0
+                        }
+                    ]
+                ]
+            },
+            "TRUNCATE changelog": {
+                "main": [
+                    [
+                        {
+                            "node": "Fetch Changelog",
+                            "type": "main",
+                            "index": 0
+                        }
+                    ]
+                ]
+            },
+            "Fetch Changelog": {
+                "main": [
+                    [
+                        {
+                            "node": "Transform Changelog",
+                            "type": "main",
+                            "index": 0
+                        }
+                    ]
+                ]
+            },
+            "Transform Changelog": {
+                "main": [
+                    [
+                        {
+                            "node": "INSERT changelog",
+                            "type": "main",
+                            "index": 0
+                        }
+                    ]
+                ]
+            }
+        },
+        "authors": "Benjamin Bruns",
+        "name": null,
+        "description": null,
+        "autosaved": false,
+        "workflowPublishHistory": [
+            {
+                "createdAt": "2026-03-03T13:53:34.668Z",
+                "id": 31,
+                "workflowId": "gHwdz3BnBnlpiWjA",
+                "versionId": "b78477c6-5c1d-466e-bab7-165a26d35a5e",
+                "event": "activated",
+                "userId": "66a4add3-c9f0-4325-be74-03a9d867281f"
+            }
+        ]
     }
-  ],
-  "pinData": {},
-  "connections": {
-    "Schedule": { "main": [[{ "node": "TRUNCATE kameraden", "type": "main", "index": 0 }]] },
-    "TRUNCATE kameraden": { "main": [[{ "node": "Fetch Kameraden", "type": "main", "index": 0 }]] },
-    "Fetch Kameraden": { "main": [[{ "node": "Transform Kameraden", "type": "main", "index": 0 }]] },
-    "Transform Kameraden": { "main": [[{ "node": "INSERT kameraden", "type": "main", "index": 0 }]] },
-    "INSERT kameraden": { "main": [[{ "node": "TRUNCATE ausruestungstypen", "type": "main", "index": 0 }]] },
-    "TRUNCATE ausruestungstypen": { "main": [[{ "node": "Fetch Ausruestungstypen", "type": "main", "index": 0 }]] },
-    "Fetch Ausruestungstypen": { "main": [[{ "node": "Transform Ausruestungstypen", "type": "main", "index": 0 }]] },
-    "Transform Ausruestungstypen": { "main": [[{ "node": "INSERT ausruestungstypen", "type": "main", "index": 0 }]] },
-    "INSERT ausruestungstypen": { "main": [[{ "node": "TRUNCATE ausruestungstuecke", "type": "main", "index": 0 }]] },
-    "TRUNCATE ausruestungstuecke": { "main": [[{ "node": "Fetch Ausruestungstuecke", "type": "main", "index": 0 }]] },
-    "Fetch Ausruestungstuecke": { "main": [[{ "node": "Transform Ausruestungstuecke", "type": "main", "index": 0 }]] },
-    "Transform Ausruestungstuecke": { "main": [[{ "node": "INSERT ausruestungstuecke", "type": "main", "index": 0 }]] },
-    "INSERT ausruestungstuecke": { "main": [[{ "node": "TRUNCATE ausgaben", "type": "main", "index": 0 }]] },
-    "TRUNCATE ausgaben": { "main": [[{ "node": "Fetch Ausgaben", "type": "main", "index": 0 }]] },
-    "Fetch Ausgaben": { "main": [[{ "node": "Transform Ausgaben", "type": "main", "index": 0 }]] },
-    "Transform Ausgaben": { "main": [[{ "node": "INSERT ausgaben", "type": "main", "index": 0 }]] },
-    "INSERT ausgaben": { "main": [[{ "node": "TRUNCATE pruefungen", "type": "main", "index": 0 }]] },
-    "TRUNCATE pruefungen": { "main": [[{ "node": "Fetch Pruefungen", "type": "main", "index": 0 }]] },
-    "Fetch Pruefungen": { "main": [[{ "node": "Transform Pruefungen", "type": "main", "index": 0 }]] },
-    "Transform Pruefungen": { "main": [[{ "node": "INSERT pruefungen", "type": "main", "index": 0 }]] },
-    "INSERT pruefungen": { "main": [[{ "node": "TRUNCATE waesche", "type": "main", "index": 0 }]] },
-    "TRUNCATE waesche": { "main": [[{ "node": "Fetch Waesche", "type": "main", "index": 0 }]] },
-    "Fetch Waesche": { "main": [[{ "node": "Transform Waesche", "type": "main", "index": 0 }]] },
-    "Transform Waesche": { "main": [[{ "node": "INSERT waesche", "type": "main", "index": 0 }]] },
-    "INSERT waesche": { "main": [[{ "node": "TRUNCATE normen", "type": "main", "index": 0 }]] },
-    "TRUNCATE normen": { "main": [[{ "node": "Fetch Normen", "type": "main", "index": 0 }]] },
-    "Fetch Normen": { "main": [[{ "node": "Transform Normen", "type": "main", "index": 0 }]] },
-    "Transform Normen": { "main": [[{ "node": "INSERT normen", "type": "main", "index": 0 }]] },
-    "INSERT normen": { "main": [[{ "node": "TRUNCATE benutzer", "type": "main", "index": 0 }]] },
-    "TRUNCATE benutzer": { "main": [[{ "node": "Fetch Benutzer", "type": "main", "index": 0 }]] },
-    "Fetch Benutzer": { "main": [[{ "node": "Transform Benutzer", "type": "main", "index": 0 }]] },
-    "Transform Benutzer": { "main": [[{ "node": "INSERT benutzer", "type": "main", "index": 0 }]] },
-    "INSERT benutzer": { "main": [[{ "node": "TRUNCATE changelog", "type": "main", "index": 0 }]] },
-    "TRUNCATE changelog": { "main": [[{ "node": "Fetch Changelog", "type": "main", "index": 0 }]] },
-    "Fetch Changelog": { "main": [[{ "node": "Transform Changelog", "type": "main", "index": 0 }]] },
-    "Transform Changelog": { "main": [[{ "node": "INSERT changelog", "type": "main", "index": 0 }]] }
-  },
-  "active": true,
-  "settings": {
-    "executionOrder": "v1",
-    "timezone": "Europe/Berlin",
-    "saveDataErrorExecution": "all",
-    "saveDataSuccessExecution": "all",
-    "callerPolicy": "workflowsFromSameOwner"
-  }
 }

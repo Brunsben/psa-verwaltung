@@ -1,58 +1,248 @@
 {
-  "name": "PSA: Backup Fehler-Benachrichtigung",
-  "nodes": [
-    {
-      "parameters": {},
-      "id": "err-trigger",
-      "name": "Fehler-Trigger",
-      "type": "n8n-nodes-base.errorTrigger",
-      "typeVersion": 1,
-      "position": [240, 304]
-    },
-    {
-      "parameters": {
-        "jsCode": "const wf = $json.workflow || {};\nconst exec = $json.execution || {};\nconst err = $json.error || {};\nconst datum = new Date().toLocaleString('de-DE', { timeZone: 'Europe/Berlin' });\n\nconst subject = '[PSA-Backup] Fehler beim NocoDB → MySQL Backup';\nconst html = '<h2 style=\"color:#ef4444\">Backup fehlgeschlagen</h2>'\n  + '<p>Der automatische PSA-Backup-Workflow ist fehlgeschlagen.</p>'\n  + '<table style=\"border-collapse:collapse;font-size:14px\">'\n  + '<tr><td style=\"padding:4px 12px 4px 0;font-weight:600\">Zeitpunkt:</td><td>' + datum + '</td></tr>'\n  + '<tr><td style=\"padding:4px 12px 4px 0;font-weight:600\">Workflow:</td><td>' + (wf.name || 'PSA: NocoDB → MySQL Backup') + '</td></tr>'\n  + '<tr><td style=\"padding:4px 12px 4px 0;font-weight:600\">Fehler:</td><td>' + (err.message || 'Unbekannter Fehler') + '</td></tr>'\n  + '<tr><td style=\"padding:4px 12px 4px 0;font-weight:600\">Node:</td><td>' + (err.node ? err.node.name : '-') + '</td></tr>'\n  + '</table>'\n  + '<p style=\"margin-top:16px\">Bitte n8n öffnen und den Fehler prüfen.</p>';\n\nreturn [{ json: { subject, html } }];"
-      },
-      "id": "err-code",
-      "name": "Fehlermeldung aufbauen",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [464, 304]
-    },
-    {
-      "parameters": {
-        "fromEmail": "absender@ihre-feuerwehr.de",
-        "toEmail": "empfaenger@ihre-feuerwehr.de",
-        "subject": "={{ $json.subject }}",
-        "html": "={{ $json.html }}",
-        "options": {}
-      },
-      "id": "err-email",
-      "name": "Fehler-E-Mail senden",
-      "type": "n8n-nodes-base.emailSend",
-      "typeVersion": 2.1,
-      "position": [688, 304],
-      "credentials": {
-        "smtp": {
-          "id": "WODz1zMPZi3WItkA",
-          "name": "SMTP account"
+    "updatedAt": "2026-03-02T11:22:33.420Z",
+    "createdAt": "2026-03-02T11:22:33.420Z",
+    "id": "bH4qa1iA6I2DOWiy",
+    "name": "PSA: Backup Fehler-Benachrichtigung",
+    "description": null,
+    "active": true,
+    "isArchived": false,
+    "nodes": [
+        {
+            "parameters": {},
+            "id": "err-trigger",
+            "name": "Fehler-Trigger",
+            "type": "n8n-nodes-base.errorTrigger",
+            "typeVersion": 1,
+            "position": [
+                240,
+                304
+            ]
+        },
+        {
+            "parameters": {
+                "jsCode": "const wf = $json.workflow || {};\nconst err = $json.error || {};\nconst datum = new Date().toLocaleString('de-DE', { timeZone: 'Europe/Berlin' });\n\nconst subject = '[PSA-Backup] Fehler beim NocoDB \\u2192 MySQL Backup';\nconst html = '<h2 style=\"color:#ef4444\">Backup fehlgeschlagen</h2>'\n  + '<p>Der automatische PSA-Backup-Workflow ist fehlgeschlagen.</p>'\n  + '<table style=\"border-collapse:collapse;font-size:14px\">'\n  + '<tr><td style=\"padding:4px 12px 4px 0;font-weight:600\">Zeitpunkt:</td><td>' + datum + '</td></tr>'\n  + '<tr><td style=\"padding:4px 12px 4px 0;font-weight:600\">Workflow:</td><td>' + (wf.name || 'PSA: NocoDB \\u2192 MySQL Backup') + '</td></tr>'\n  + '<tr><td style=\"padding:4px 12px 4px 0;font-weight:600\">Fehler:</td><td>' + (err.message || 'Unbekannter Fehler') + '</td></tr>'\n  + '<tr><td style=\"padding:4px 12px 4px 0;font-weight:600\">Node:</td><td>' + (err.node ? err.node.name : '-') + '</td></tr>'\n  + '</table>'\n  + '<p style=\"margin-top:16px\">Bitte n8n \\u00f6ffnen und den Fehler pr\\u00fcfen.</p>';\n\nreturn [{ json: { subject, html } }];"
+            },
+            "id": "err-code",
+            "name": "Fehlermeldung aufbauen",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                464,
+                304
+            ]
+        },
+        {
+            "parameters": {
+                "fromEmail": "psa@brunsben.org",
+                "toEmail": "brunsben@gmail.com",
+                "subject": "={{ $json.subject }}",
+                "html": "={{ $json.html }}",
+                "options": {}
+            },
+            "id": "err-email",
+            "name": "Fehler-E-Mail senden",
+            "type": "n8n-nodes-base.emailSend",
+            "typeVersion": 2.1,
+            "position": [
+                688,
+                304
+            ],
+            "credentials": {
+                "smtp": {
+                    "id": "WODz1zMPZi3WItkA",
+                    "name": "SMTP account"
+                }
+            }
         }
-      }
-    }
-  ],
-  "pinData": {},
-  "connections": {
-    "Fehler-Trigger": {
-      "main": [[{ "node": "Fehlermeldung aufbauen", "type": "main", "index": 0 }]]
+    ],
+    "connections": {
+        "Fehler-Trigger": {
+            "main": [
+                [
+                    {
+                        "node": "Fehlermeldung aufbauen",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Fehlermeldung aufbauen": {
+            "main": [
+                [
+                    {
+                        "node": "Fehler-E-Mail senden",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
     },
-    "Fehlermeldung aufbauen": {
-      "main": [[{ "node": "Fehler-E-Mail senden", "type": "main", "index": 0 }]]
+    "settings": {
+        "executionOrder": "v1",
+        "timezone": "Europe/Berlin",
+        "callerPolicy": "workflowsFromSameOwner",
+        "availableInMCP": false
+    },
+    "staticData": null,
+    "meta": null,
+    "pinData": null,
+    "versionId": "e20101e1-1484-485b-adfa-7f2d69192c71",
+    "activeVersionId": "e20101e1-1484-485b-adfa-7f2d69192c71",
+    "versionCounter": 3,
+    "triggerCount": 0,
+    "shared": [
+        {
+            "updatedAt": "2026-03-02T11:22:33.425Z",
+            "createdAt": "2026-03-02T11:22:33.425Z",
+            "role": "workflow:owner",
+            "workflowId": "bH4qa1iA6I2DOWiy",
+            "projectId": "viwO0kwkZrPZoBTS",
+            "project": {
+                "updatedAt": "2025-07-21T14:22:06.251Z",
+                "createdAt": "2025-07-21T13:41:35.644Z",
+                "id": "viwO0kwkZrPZoBTS",
+                "name": "Benjamin Bruns <brunsben@gmail.com>",
+                "type": "personal",
+                "icon": null,
+                "description": null,
+                "creatorId": "66a4add3-c9f0-4325-be74-03a9d867281f",
+                "projectRelations": [
+                    {
+                        "updatedAt": "2025-07-21T13:41:35.645Z",
+                        "createdAt": "2025-07-21T13:41:35.645Z",
+                        "userId": "66a4add3-c9f0-4325-be74-03a9d867281f",
+                        "projectId": "viwO0kwkZrPZoBTS",
+                        "user": {
+                            "updatedAt": "2026-03-03T23:25:57.000Z",
+                            "createdAt": "2025-07-21T13:41:35.391Z",
+                            "id": "66a4add3-c9f0-4325-be74-03a9d867281f",
+                            "email": "brunsben@gmail.com",
+                            "firstName": "Benjamin",
+                            "lastName": "Bruns",
+                            "personalizationAnswers": {
+                                "version": "v4",
+                                "personalization_survey_submitted_at": "2025-07-21T14:22:13.098Z",
+                                "personalization_survey_n8n_version": "1.103.1",
+                                "companyType": "personal",
+                                "reportedSource": "google"
+                            },
+                            "settings": {
+                                "userActivated": true,
+                                "easyAIWorkflowOnboarded": true,
+                                "firstSuccessfulWorkflowId": "mMpEy8pu6OpUsHVU",
+                                "userActivatedAt": 1753134014106,
+                                "npsSurvey": {
+                                    "responded": true,
+                                    "lastShownAt": 1771619236876
+                                },
+                                "dismissedCallouts": {
+                                    "preBuiltAgentsModalCallout": true
+                                }
+                            },
+                            "disabled": false,
+                            "mfaEnabled": false,
+                            "lastActiveAt": "2026-03-03",
+                            "isPending": false
+                        }
+                    }
+                ]
+            }
+        }
+    ],
+    "tags": [],
+    "activeVersion": {
+        "updatedAt": "2026-03-02T11:22:33.429Z",
+        "createdAt": "2026-03-02T11:22:33.429Z",
+        "versionId": "e20101e1-1484-485b-adfa-7f2d69192c71",
+        "workflowId": "bH4qa1iA6I2DOWiy",
+        "nodes": [
+            {
+                "parameters": {},
+                "id": "err-trigger",
+                "name": "Fehler-Trigger",
+                "type": "n8n-nodes-base.errorTrigger",
+                "typeVersion": 1,
+                "position": [
+                    240,
+                    304
+                ]
+            },
+            {
+                "parameters": {
+                    "jsCode": "const wf = $json.workflow || {};\nconst err = $json.error || {};\nconst datum = new Date().toLocaleString('de-DE', { timeZone: 'Europe/Berlin' });\n\nconst subject = '[PSA-Backup] Fehler beim NocoDB \\u2192 MySQL Backup';\nconst html = '<h2 style=\"color:#ef4444\">Backup fehlgeschlagen</h2>'\n  + '<p>Der automatische PSA-Backup-Workflow ist fehlgeschlagen.</p>'\n  + '<table style=\"border-collapse:collapse;font-size:14px\">'\n  + '<tr><td style=\"padding:4px 12px 4px 0;font-weight:600\">Zeitpunkt:</td><td>' + datum + '</td></tr>'\n  + '<tr><td style=\"padding:4px 12px 4px 0;font-weight:600\">Workflow:</td><td>' + (wf.name || 'PSA: NocoDB \\u2192 MySQL Backup') + '</td></tr>'\n  + '<tr><td style=\"padding:4px 12px 4px 0;font-weight:600\">Fehler:</td><td>' + (err.message || 'Unbekannter Fehler') + '</td></tr>'\n  + '<tr><td style=\"padding:4px 12px 4px 0;font-weight:600\">Node:</td><td>' + (err.node ? err.node.name : '-') + '</td></tr>'\n  + '</table>'\n  + '<p style=\"margin-top:16px\">Bitte n8n \\u00f6ffnen und den Fehler pr\\u00fcfen.</p>';\n\nreturn [{ json: { subject, html } }];"
+                },
+                "id": "err-code",
+                "name": "Fehlermeldung aufbauen",
+                "type": "n8n-nodes-base.code",
+                "typeVersion": 2,
+                "position": [
+                    464,
+                    304
+                ]
+            },
+            {
+                "parameters": {
+                    "fromEmail": "psa@brunsben.org",
+                    "toEmail": "brunsben@gmail.com",
+                    "subject": "={{ $json.subject }}",
+                    "html": "={{ $json.html }}",
+                    "options": {}
+                },
+                "id": "err-email",
+                "name": "Fehler-E-Mail senden",
+                "type": "n8n-nodes-base.emailSend",
+                "typeVersion": 2.1,
+                "position": [
+                    688,
+                    304
+                ],
+                "credentials": {
+                    "smtp": {
+                        "id": "WODz1zMPZi3WItkA",
+                        "name": "SMTP account"
+                    }
+                }
+            }
+        ],
+        "connections": {
+            "Fehler-Trigger": {
+                "main": [
+                    [
+                        {
+                            "node": "Fehlermeldung aufbauen",
+                            "type": "main",
+                            "index": 0
+                        }
+                    ]
+                ]
+            },
+            "Fehlermeldung aufbauen": {
+                "main": [
+                    [
+                        {
+                            "node": "Fehler-E-Mail senden",
+                            "type": "main",
+                            "index": 0
+                        }
+                    ]
+                ]
+            }
+        },
+        "authors": "Benjamin Bruns",
+        "name": null,
+        "description": null,
+        "autosaved": false,
+        "workflowPublishHistory": [
+            {
+                "createdAt": "2026-03-02T11:22:33.613Z",
+                "id": 25,
+                "workflowId": "bH4qa1iA6I2DOWiy",
+                "versionId": "e20101e1-1484-485b-adfa-7f2d69192c71",
+                "event": "activated",
+                "userId": "66a4add3-c9f0-4325-be74-03a9d867281f"
+            }
+        ]
     }
-  },
-  "active": true,
-  "settings": {
-    "executionOrder": "v1",
-    "timezone": "Europe/Berlin",
-    "callerPolicy": "workflowsFromSameOwner"
-  }
 }
