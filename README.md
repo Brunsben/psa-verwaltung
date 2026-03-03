@@ -21,12 +21,12 @@ Webbasierte Verwaltungssoftware für persönliche Schutzausrüstung (PSA) bei Fr
 Browser → nginx (Port 8182)
                 │
                 ├── /          → Vue 3 SPA (Vite-Build, dist/)
-                └── /api/      → NocoDB (Port 8181, API-Token wird server-seitig ergänzt)
+                └── /api/      → PostgREST (Port 3000, Docker-intern)
                                         │
                                         └── PostgreSQL 17
 ```
 
-**Docker Compose** mit 3 Containern: `nocodb`, `postgres`, `frontend` (nginx mit Vite-Build).
+**Docker Compose** mit 3 Containern: `postgrest`, `postgres`, `frontend` (nginx mit Vite-Build).
 Das Frontend wird beim Deployment via `docker compose up --build` gebaut (Node 22 → nginx:1.28-alpine).
 
 ## Voraussetzungen
@@ -36,13 +36,11 @@ Das Frontend wird beim Deployment via `docker compose up --build` gebaut (Node 2
 | Docker | 24+ |
 | Docker Compose Plugin | v2 (`docker compose`) |
 | `curl` | beliebig |
-| `python3` | 3.6+ |
-| `envsubst` | (Paket `gettext-base`) |
 
 Auf **Raspberry Pi OS / Ubuntu / Debian**:
 
 ```bash
-sudo apt update && sudo apt install -y curl python3 gettext-base
+sudo apt update && sudo apt install -y curl
 # Docker: https://docs.docker.com/engine/install/
 ```
 
@@ -55,27 +53,36 @@ git clone https://github.com/Brunsben/psa-verwaltung.git
 cd psa-verwaltung
 ```
 
-### 2. Installationsskript ausführen
+### 2. Umgebungsvariablen anlegen
+
+```bash
+cp setup/.env.example setup/.env
+# .env bearbeiten: POSTGRES_PASSWORD und POSTGREST_DB_PASSWORD setzen
+```
+
+### 3. PostgreSQL-Rollen anlegen (einmalig)
 
 ```bash
 cd setup
-bash install.sh
+docker compose up -d postgres
+docker exec nocodb_postgres psql -U nocodb -d nocodb \
+  -c "CREATE ROLE psa_anon NOLOGIN;" \
+  -c "GRANT USAGE ON SCHEMA pxicv3djlauluse TO psa_anon;" \
+  -c "GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA pxicv3djlauluse TO psa_anon;" \
+  -c "GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA pxicv3djlauluse TO psa_anon;" \
+  -c "CREATE ROLE psa_auth NOINHERIT LOGIN PASSWORD 'DEIN_PASSWORT';" \
+  -c "GRANT psa_anon TO psa_auth;"
 ```
 
-Das Skript erledigt alles automatisch:
+### 4. Frontend konfigurieren und starten
 
-1. Prüft alle Voraussetzungen
-2. Erzeugt `.env` mit zufällig generierten Passwörtern
-3. Startet alle Docker-Container (inkl. Frontend-Build)
-4. Wartet bis NocoDB bereit ist
-5. **Fragt interaktiv nach dem API-Token** (einmaliger manueller Schritt)
-6. Erstellt alle 9 Datenbank-Tabellen
-7. Schreibt die Konfiguration in `frontend/config.js`
-
-> **Einziger manueller Schritt:** Das Skript pausiert und zeigt die NocoDB-URL an.
-> Öffne diese, erstelle ein Admin-Konto, erzeuge einen API-Token und füge ihn im Terminal ein.
+```bash
+./configure-frontend.sh
+docker compose up -d --build
+```
 
 Die App ist danach erreichbar unter `http://SERVER-IP:8182`.
+Beim ersten Aufruf wird ein Admin-Account angelegt.
 
 ## Datenbanktabellen
 
@@ -96,22 +103,24 @@ Die App ist danach erreichbar unter `http://SERVER-IP:8182`.
 ```bash
 git pull
 cd setup
-./configure-frontend.sh   # config.js aktualisieren (falls neue Tabellen)
+./configure-frontend.sh
 docker compose up -d --build
 ```
 
-> **Wichtig:** `docker compose restart` reicht nicht – das Frontend muss neu gebaut werden.
+> **Hinweis:** Nach einem Deployment den Cloudflare Cache leeren falls die App via Cloudflare Tunnel erreichbar ist (Dashboard → Domain → Caching → Purge Everything).
 
 ## n8n-Automatisierung
 
-Im Verzeichnis `workflows/` liegen vier n8n-Workflows:
+Im Verzeichnis `workflows/` liegen n8n-Workflows:
 
 | Datei | Trigger | Funktion |
 | --- | --- | --- |
 | `psa-pruefungs-reminder-woechentlich.json` | Mo 07:00 | E-Mail bei Prüfungen ≤ 30 Tage |
+| `psa-pruefungs-reminder-pro-kamerad.json` | Mo 07:30 | Prüfungs-Reminder je Kamerad |
 | `psa-waeschlimit-reminder.json` | Mo 07:00 | E-Mail bei ≥ 90 % Wäschlimit |
 | `psa-lebensende-warnung.json` | Mo 08:00 | E-Mail bei Lebensende ≤ 180 Tage |
-| `psa-backup-mysql.json` | täglich 02:00 | Vollbackup NocoDB → MySQL |
+| `psa-backup-mysql.json` | täglich 02:00 | Vollbackup PostgreSQL → MySQL |
+| `psa-backup-fehler-benachrichtigung.json` | Error-Trigger | E-Mail bei Backup-Fehler |
 
 Import in n8n über **Workflow → Import from file**.
 
@@ -126,19 +135,19 @@ psa-verwaltung/
 │   ├── vite.config.js
 │   └── package.json
 ├── setup/
-│   ├── docker-compose.yml      # Container-Konfiguration
-│   ├── nginx.conf.template     # nginx mit XC_TOKEN-Injection
+│   ├── docker-compose.yml      # Container-Konfiguration (postgrest, postgres, frontend)
+│   ├── nginx.conf.template     # nginx-Konfiguration
 │   ├── .env.example            # Vorlage für Umgebungsvariablen
-│   ├── install.sh              # Hauptinstallationsskript
-│   ├── nocodb-setup.sh         # Erstellt NocoDB-Tabellen via API
-│   ├── configure-frontend.sh   # Schreibt Table-IDs in config.js
-│   ├── add-groesse-field.sh    # Migration: Groesse-Spalte ergänzen
-│   └── add-normen.sh           # Befüllt Normen-Tabelle mit Feuerwehr-PSA-Normen
+│   ├── install.sh              # Installationsskript
+│   ├── configure-frontend.sh   # Schreibt frontend/config.js
+│   └── nginx-ratelimit.conf    # Rate-Limiting-Konfiguration
 ├── workflows/
 │   ├── psa-pruefungs-reminder-woechentlich.json
+│   ├── psa-pruefungs-reminder-pro-kamerad.json
 │   ├── psa-waeschlimit-reminder.json
 │   ├── psa-lebensende-warnung.json
 │   ├── psa-backup-mysql.json
+│   ├── psa-backup-fehler-benachrichtigung.json
 │   └── backup-schema.sql       # MySQL-Schema für Backup-Datenbank
 └── README.md
 ```
