@@ -65,8 +65,8 @@ fi
 echo ""
 echo "🔄 Stelle Datenbank wieder her..."
 
-# NocoDB stoppen damit keine aktiven Verbindungen die Wiederherstellung blockieren
-docker stop nocodb 2>/dev/null || true
+# PostgREST stoppen damit keine aktiven Verbindungen die Wiederherstellung blockieren
+docker stop psa_postgrest 2>/dev/null || true
 
 # Datenbank löschen und neu anlegen
 docker exec nocodb_postgres psql -U "$DB_USER" -c "DROP DATABASE IF EXISTS $DB_NAME;" postgres
@@ -77,8 +77,8 @@ gunzip -c "$BACKUP_FILE" | docker exec -i nocodb_postgres psql -U "$DB_USER" "$D
 
 echo "✅ Datenbank wiederhergestellt"
 
-# NocoDB wieder starten
-docker start nocodb
-echo "✅ NocoDB gestartet"
+# PostgREST wieder starten
+docker start psa_postgrest
+echo "✅ PostgREST gestartet"
 echo ""
 echo "🌐 App verfügbar unter: http://$(hostname -I 2>/dev/null | awk '{print $1}' || echo 'localhost'):8182"
