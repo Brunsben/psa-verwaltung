@@ -4,7 +4,9 @@
 // Komponenten importieren nur was sie brauchen.
 
 import { ref, reactive, computed } from 'vue'
-import { getAll, post, patch, del, TABLES } from './api/index.js'
+import { getAll, post, patch, del, TABLES,
+         authenticate, isInitialized, createAdmin,
+         setJwt, clearJwt } from './api/index.js'
 import { fmtDate, todayStr } from './utils/formatters.js'
 
 // ── UI-Zustand ─────────────────────────────────────────────────────────────
@@ -34,8 +36,17 @@ export function toggleDark() {
 }
 
 // ── Auth ───────────────────────────────────────────────────────────────────
-export const loggedIn    = ref(!!localStorage.getItem('psa_user'))
+export const loggedIn    = ref(!!localStorage.getItem('psa_jwt'))
 export const currentUser = ref(JSON.parse(localStorage.getItem('psa_user') || 'null'))
+
+// Bei abgelaufenem JWT automatisch ausloggen
+window.addEventListener('psa:unauthorized', () => {
+  clearJwt()
+  localStorage.removeItem('psa_user')
+  loggedIn.value    = false
+  currentUser.value = null
+  showToast('Sitzung abgelaufen – bitte neu anmelden', 'error')
+})
 export const loginForm   = reactive({ username: '', pin: '', error: '' })
 export const needsSetup  = ref(false)
 export const setupForm   = reactive({ username: '', pin: '', pinConfirm: '', error: '' })
@@ -491,6 +502,18 @@ export async function logChange(tabelle, aktion, details) {
 export async function fetchAll(renderChartsCallback) {
   loading.value = true
   try {
+    // Nicht eingeloggt: nur First-Run prüfen, keine Daten laden
+    if (!loggedIn.value) {
+      try {
+        const initialized = await isInitialized()
+        needsSetup.value = !initialized
+      } catch(e) {
+        // Offline oder Verbindungsfehler – Login-Screen zeigen
+      }
+      loading.value = false
+      return
+    }
+
     const results = await Promise.allSettled([
       getAll('Kameraden'),
       getAll('Ausruestungstuecke'),
@@ -514,10 +537,6 @@ export async function fetchAll(renderChartsCallback) {
     benutzer.value     = val(8)
     isOffline.value    = false
     saveOfflineSnapshot()
-    // First-Run-Check: Benutzer-Tabelle konfiguriert aber noch leer?
-    if (!loggedIn.value && TABLES.Benutzer && benutzer.value.length === 0) {
-      needsSetup.value = true
-    }
     if (renderChartsCallback) {
       import('vue').then(({ nextTick }) => nextTick(renderChartsCallback))
     }
@@ -540,21 +559,10 @@ export async function doLogin() {
     return
   }
   await load(async () => {
-    if (TABLES.Benutzer) {
-      const users = await getAll('Benutzer')
-      if (users.length === 0) { needsSetup.value = true; return }
-      const user = users.find(u =>
-        u.Benutzername?.toLowerCase() === loginForm.username.toLowerCase() &&
-        u.PIN === loginForm.pin
-      )
-      if (!user) { loginForm.error = 'Benutzername oder Passwort falsch.'; return }
-      if (!user.Aktiv) { loginForm.error = 'Benutzer deaktiviert.'; return }
-      currentUser.value = user
-    } else {
-      loginForm.error = 'Benutzer-Tabelle nicht konfiguriert. Bitte config.js prüfen.'
-      return
-    }
-    localStorage.setItem('psa_user', JSON.stringify(currentUser.value))
+    const result = await authenticate(loginForm.username, loginForm.pin)
+    setJwt(result.token)
+    currentUser.value = result.user
+    localStorage.setItem('psa_user', JSON.stringify(result.user))
     loggedIn.value     = true
     loginForm.username = ''
     loginForm.pin      = ''
@@ -573,14 +581,10 @@ export async function doSetup() {
     return
   }
   await load(async () => {
-    const created = await post('Benutzer', {
-      Benutzername: setupForm.username.trim(),
-      PIN:          setupForm.pin.trim(),
-      Rolle:        'Admin',
-      Aktiv:        true,
-    })
-    currentUser.value    = created
-    localStorage.setItem('psa_user', JSON.stringify(created))
+    const result = await createAdmin(setupForm.username.trim(), setupForm.pin.trim())
+    setJwt(result.token)
+    currentUser.value    = result.user
+    localStorage.setItem('psa_user', JSON.stringify(result.user))
     needsSetup.value     = false
     loggedIn.value       = true
     setupForm.username   = ''
@@ -591,6 +595,7 @@ export async function doSetup() {
 }
 
 export function doLogout() {
+  clearJwt()
   localStorage.removeItem('psa_user')
   loggedIn.value     = false
   currentUser.value  = null

@@ -49,8 +49,10 @@ else
   cp "$ENV_EXAMPLE" "$ENV_FILE"
   PW=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1 || true)
   PW_REST=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1 || true)
+  JWT=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 48 | head -n 1 || true)
   sed -i "s|change-me-strong-password|$PW|g" "$ENV_FILE"
   sed -i "s|change-me-postgrest-password|$PW_REST|g" "$ENV_FILE"
+  sed -i "s|change-me-random-jwt-secret|$JWT|g" "$ENV_FILE"
   echo "✅ .env erstellt"
 fi
 
@@ -83,6 +85,7 @@ $COMPOSE exec -T postgres psql \
   -U "${POSTGRES_USER:-nocodb}" \
   -d "${POSTGRES_DB:-nocodb}" \
   -v "postgrest_password=${POSTGREST_DB_PASSWORD}" \
+  -v "jwt_secret=${JWT_SECRET}" \
   -f /dev/stdin < "$SCRIPT_DIR/postgres-init.sql"
 echo "✅ Rollen angelegt"
 
