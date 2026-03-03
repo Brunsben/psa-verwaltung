@@ -1,21 +1,4 @@
 services:
-  # NocoDB bleibt bis nach erfolgreichem PostgREST-Test aktiv.
-  # Nach Verifikation: diesen Block entfernen + nocodb_data Volume löschen.
-  nocodb:
-    image: nocodb/nocodb:0.301.3
-    container_name: nocodb
-    ports:
-      - "8181:8080"
-    environment:
-      NC_DB: "pg://postgres:5432?u=${POSTGRES_USER:-nocodb}&p=${POSTGRES_PASSWORD}&d=${POSTGRES_DB:-nocodb}"
-      NC_AUTH_JWT_SECRET: "${NC_AUTH_JWT_SECRET}"
-    depends_on:
-      postgres:
-        condition: service_healthy
-    volumes:
-      - nocodb_data:/usr/app/data
-    restart: unless-stopped
-
   postgrest:
     image: postgrest/postgrest:v14.5
     container_name: psa_postgrest
@@ -66,5 +49,4 @@ services:
     restart: unless-stopped
 
 volumes:
-  nocodb_data:
   postgres_data:
