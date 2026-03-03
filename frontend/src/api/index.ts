@@ -5,6 +5,8 @@
 // PK-Mapping: PostgreSQL speichert "id" (lowercase), store.js erwartet "Id".
 // getAll() und post() mappen automatisch: { ...r, Id: r.id }
 
+import type { AuthResult } from '../types/index.js'
+
 const API = window.CONFIG.api  // '/api'
 
 // Kompatibilitäts-Exports – store.js prüft TABLES.Benutzer etc.
@@ -12,15 +14,16 @@ export const TABLES = {
   Kameraden: true, Ausruestungstypen: true, Ausruestungstuecke: true,
   Ausgaben: true, Pruefungen: true, Waesche: true, Normen: true,
   Benutzer: true, Changelog: true,
-}
-export const T = name => name  // Tabellenname = PostgREST-Endpunkt
+} as const
+
+export const T = (name: string): string => name
 
 // ── JWT-Token-Verwaltung ──────────────────────────────────────────────────
-export const getJwt   = ()      => localStorage.getItem('psa_jwt')
-export const setJwt   = token   => localStorage.setItem('psa_jwt', token)
-export const clearJwt = ()      => localStorage.removeItem('psa_jwt')
+export const getJwt   = (): string | null => localStorage.getItem('psa_jwt')
+export const setJwt   = (token: string): void => { localStorage.setItem('psa_jwt', token) }
+export const clearJwt = (): void => { localStorage.removeItem('psa_jwt') }
 
-function authHeader() {
+function authHeader(): Record<string, string> {
   const token = getJwt()
   return token ? { Authorization: `Bearer ${token}` } : {}
 }
@@ -29,8 +32,13 @@ function authHeader() {
  * Basis-Fetch-Wrapper mit Error-Handling und JWT-Injection.
  * Bei 401 (abgelaufenes Token): clearJwt + psa:unauthorized-Event.
  */
-export async function api(method, path, body, extraHeaders = {}) {
-  const headers = {
+export async function api(
+  method: string,
+  path: string,
+  body?: unknown,
+  extraHeaders: Record<string, string> = {},
+): Promise<unknown> {
+  const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     ...authHeader(),
     ...extraHeaders,
@@ -46,7 +54,7 @@ export async function api(method, path, body, extraHeaders = {}) {
     throw new Error('401: Sitzung abgelaufen – bitte neu anmelden')
   }
   if (!r.ok) {
-    const err = await r.json().catch(() => ({}))
+    const err = await r.json().catch(() => ({})) as { message?: string; hint?: string }
     throw new Error(`${r.status}: ${err.message || err.hint || JSON.stringify(err)}`)
   }
   if (r.status === 204) return null
@@ -56,14 +64,14 @@ export async function api(method, path, body, extraHeaders = {}) {
 /**
  * Ruft eine PostgREST-RPC-Funktion auf (ohne Auth-Header, für Login/First-Run).
  */
-export async function rpc(name, params = {}) {
+export async function rpc(name: string, params: Record<string, unknown> = {}): Promise<unknown> {
   const r = await fetch(`${API}/rpc/${name}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(params),
   })
   if (!r.ok) {
-    const err = await r.json().catch(() => ({}))
+    const err = await r.json().catch(() => ({})) as { message?: string; hint?: string }
     throw new Error(err.message || err.hint || `${r.status}`)
   }
   if (r.status === 204) return null
@@ -73,28 +81,30 @@ export async function rpc(name, params = {}) {
 // ── Auth-Funktionen (via PostgreSQL-Funktionen) ───────────────────────────
 
 /** Login: gibt { token, user } zurück */
-export async function authenticate(benutzername, pin) {
-  return rpc('authenticate', { benutzername, pin })
+export async function authenticate(benutzername: string, pin: string): Promise<AuthResult> {
+  return rpc('authenticate', { benutzername, pin }) as Promise<AuthResult>
 }
 
 /** Prüft ob bereits ein Admin-Account existiert */
-export async function isInitialized() {
-  return rpc('is_initialized', {})
+export async function isInitialized(): Promise<boolean> {
+  return rpc('is_initialized', {}) as Promise<boolean>
 }
 
 /** Ersten Admin anlegen: gibt { token, user } zurück */
-export async function createAdmin(benutzername, pin) {
-  return rpc('create_admin', { benutzername, pin })
+export async function createAdmin(benutzername: string, pin: string): Promise<AuthResult> {
+  return rpc('create_admin', { benutzername, pin }) as Promise<AuthResult>
 }
 
 // ── Datenzugriff ──────────────────────────────────────────────────────────
 
 /**
  * Lädt alle Datensätze einer Tabelle (limit 10000, sortiert nach id).
- * Mappt id → Id für Kompatibilität mit store.js.
+ * Mappt id → Id für Kompatibilität mit store.
  */
-export async function getAll(table) {
-  const records = await api('GET', `${API}/${table}?limit=10000&order=id.asc`)
+export async function getAll<T extends Record<string, unknown> = Record<string, unknown>>(
+  table: string,
+): Promise<(T & { Id: number })[]> {
+  const records = await api('GET', `${API}/${table}?limit=10000&order=id.asc`) as (T & { id: number })[]
   return records.map(r => ({ ...r, Id: r.id }))
 }
 
@@ -103,18 +113,21 @@ export async function getAll(table) {
  * Prefer: return=representation → PostgREST gibt angelegten Datensatz zurück.
  * Mappt id → Id.
  */
-export const post = async (table, body) => {
+export const post = async (
+  table: string,
+  body: Record<string, unknown>,
+): Promise<(Record<string, unknown> & { Id: number }) | null> => {
   const result = await api('POST', `${API}/${table}`, body, {
     'Prefer': 'return=representation',
-  })
+  }) as (Record<string, unknown> & { id: number })[] | null
   const record = Array.isArray(result) ? result[0] : result
-  return record ? { ...record, Id: record.id } : record
+  return record ? { ...record, Id: record.id } : null
 }
 
 /**
  * Aktualisiert einen Datensatz (per id-Filter statt Pfad-Segment).
  */
-export const patch = (table, id, body) =>
+export const patch = (table: string, id: number, body: Record<string, unknown>): Promise<unknown> =>
   api('PATCH', `${API}/${table}?id=eq.${id}`, body, {
     'Prefer': 'return=representation',
   })
@@ -122,7 +135,7 @@ export const patch = (table, id, body) =>
 /**
  * Löscht einen Datensatz (per id-Filter).
  */
-export const del = (table, id) =>
+export const del = (table: string, id: number): Promise<unknown> =>
   api('DELETE', `${API}/${table}?id=eq.${id}`)
 
 export { API }

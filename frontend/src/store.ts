@@ -8,6 +8,7 @@ import { getAll, post, patch, del, TABLES,
          authenticate, isInitialized, createAdmin,
          setJwt, clearJwt } from './api/index.js'
 import { fmtDate, todayStr } from './utils/formatters.js'
+import type { Kamerad, Ausruestungstyp, Ausruestungstueck, Ausgabe, Pruefung, Waesche, Norm, Benutzer, ChangelogEntry, AppUser, CsvRow, GroesseKatEntry, Warnung } from './types/index.js'
 
 // ── UI-Zustand ─────────────────────────────────────────────────────────────
 export const page        = ref('dashboard')
@@ -15,15 +16,15 @@ export const sidebarOpen = ref(false)
 export const loading     = ref(false)
 export const toast       = reactive({ show: false, msg: '', type: 'ok' })
 
-export function showToast(msg, type = 'ok') {
+export function showToast(msg: string, type = 'ok') {
   toast.msg = msg; toast.type = type; toast.show = true
   setTimeout(() => { toast.show = false }, 3000)
 }
 
-export async function load(fn) {
+export async function load(fn: () => Promise<void>) {
   loading.value = true
   try { await fn() }
-  catch (e) { showToast(e.message, 'error') }
+  catch (e) { showToast(e instanceof Error ? e.message : String(e), 'error') }
   finally { loading.value = false }
 }
 
@@ -32,12 +33,12 @@ export const darkMode = ref(document.documentElement.classList.contains('dark'))
 export function toggleDark() {
   darkMode.value = !darkMode.value
   document.documentElement.classList.toggle('dark', darkMode.value)
-  localStorage.setItem('darkMode', darkMode.value)
+  localStorage.setItem('darkMode', String(darkMode.value))
 }
 
 // ── Auth ───────────────────────────────────────────────────────────────────
 export const loggedIn    = ref(!!localStorage.getItem('psa_jwt'))
-export const currentUser = ref(JSON.parse(localStorage.getItem('psa_user') || 'null'))
+export const currentUser = ref<AppUser | null>(JSON.parse(localStorage.getItem('psa_user') || 'null'))
 
 // Bei abgelaufenem JWT automatisch ausloggen
 window.addEventListener('psa:unauthorized', () => {
@@ -97,19 +98,19 @@ export const visiblePages = computed(() => {
 })
 
 // ── Datenkollektionen ──────────────────────────────────────────────────────
-export const kameraden    = ref([])
-export const ausruestung  = ref([])
-export const typen        = ref([])
-export const ausgaben     = ref([])
-export const pruefungen   = ref([])
-export const waescheListe = ref([])
-export const normen       = ref([])
-export const changelog    = ref([])
-export const benutzer     = ref([])
+export const kameraden    = ref<Kamerad[]>([])
+export const ausruestung  = ref<Ausruestungstueck[]>([])
+export const typen        = ref<Ausruestungstyp[]>([])
+export const ausgaben     = ref<Ausgabe[]>([])
+export const pruefungen   = ref<Pruefung[]>([])
+export const waescheListe = ref<Waesche[]>([])
+export const normen       = ref<Norm[]>([])
+export const changelog    = ref<ChangelogEntry[]>([])
+export const benutzer     = ref<Benutzer[]>([])
 
 // ── Offline ────────────────────────────────────────────────────────────────
 export const isOffline        = ref(false)
-export const offlineTimestamp = ref(null)
+export const offlineTimestamp = ref<number | null>(null)
 
 export function saveOfflineSnapshot() {
   try {
@@ -157,7 +158,7 @@ export const filterChangelog         = ref('')
 export const filterNormKategorie     = ref('')
 export const sortAusruestung         = reactive({ field: '', dir: 'asc' })
 
-export function sortBy(field) {
+export function sortBy(field: string) {
   if (sortAusruestung.field === field) {
     sortAusruestung.dir = sortAusruestung.dir === 'asc' ? 'desc' : 'asc'
   } else {
@@ -176,28 +177,30 @@ export const modal = reactive({
 })
 
 // ── Formular-Zustand ───────────────────────────────────────────────────────
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnyForm = Record<string, any>
 export const form = reactive({
-  kamerad:         {},
-  ausruestung:     {},
-  typ:             {},
-  aktion:          {},
-  ausgabe:         {},
-  pruefung:        {},
-  waesche:         {},
-  norm:            {},
-  massenWaesche:   {},
-  massenPruefung:  {},
-  rueckgabe:       {},
-  rueckgabeAusgabe: null,
-  csvImport:       { rows: [], fileName: '' },
-  benutzer:        { Id: null, Benutzername: '', PIN: '', Rolle: 'Kleiderwart', Aktiv: true, KameradId: '' },
+  kamerad:         {} as AnyForm,
+  ausruestung:     {} as AnyForm,
+  typ:             {} as AnyForm,
+  aktion:          {} as AnyForm,
+  ausgabe:         {} as AnyForm,
+  pruefung:        {} as AnyForm,
+  waesche:         {} as AnyForm,
+  norm:            {} as AnyForm,
+  massenWaesche:   {} as AnyForm,
+  massenPruefung:  {} as AnyForm,
+  rueckgabe:       {} as AnyForm,
+  rueckgabeAusgabe: null as Ausgabe | null,
+  csvImport:       { rows: [] as CsvRow[], fileName: '' },
+  benutzer:        { Id: null, Benutzername: '', PIN: '', Rolle: 'Kleiderwart', Aktiv: true, KameradId: '' } as AnyForm,
 })
 
 // ── Detail-Navigation ──────────────────────────────────────────────────────
-export const selectedKamerad     = ref({})
-export const selectedIds         = ref([])
-export const selectedAusruestung = ref(null)
-export const detailFromKamerad   = ref(null)
+export const selectedKamerad     = ref<Partial<Kamerad>>({})
+export const selectedIds         = ref<number[]>([])
+export const selectedAusruestung = ref<Ausruestungstueck | null>(null)
+export const detailFromKamerad   = ref<Kamerad | null>(null)
 export const qrResult            = ref('')
 export const qrError             = ref('')
 
@@ -244,7 +247,7 @@ export const normenFuerAktuellenTyp = computed(() =>
   normen.value.filter(n => n.Ausruestungstyp_Kategorie === form.typ.Typ)
 )
 
-export function normenFuerTyp(kategorie) {
+export function normenFuerTyp(kategorie: string) {
   return normen.value.filter(n => n.Ausruestungstyp_Kategorie === kategorie)
 }
 
@@ -276,7 +279,7 @@ export const ausruestungFiltered = computed(() => {
     const f = sortAusruestung.field
     const d = sortAusruestung.dir === 'asc' ? 1 : -1
     list = [...list].sort((a, b) =>
-      (a[f] ?? '').toString().localeCompare((b[f] ?? '').toString(), 'de') * d
+      ((a as AnyForm)[f] ?? '').toString().localeCompare(((b as AnyForm)[f] ?? '').toString(), 'de') * d
     )
   }
   return list
@@ -285,7 +288,7 @@ export const ausruestungFiltered = computed(() => {
 // ── Computed: Ausgaben / Prüfungen / Wäsche ────────────────────────────────
 export const ausgabenFiltered = computed(() =>
   [...ausgaben.value]
-    .sort((a, b) => new Date(b.Ausgabedatum || 0) - new Date(a.Ausgabedatum || 0))
+    .sort((a, b) => new Date(b.Ausgabedatum || 0).getTime() - new Date(a.Ausgabedatum || 0).getTime())
     .filter(ag => !filterVerlaufKamerad.value || ag.Kamerad === filterVerlaufKamerad.value)
 )
 
@@ -320,21 +323,21 @@ export const ausgabenByAusruestung = computed(() => {
 })
 
 export const pruefungenFiltered = computed(() => {
-  let list = [...pruefungen.value].sort((a, b) => new Date(b.Datum || 0) - new Date(a.Datum || 0))
+  let list = [...pruefungen.value].sort((a, b) => new Date(b.Datum || 0).getTime() - new Date(a.Datum || 0).getTime())
   if (myKameradName.value) list = list.filter(p => p.Kamerad === myKameradName.value)
   else if (filterVerlaufKamerad.value) list = list.filter(p => p.Kamerad === filterVerlaufKamerad.value)
   return list
 })
 
 export const waescheFiltered = computed(() => {
-  let list = [...waescheListe.value].sort((a, b) => new Date(b.Datum || 0) - new Date(a.Datum || 0))
+  let list = [...waescheListe.value].sort((a, b) => new Date(b.Datum || 0).getTime() - new Date(a.Datum || 0).getTime())
   if (myKameradName.value) list = list.filter(w => w.Kamerad === myKameradName.value)
   else if (filterVerlaufKamerad.value) list = list.filter(w => w.Kamerad === filterVerlaufKamerad.value)
   return list
 })
 
 export const changelogFiltered = computed(() => {
-  let list = [...changelog.value].sort((a, b) => new Date(b.Zeitpunkt || 0) - new Date(a.Zeitpunkt || 0))
+  let list = [...changelog.value].sort((a, b) => new Date(b.Zeitpunkt || 0).getTime() - new Date(a.Zeitpunkt || 0).getTime())
   if (filterChangelog.value) list = list.filter(c => c.Aktion === filterChangelog.value)
   return list
 })
@@ -348,7 +351,7 @@ export const stats = computed(() => ({
 }))
 
 export const warnungen = computed(() => {
-  const w = []
+  const w: Warnung[] = []
   ausruestung.value.forEach(a => {
     if (a.Naechste_Pruefung) {
       const d = new Date(a.Naechste_Pruefung)
@@ -391,7 +394,7 @@ export const warnungen = computed(() => {
       const k = kameraden.value.find(x => `${x.Vorname} ${x.Name}` === a.Kamerad)
       if (k) {
         const typ = typen.value.find(t => t.Bezeichnung === a.Ausruestungstyp)
-        const entry = GROESSE_KAT_MAP[typ?.Typ]
+        const entry = typ?.Typ ? GROESSE_KAT_MAP[typ.Typ] : undefined
         if (entry) {
           const kGroesse = k[entry.field] ? String(k[entry.field]) : ''
           const aGroesse = String(a.Groesse).trim()
@@ -404,7 +407,8 @@ export const warnungen = computed(() => {
       }
     }
   })
-  return w.sort((a, b) => ({ rot: 0, orange: 1, gelb: 2 }[a.prio] - { rot: 0, orange: 1, gelb: 2 }[b.prio]))
+  const prioOrder: Record<string, number> = { rot: 0, orange: 1, gelb: 2 }
+  return w.sort((a, b) => prioOrder[a.prio] - prioOrder[b.prio])
 })
 
 // ── Computed: Multi-Select ─────────────────────────────────────────────────
@@ -414,7 +418,7 @@ export const alleAusgewaehlt = computed(() =>
 )
 
 // ── Größen-Mapping (Typ-Kategorie → Kamerad-Feld) ─────────────────────────
-export const GROESSE_KAT_MAP = {
+export const GROESSE_KAT_MAP: Record<string, GroesseKatEntry> = {
   'Jacke':            { label: 'Jacke',        field: 'Jacke_Groesse' },
   'Hose':             { label: 'Hose',         field: 'Hose_Groesse' },
   'Stiefel':          { label: 'Stiefel (EU)', field: 'Stiefel_Groesse' },
@@ -430,7 +434,7 @@ export const ausruestungGroesseHint = computed(() => {
   const k = kameraden.value.find(x => `${x.Vorname} ${x.Name}` === form.ausgabe.kamerad)
   if (!k) return null
   const typ = typen.value.find(t => t.Bezeichnung === form.aktion.Ausruestungstyp)
-  const entry = GROESSE_KAT_MAP[typ?.Typ]
+  const entry = typ?.Typ ? GROESSE_KAT_MAP[typ.Typ] : undefined
   if (!entry) return null
   const kGroesse = k[entry.field] ? String(k[entry.field]) : ''
   const ausrGroesse = form.aktion?.Groesse ? String(form.aktion.Groesse).trim() : ''
@@ -439,27 +443,27 @@ export const ausruestungGroesseHint = computed(() => {
 })
 
 // ── Helper-Funktionen ──────────────────────────────────────────────────────
-export function waeschenInfo(ausruestungId, ausruestungstyp) {
+export function waeschenInfo(ausruestungId: number, ausruestungstyp: string | null) {
   const typ = typen.value.find(t => t.Bezeichnung === ausruestungstyp)
   if (!typ?.Max_Waeschen) return null
   const count = (waescheByAusruestung.value.get(ausruestungId) || []).length
   return { count, max: typ.Max_Waeschen }
 }
 
-export function ausruestungFuerKamerad(k) {
+export function ausruestungFuerKamerad(k: Kamerad) {
   const label = `${k.Vorname} ${k.Name}`
   return ausruestung.value.filter(a => a.Kamerad === label)
 }
 
-export function letzteAktion(ausruestungId, typ) {
-  const list = (typ === 'pruefung'
+export function letzteAktion(ausruestungId: number, typ: string) {
+  const list: (Pruefung | Waesche)[] = (typ === 'pruefung'
     ? pruefungenByAusruestung.value.get(ausruestungId)
     : waescheByAusruestung.value.get(ausruestungId)) || []
   if (!list.length) return null
-  return list.reduce((a, b) => new Date(a.Datum) > new Date(b.Datum) ? a : b)
+  return list.reduce((a, b) => new Date(a.Datum!) > new Date(b.Datum!) ? a : b)
 }
 
-export function kameradenGroessen(k) {
+export function kameradenGroessen(k: Kamerad) {
   return [
     { label: 'Jacke',     wert: k.Jacke_Groesse },
     { label: 'Hose',      wert: k.Hose_Groesse },
@@ -471,7 +475,7 @@ export function kameradenGroessen(k) {
   ]
 }
 
-export function toggleSelect(id) {
+export function toggleSelect(id: number) {
   const idx = selectedIds.value.indexOf(id)
   if (idx === -1) selectedIds.value.push(id)
   else selectedIds.value.splice(idx, 1)
@@ -483,7 +487,7 @@ export function toggleAlle() {
 }
 
 // ── Audit-Log ──────────────────────────────────────────────────────────────
-export async function logChange(tabelle, aktion, details) {
+export async function logChange(tabelle: string, aktion: string, details: string | null) {
   if (!TABLES.Changelog) return
   try {
     await post('Changelog', {
@@ -499,7 +503,7 @@ export async function logChange(tabelle, aktion, details) {
 }
 
 // ── Alle Daten laden ───────────────────────────────────────────────────────
-export async function fetchAll(renderChartsCallback) {
+export async function fetchAll(renderChartsCallback?: (() => void) | null) {
   loading.value = true
   try {
     // Nicht eingeloggt: nur First-Run prüfen, keine Daten laden
@@ -525,16 +529,16 @@ export async function fetchAll(renderChartsCallback) {
       TABLES.Changelog ? getAll('Changelog') : Promise.resolve([]),
       TABLES.Benutzer  ? getAll('Benutzer')  : Promise.resolve([]),
     ])
-    const val = (i) => results[i].status === 'fulfilled' ? results[i].value : []
-    kameraden.value    = val(0)
-    ausruestung.value  = val(1)
-    typen.value        = val(2)
-    ausgaben.value     = val(3)
-    pruefungen.value   = val(4)
-    waescheListe.value = val(5)
-    normen.value       = val(6)
-    changelog.value    = val(7)
-    benutzer.value     = val(8)
+    const val = (i: number) => { const r = results[i]; return r.status === 'fulfilled' ? r.value : [] }
+    kameraden.value    = val(0) as unknown as Kamerad[]
+    ausruestung.value  = val(1) as unknown as Ausruestungstueck[]
+    typen.value        = val(2) as unknown as Ausruestungstyp[]
+    ausgaben.value     = val(3) as unknown as Ausgabe[]
+    pruefungen.value   = val(4) as unknown as Pruefung[]
+    waescheListe.value = val(5) as unknown as Waesche[]
+    normen.value       = val(6) as unknown as Norm[]
+    changelog.value    = val(7) as unknown as ChangelogEntry[]
+    benutzer.value     = val(8) as unknown as Benutzer[]
     isOffline.value    = false
     saveOfflineSnapshot()
     if (renderChartsCallback) {
@@ -603,12 +607,12 @@ export function doLogout() {
 }
 
 // ── Kameraden-Aktionen ─────────────────────────────────────────────────────
-export function openKameradenForm(k = {}) {
+export function openKameradenForm(k: Partial<Kamerad> = {}) {
   form.kamerad = { Aktiv: true, ...k }
   modal.kameradenForm = true
 }
 
-export function openKameradenDetail(k) {
+export function openKameradenDetail(k: Kamerad) {
   selectedKamerad.value = k
   modal.kameradenDetail = true
 }
@@ -650,7 +654,7 @@ export async function saveKamerad() {
   })
 }
 
-export async function deleteKamerad(k) {
+export async function deleteKamerad(k: Kamerad) {
   const label    = `${k.Vorname} ${k.Name}`
   const assigned = ausruestung.value.filter(a => a.Kamerad === label).length
   const msg = assigned
@@ -685,36 +689,38 @@ export function openCsvImport() {
   modal.csvImport = true
 }
 
-export function onCsvFile(event) {
-  const file = event.target.files[0]
+export function onCsvFile(event: Event) {
+  const file = (event.target as HTMLInputElement).files?.[0]
   if (!file) return
   form.csvImport.fileName = file.name
   const reader = new FileReader()
-  reader.onload = (e) => {
-    const text  = e.target.result.replace(/\r\n/g, '\n').replace(/\r/g, '\n')
+  reader.onload = (e: ProgressEvent<FileReader>) => {
+    const text  = (e.target!.result as string).replace(/\r\n/g, '\n').replace(/\r/g, '\n')
     const lines = text.split('\n').filter(l => l.trim())
     if (lines.length < 2) { showToast('CSV hat keine Datenzeilen', 'error'); return }
     const delim   = lines[0].includes(';') ? ';' : ','
     const headers = lines[0].split(delim).map(h => h.trim().replace(/^"|"$/g, ''))
-    const rows = []
+    const rows: CsvRow[] = []
     for (let i = 1; i < lines.length; i++) {
       const vals = lines[i].split(delim).map(v => v.trim().replace(/^"|"$/g, ''))
-      const row  = {}
+      const row: Record<string, string | boolean> = {}
       headers.forEach((h, idx) => { row[h] = vals[idx] ?? '' })
-      row._Vorname   = row.Vorname || row.vorname || ''
-      row._Name      = row.Name    || row.name    || ''
-      row._error     = (!row._Vorname || !row._Name) ? 'Vorname und Name sind Pflichtfelder' : ''
+      const _Vorname = String(row.Vorname || row.vorname || '')
+      const _Name    = String(row.Name    || row.name    || '')
+      row._Vorname   = _Vorname
+      row._Name      = _Name
+      row._error     = (!_Vorname || !_Name) ? 'Vorname und Name sind Pflichtfelder' : ''
       row._duplicate = !row._error && kameraden.value.some(k =>
-        k.Vorname?.toLowerCase() === row._Vorname.toLowerCase() &&
-        k.Name?.toLowerCase()    === row._Name.toLowerCase()
+        k.Vorname?.toLowerCase() === _Vorname.toLowerCase() &&
+        k.Name?.toLowerCase()    === _Name.toLowerCase()
       )
-      rows.push(row)
+      rows.push(row as CsvRow)
     }
     form.csvImport.rows = rows
     if (!rows.length) showToast('Keine Zeilen gefunden', 'error')
   }
   reader.readAsText(file, 'UTF-8')
-  event.target.value = ''
+  ;(event.target as HTMLInputElement).value = ''
 }
 
 export async function importKameraden() {
@@ -728,7 +734,7 @@ export async function importKameraden() {
   }
   await load(async () => {
     for (const row of valid) {
-      const aktivRaw = (row.Aktiv || row.aktiv || 'ja').toLowerCase().trim()
+      const aktivRaw = String(row.Aktiv || row.aktiv || 'ja').toLowerCase().trim()
       const aktiv    = !['nein', '0', 'false', 'falsch', 'no'].includes(aktivRaw)
       await post('Kameraden', {
         Vorname:           row._Vorname,
@@ -751,12 +757,12 @@ export async function importKameraden() {
 }
 
 // ── Ausrüstung-Aktionen ────────────────────────────────────────────────────
-export function openAusruestungForm(a = {}) {
+export function openAusruestungForm(a: Partial<Ausruestungstueck> = {}) {
   form.ausruestung = { Status: 'Lager', ...a, Ausruestungstyp: a.Ausruestungstyp || '', Kamerad: a.Kamerad || '' }
   modal.ausruestungForm = true
 }
 
-export function openAusruestungDetail(a, fromKamerad = null) {
+export function openAusruestungDetail(a: Ausruestungstueck, fromKamerad: Kamerad | null = null) {
   selectedAusruestung.value = a
   detailFromKamerad.value   = fromKamerad
   modal.ausruestungDetail   = true
@@ -824,7 +830,7 @@ export async function saveAusruestung() {
   })
 }
 
-export async function deleteAusruestung(a) {
+export async function deleteAusruestung(a: Ausruestungstueck) {
   if (!confirm(`Ausrüstungsstück "${a.Seriennummer || a.Id}" wirklich löschen?`)) return
   await load(async () => {
     await del('Ausruestungstuecke', a.Id)
@@ -834,7 +840,7 @@ export async function deleteAusruestung(a) {
   })
 }
 
-export async function quickStatus(item, newStatus) {
+export async function quickStatus(item: Ausruestungstueck, newStatus: string) {
   if (item.Status === newStatus) return
   await load(async () => {
     await patch('Ausruestungstuecke', item.Id, { Status: newStatus })
@@ -844,7 +850,7 @@ export async function quickStatus(item, newStatus) {
 }
 
 // ── Ausgabe / Rückgabe ─────────────────────────────────────────────────────
-export function openAusgabe(a) {
+export function openAusgabe(a: Ausruestungstueck) {
   form.aktion  = a
   form.ausgabe = { datum: todayStr(), kamerad: a.Kamerad || '', notizen: '' }
   modal.ausgabe = true
@@ -869,7 +875,7 @@ export async function saveAusgabe() {
   })
 }
 
-export function openRueckgabe(ag) {
+export function openRueckgabe(ag: Ausgabe) {
   form.rueckgabeAusgabe = ag
   form.rueckgabe = { datum: todayStr() }
   modal.rueckgabe = true
@@ -889,7 +895,7 @@ export async function saveRueckgabe() {
 }
 
 // ── Prüfungen ──────────────────────────────────────────────────────────────
-export function openPruefung(a) {
+export function openPruefung(a: Ausruestungstueck) {
   form.aktion  = a
   form.pruefung = {
     datum:    todayStr(),
@@ -911,21 +917,21 @@ export function recalcNaechstePruefung() {
   form.pruefung.naechste = d.toISOString().split('T')[0]
 }
 
-export async function onPruefungFoto(event) {
-  const file = event.target.files[0]
+export function onPruefungFoto(event: Event) {
+  const file = (event.target as HTMLInputElement).files?.[0]
   if (!file) return
   const reader = new FileReader()
-  reader.onload = async (e) => {
+  reader.onload = (e: ProgressEvent<FileReader>) => {
     // Bild komprimieren via Canvas
     const img = new Image()
-    img.src = e.target.result
+    img.src = e.target!.result as string
     img.onload = () => {
       const canvas = document.createElement('canvas')
       const MAX = 800
       let w = img.width, h = img.height
       if (w > MAX) { h = h * MAX / w; w = MAX }
       canvas.width = w; canvas.height = h
-      canvas.getContext('2d').drawImage(img, 0, 0, w, h)
+      canvas.getContext('2d')!.drawImage(img, 0, 0, w, h)
       form.pruefung.foto = canvas.toDataURL('image/jpeg', 0.7)
     }
   }
@@ -958,7 +964,7 @@ export async function savePruefung() {
 }
 
 // ── Wäsche ─────────────────────────────────────────────────────────────────
-export function openWaesche(a) {
+export function openWaesche(a: Ausruestungstueck) {
   form.aktion = a
   form.waesche = { datum: todayStr(), art: 'Normal', notizen: '' }
   modal.waesche = true
@@ -1052,7 +1058,7 @@ export async function saveMassenPruefung() {
 }
 
 // ── Typen CRUD ─────────────────────────────────────────────────────────────
-export function openTypenForm(t = {}) {
+export function openTypenForm(t: Partial<Ausruestungstyp> = {}) {
   form.typ = { ...t, _normWahl: '', _normHinweis: '' }
   modal.typForm = true
 }
@@ -1111,7 +1117,7 @@ export async function saveTyp() {
   })
 }
 
-export async function deleteTyp(t) {
+export async function deleteTyp(t: Ausruestungstyp) {
   const inUse = ausruestung.value.filter(a => a.Ausruestungstyp === t.Bezeichnung).length
   if (inUse) { showToast(`Typ wird von ${inUse} Ausrüstungsstück${inUse > 1 ? 'en' : ''} verwendet`, 'error'); return }
   if (!confirm(`Typ "${t.Bezeichnung}" wirklich löschen?`)) return
@@ -1124,7 +1130,7 @@ export async function deleteTyp(t) {
 }
 
 // ── Normen CRUD ────────────────────────────────────────────────────────────
-export function openNormenForm(n = {}) {
+export function openNormenForm(n: Partial<Norm> = {}) {
   form.norm = { ...n }
   modal.normenForm = true
 }
@@ -1150,7 +1156,7 @@ export async function saveNorm() {
   })
 }
 
-export async function deleteNorm(n) {
+export async function deleteNorm(n: Norm) {
   if (!confirm(`Norm "${n.Bezeichnung}" wirklich löschen?`)) return
   await load(async () => {
     await del('Normen', n.Id)
@@ -1161,7 +1167,7 @@ export async function deleteNorm(n) {
 }
 
 // ── Benutzer CRUD ──────────────────────────────────────────────────────────
-export function openBenutzerForm(b = null) {
+export function openBenutzerForm(b: Benutzer | null = null) {
   if (b) {
     Object.assign(form.benutzer, { Id: b.Id, Benutzername: b.Benutzername, PIN: b.PIN, Rolle: b.Rolle || 'Kleiderwart', Aktiv: b.Aktiv !== false, KameradId: b.KameradId || '' })
   } else {
@@ -1189,7 +1195,7 @@ export async function saveBenutzer() {
       logChange('Benutzer', 'Bearbeitet', payload.Benutzername)
     } else {
       const created = await post('Benutzer', payload)
-      benutzer.value.push(created)
+      benutzer.value.push(created as unknown as Benutzer)
       logChange('Benutzer', 'Erstellt', payload.Benutzername)
     }
     modal.benutzerForm = false
@@ -1197,7 +1203,7 @@ export async function saveBenutzer() {
   })
 }
 
-export async function deleteBenutzer(b) {
+export async function deleteBenutzer(b: Benutzer) {
   if (b.Id === currentUser.value?.Id) { showToast('Eigenen Account nicht löschbar', 'error'); return }
   if (!confirm(`Benutzer "${b.Benutzername}" wirklich löschen?`)) return
   await load(async () => {

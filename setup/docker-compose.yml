@@ -49,5 +49,15 @@ services:
       retries: 3
     restart: unless-stopped
 
+  uptime-kuma:
+    image: louislam/uptime-kuma:1
+    container_name: psa_uptime
+    volumes:
+      - uptime_data:/app/data
+    ports:
+      - "3001:3001"
+    restart: unless-stopped
+
 volumes:
   postgres_data:
+  uptime_data:
