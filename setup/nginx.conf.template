@@ -20,8 +20,12 @@ server {
         }
     }
 
-    # ── config.js nie cachen (enthält Laufzeitkonfiguration) ──
+    # ── config.js + service-worker.js nie cachen ──────────────
     location = /config.js {
+        add_header Cache-Control "no-cache, must-revalidate";
+        expires 0;
+    }
+    location = /service-worker.js {
         add_header Cache-Control "no-cache, must-revalidate";
         expires 0;
     }

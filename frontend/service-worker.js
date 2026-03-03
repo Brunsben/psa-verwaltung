@@ -1,7 +1,7 @@
 // PSA-Verwaltung Service Worker – Offline-Cache
-const CACHE_NAME = 'psa-v8';
+const CACHE_NAME = 'psa-v9';
 
-// Nur schwere Vendor-Dateien cachen (ändern sich nie)
+// Vendor-Dateien vorladen (ändern sich nie, kein Inhaltshash im Namen)
 const VENDOR_ASSETS = [
   '/vendor/tailwind.min.css',
   '/vendor/vue.global.prod.js',
@@ -30,9 +30,11 @@ self.addEventListener('activate', e => {
 });
 
 // Fetch-Strategie:
-// - API: immer Netzwerk
-// - index.html + config.js: immer Netzwerk (damit Updates sofort wirken)
-// - Vendor-Dateien: Cache-first (ändern sich nicht)
+// - API:              immer Netzwerk
+// - Navigation (HTML): Network-first → deckt alle SPA-Routen ab
+// - config.js:        Network-first
+// - /assets/ (Vite):  Cache-first (Inhaltshash im Namen → unveränderlich)
+// - Vendor-Dateien:   Cache-first
 self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
 
@@ -49,15 +51,25 @@ self.addEventListener('fetch', e => {
     return;
   }
 
-  // index.html und config.js: Network-first (immer aktuell)
-  if (url.pathname === '/' || url.pathname === '/index.html' || url.pathname.startsWith('/config.js')) {
+  // Navigation (alle HTML-Seiten der SPA): Network-first
+  // Stellt sicher dass index.html immer frisch geladen wird,
+  // auch für Routen wie /kameraden, /ausruestung etc.
+  if (e.request.mode === 'navigate') {
+    e.respondWith(
+      fetch(e.request).catch(() => caches.match('/index.html'))
+    );
+    return;
+  }
+
+  // config.js: Network-first (Laufzeitkonfiguration)
+  if (url.pathname === '/config.js') {
     e.respondWith(
       fetch(e.request).catch(() => caches.match(e.request))
     );
     return;
   }
 
-  // Vendor-Dateien: Cache-first, dann Netzwerk
+  // Cache-first für alles andere (Vite-Bundles, Vendor-Dateien)
   e.respondWith(
     caches.match(e.request).then(cached => {
       if (cached) return cached;
