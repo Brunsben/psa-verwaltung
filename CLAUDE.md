@@ -49,24 +49,25 @@ Located in `~/.claude/skills/`:
 - **`/n8n-code-javascript`** — JavaScript in Code nodes (`$input`, `$helpers`, DateTime)
 - **`/n8n-code-python`** — Python in Code nodes and its limitations
 
-## NocoDB (PSA-Verwaltung)
+## PSA-Verwaltung (PostgREST)
 
-- **URL:** deine NocoDB-URL (via Cloudflare Tunnel oder lokal)
-- **API Token:** siehe `setup/.env` → `XC_TOKEN` (Header: `xc-token`)
-- **API Endpoint:** `https://DEINE-NOCODB-URL/api/v2/meta/bases/`
-- **Base ID:** siehe `setup/.nocodb_table_ids` (wird beim Install generiert)
+- **API:** `http://10.10.1.238:8182/api/{tabelle}` (intern), `https://psa.ofwietmarschen.org/api/{tabelle}` (extern)
+- **Auth:** keine (PostgREST anon-Rolle, nginx schützt den Endpunkt)
+- **Schema:** `pxicv3djlauluse` (PostgreSQL-Schema)
 
-| Tabelle | ID |
+| Tabelle | PostgREST-Endpunkt |
 | - | - |
-| Kameraden | `mbfq6ec4y5mroif` |
-| Ausruestungstypen | `mv97zr52e65li0f` |
-| Ausruestungstuecke | `m6gby0ep5khzyzg` |
-| Ausgaben | `m6rtooq3l4fshif` |
-| Pruefungen | `mvpg0wcptqd4gk9` |
-| Waesche | `m3e70ipbmh7zre0` |
-| Normen | `m548rfn3cyooaa7` |
-| Benutzer | `mvcs3jnd76tm4ad` |
-| Changelog | `mf2aln0bbnynp0m` |
+| Kameraden | `/api/Kameraden` |
+| Ausruestungstypen | `/api/Ausruestungstypen` |
+| Ausruestungstuecke | `/api/Ausruestungstuecke` |
+| Ausgaben | `/api/Ausgaben` |
+| Pruefungen | `/api/Pruefungen` |
+| Waesche | `/api/Waesche` |
+| Normen | `/api/Normen` |
+| Benutzer | `/api/Benutzer` |
+| Changelog | `/api/Changelog` |
+
+**Filter-Syntax:** `?Feld=op.Wert` (z.B. `?Status=neq.Ausgesondert&Naechste_Pruefung=lte.2026-12-31`)
 
 > Cloudflare Tunnel läuft als Systemdienst auf dem Pi (`sudo systemctl status cloudflared`). Startet automatisch nach Neustart.
 
