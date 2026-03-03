@@ -1,16 +1,14 @@
 #!/bin/bash
 # ─────────────────────────────────────────────────────────────
 #  install.sh – PSA-Verwaltung Installationsskript
-#  Alles in einem Durchlauf: Container starten, Token eingeben,
-#  Tabellen anlegen, Frontend konfigurieren.
+#  Startet alle Container, legt PostgreSQL-Rollen an,
+#  konfiguriert das Frontend.
 # ─────────────────────────────────────────────────────────────
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ENV_FILE="$SCRIPT_DIR/.env"
 ENV_EXAMPLE="$SCRIPT_DIR/.env.example"
-NGINX_TEMPLATE="$SCRIPT_DIR/nginx.conf.template"
-NGINX_CONF="$SCRIPT_DIR/nginx.conf"
 
 echo ""
 echo "╔══════════════════════════════════════════════════╗"
@@ -31,7 +29,6 @@ check_cmd() {
 
 check_cmd docker
 check_cmd curl
-check_cmd python3
 
 if docker compose version &>/dev/null 2>&1; then
   COMPOSE="docker compose"
@@ -42,44 +39,64 @@ else
   exit 1
 fi
 echo "   ✓ $COMPOSE"
-
-if ! command -v envsubst &>/dev/null; then
-  echo "❌ 'envsubst' fehlt. Installiere mit: sudo apt install gettext-base"
-  exit 1
-fi
-echo "   ✓ envsubst"
 echo ""
 
 # ── .env erzeugen ─────────────────────────────────────────
 if [ -f "$ENV_FILE" ]; then
   echo "ℹ️  .env existiert – wird nicht überschrieben."
 else
-  echo "📝 Erstelle .env..."
+  echo "📝 Erstelle .env mit zufälligen Passwörtern..."
   cp "$ENV_EXAMPLE" "$ENV_FILE"
   PW=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1 || true)
-  SECRET=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 48 | head -n 1 || true)
+  PW_REST=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1 || true)
   sed -i "s|change-me-strong-password|$PW|g" "$ENV_FILE"
-  sed -i "s|change-me-random-secret-at-least-32-chars|$SECRET|g" "$ENV_FILE"
+  sed -i "s|change-me-postgrest-password|$PW_REST|g" "$ENV_FILE"
   echo "✅ .env erstellt"
 fi
 
 # .env laden
 set -a; source "$ENV_FILE"; set +a
 
-# ── Docker-Container starten ──────────────────────────────
-echo ""
-echo "🐳 Starte Docker-Container..."
-cd "$SCRIPT_DIR"
-XC_TOKEN="${XC_TOKEN:-PLACEHOLDER_TOKEN}" envsubst '${XC_TOKEN}' < "$NGINX_TEMPLATE" > "$NGINX_CONF"
-$COMPOSE up -d
+# ── nginx.conf erzeugen ────────────────────────────────────
+cp "$SCRIPT_DIR/nginx.conf.template" "$SCRIPT_DIR/nginx.conf"
 
-# ── Warten auf NocoDB ─────────────────────────────────────
+# ── PostgreSQL starten und warten ─────────────────────────
 echo ""
-echo "⏳ Warte auf NocoDB..."
+echo "🐳 Starte PostgreSQL..."
+cd "$SCRIPT_DIR"
+$COMPOSE up -d postgres
+
+echo "⏳ Warte auf PostgreSQL..."
+for i in $(seq 1 30); do
+  if $COMPOSE exec -T postgres pg_isready -U "${POSTGRES_USER:-nocodb}" &>/dev/null; then
+    echo "✅ PostgreSQL bereit"
+    break
+  fi
+  printf "."
+  sleep 2
+done
+echo ""
+
+# ── PostgreSQL-Rollen anlegen ──────────────────────────────
+echo "🔑 Lege PostgreSQL-Rollen an..."
+$COMPOSE exec -T postgres psql \
+  -U "${POSTGRES_USER:-nocodb}" \
+  -d "${POSTGRES_DB:-nocodb}" \
+  -v "postgrest_password=${POSTGREST_DB_PASSWORD}" \
+  -f /dev/stdin < "$SCRIPT_DIR/postgres-init.sql"
+echo "✅ Rollen angelegt"
+
+# ── Alle Container starten ────────────────────────────────
+echo ""
+echo "🚀 Starte alle Container (Frontend-Build dauert ~30s)..."
+$COMPOSE up -d --build
+
+# ── Warten auf Frontend ───────────────────────────────────
+echo "⏳ Warte auf Frontend..."
 for i in $(seq 1 40); do
-  STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8181/api/v1/health 2>/dev/null || echo "000")
+  STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8182/ 2>/dev/null || echo "000")
   if [ "$STATUS" = "200" ]; then
-    echo "✅ NocoDB bereit"
+    echo "✅ Frontend bereit"
     break
   fi
   printf "."
@@ -87,70 +104,19 @@ for i in $(seq 1 40); do
 done
 echo ""
 
-SERVER_IP=$(hostname -I 2>/dev/null | awk '{print $1}' || echo "localhost")
-
-# ── API-Token einrichten ──────────────────────────────────
-set -a; source "$ENV_FILE"; set +a  # neu laden, falls Token inzwischen gesetzt
-
-if [ -z "$XC_TOKEN" ] || [ "$XC_TOKEN" = "your-nocodb-api-token-here" ]; then
-  echo ""
-  echo "┌─────────────────────────────────────────────────────┐"
-  echo "│  Schritt: NocoDB einrichten                         │"
-  echo "├─────────────────────────────────────────────────────┤"
-  echo "│  1. Öffne:  http://$SERVER_IP:8181                  │"
-  echo "│  2. Erstelle ein Admin-Konto (E-Mail + Passwort)    │"
-  echo "│  3. Klicke rechts oben auf dein Profilbild          │"
-  echo "│     → Team & Settings → API Tokens → Token erstellen│"
-  echo "│  4. Kopiere den Token und füge ihn hier ein.        │"
-  echo "└─────────────────────────────────────────────────────┘"
-  echo ""
-  printf "🔑 NocoDB API-Token: "
-  read -r XC_TOKEN_INPUT
-
-  if [ -z "$XC_TOKEN_INPUT" ]; then
-    echo "❌ Kein Token eingegeben. Abbruch."
-    echo "   Starte das Skript erneut, wenn du einen Token hast."
-    exit 1
-  fi
-
-  # Token in .env speichern
-  sed -i "s|XC_TOKEN=.*|XC_TOKEN=$XC_TOKEN_INPUT|g" "$ENV_FILE"
-  XC_TOKEN="$XC_TOKEN_INPUT"
-  echo "✅ Token gespeichert"
-else
-  echo "ℹ️  XC_TOKEN bereits in .env vorhanden – Token-Schritt übersprungen."
-fi
-
-# ── nginx.conf mit echtem Token neu generieren ────────────
-echo ""
-echo "🔧 Aktualisiere nginx.conf..."
-XC_TOKEN="$XC_TOKEN" envsubst '${XC_TOKEN}' < "$NGINX_TEMPLATE" > "$NGINX_CONF"
-$COMPOSE restart frontend
-echo "✅ nginx neugestartet"
-
-# ── NocoDB-Tabellen anlegen ───────────────────────────────
-IDS_FILE="$SCRIPT_DIR/.nocodb_table_ids"
-
-if [ -f "$IDS_FILE" ] && grep -q "BASE_ID=" "$IDS_FILE"; then
-  echo ""
-  echo "ℹ️  Tabellen-IDs gefunden – nocodb-setup übersprungen."
-else
-  echo ""
-  echo "📋 Erstelle Datenbank-Tabellen..."
-  bash "$SCRIPT_DIR/nocodb-setup.sh"
-fi
-
 # ── Frontend konfigurieren ────────────────────────────────
-echo ""
 echo "⚙️  Konfiguriere Frontend..."
 bash "$SCRIPT_DIR/configure-frontend.sh"
+$COMPOSE restart frontend
 
 # ── Fertig ────────────────────────────────────────────────
+SERVER_IP=$(hostname -I 2>/dev/null | awk '{print $1}' || echo "localhost")
 echo ""
 echo "╔══════════════════════════════════════════════════╗"
 echo "║   ✅ Installation abgeschlossen!                 ║"
 echo "╚══════════════════════════════════════════════════╝"
 echo ""
-echo "🌐 PSA-App:   http://$SERVER_IP:8182"
-echo "🌐 NocoDB UI: http://$SERVER_IP:8181"
+echo "🌐 PSA-App: http://$SERVER_IP:8182"
+echo ""
+echo "   Beim ersten Aufruf Admin-Account anlegen."
 echo ""
