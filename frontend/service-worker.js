@@ -1,11 +1,11 @@
 // PSA-Verwaltung Service Worker – Offline-Cache
-const CACHE_NAME = 'psa-v9';
+const CACHE_NAME = 'psa-v10';
 
 // Vendor-Dateien vorladen (ändern sich nie, kein Inhaltshash im Namen)
 const VENDOR_ASSETS = [
-  '/vendor/tailwind.min.css',
-  '/vendor/vue.global.prod.js',
   '/vendor/chart.umd.min.js',
+  '/vendor/jspdf.umd.min.js',
+  '/vendor/html5-qrcode.min.js',
   '/vendor/phosphor/style.css',
   '/vendor/phosphor/Phosphor.woff2',
   '/manifest.json',

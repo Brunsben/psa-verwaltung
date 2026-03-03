@@ -11,3 +11,12 @@ if (!window.CONFIG) {
 }
 
 createApp(App).mount('#app')
+
+// Service Worker registrieren (PWA Offline-Support)
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/service-worker.js').catch(() => {
+      // Kein Fehler werfen – App funktioniert auch ohne SW
+    })
+  })
+}
