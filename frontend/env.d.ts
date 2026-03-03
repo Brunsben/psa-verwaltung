@@ -1,14 +1,18 @@
 /// <reference types="vite/client" />
 
 // Globale Typen für Vendor-Bibliotheken (werden als <script> in index.html geladen)
-declare const Chart: unknown
-declare const jspdf: unknown
-declare const Html5Qrcode: unknown
-declare const Html5QrcodeScanner: unknown
-
-// Runtime-Konfiguration (config.js, generiert durch configure-frontend.sh)
-interface Window {
-  CONFIG: {
-    api: string
+declare global {
+  interface Window {
+    CONFIG: { api: string }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    jspdf: { jsPDF: new (...args: any[]) => any }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    Chart: new (...args: any[]) => any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    Html5Qrcode: new (...args: any[]) => any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    Html5QrcodeScanner: new (...args: any[]) => any
   }
 }
+
+export {}

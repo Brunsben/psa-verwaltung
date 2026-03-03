@@ -45,6 +45,7 @@ export interface Ausruestungstueck {
   QR_Code: string | null
   Waesche_Anzahl: number | null
   Groesse: string | null
+  Notizen: string | null
 }
 
 export interface Ausgabe {

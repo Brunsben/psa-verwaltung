@@ -1,12 +1,19 @@
 // ── PDF & CSV Export ─────────────────────────────────────────────────────────
 import { fmtDate, typLabel, todayStr } from './formatters.js'
+import type { Kamerad, Ausruestungstyp, Ausruestungstueck, Pruefung } from '../types/index.js'
+
+interface PdfStore {
+  showToast: (msg: string, type?: string) => void
+  kameradenGroessen: (k: Kamerad) => { label: string; wert: string | number | null }[]
+  ausruestungFuerKamerad: (k: Kamerad) => Ausruestungstueck[]
+  pruefungen: { value: Pruefung[] }
+  typen: { value: Ausruestungstyp[] }
+}
 
 /**
  * Exportiert einen PSA-Nachweis als PDF für einen Kameraden.
- * @param {Object} kamerad
- * @param {Object} store - { pruefungen, ausruestung, typen, kameradenGroessen, ausruestungFuerKamerad, showToast }
  */
-export function exportPDF(kamerad, store) {
+export function exportPDF(kamerad: Kamerad, store: PdfStore): void {
   if (typeof window.jspdf === 'undefined') {
     store.showToast('PDF-Bibliothek nicht geladen', 'error')
     return
@@ -96,7 +103,7 @@ export function exportPDF(kamerad, store) {
 
   const kamPruefungen = store.pruefungen.value
     .filter(p => p.Kamerad === label)
-    .sort((a, b) => new Date(b.Datum || 0) - new Date(a.Datum || 0))
+    .sort((a, b) => new Date(b.Datum || 0).getTime() - new Date(a.Datum || 0).getTime())
     .slice(0, 10)
 
   if (kamPruefungen.length) {
@@ -131,11 +138,12 @@ export function exportPDF(kamerad, store) {
 
 /**
  * Exportiert die aktuelle Ausrüstungsliste als CSV.
- * @param {Array} list - Gefilterte Ausrüstungsliste
- * @param {Array} typen - Für typLabel
- * @param {Function} showToast
  */
-export function exportCSV(list, typen, showToast) {
+export function exportCSV(
+  list: Ausruestungstueck[],
+  typen: Ausruestungstyp[],
+  showToast: (msg: string, type?: string) => void,
+): void {
   const header = 'Seriennummer;Typ;Kamerad;Status;Nächste Prüfung;Lebensende;Notizen'
   const rows = list.map(a =>
     [
