@@ -15,7 +15,49 @@
       </select>
     </div>
 
-    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-x-auto">
+    <!-- ── Mobile Karten ────────────────────────────────────────── -->
+    <div class="md:hidden space-y-2">
+      <div v-if="!normenFiltered.length" class="text-center text-gray-400 dark:text-gray-500 text-sm py-8">Keine Normen vorhanden</div>
+      <div v-for="n in normenFiltered" :key="n.Id"
+        class="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 p-4 shadow-sm">
+        <div class="flex items-start justify-between gap-2">
+          <div class="min-w-0 flex-1">
+            <div class="font-semibold font-mono text-gray-900 dark:text-white">{{ n.Bezeichnung }}</div>
+            <span v-if="n.Ausruestungstyp_Kategorie"
+              class="mt-1 inline-block text-xs bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 px-2 py-0.5 rounded-full font-semibold">
+              {{ n.Ausruestungstyp_Kategorie }}
+            </span>
+            <span v-else class="mt-1 inline-block text-xs text-gray-400">–</span>
+          </div>
+          <div class="flex shrink-0 gap-0.5">
+            <button @click="openNormenForm(n)" title="Bearbeiten" class="icon-btn hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 dark:hover:text-blue-400">
+              <i class="ph ph-pencil-simple text-base"></i>
+            </button>
+            <button @click="deleteNorm(n)" title="Löschen" class="icon-btn hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 dark:hover:text-red-400">
+              <i class="ph ph-trash text-base"></i>
+            </button>
+          </div>
+        </div>
+        <dl class="mt-2.5 grid grid-cols-3 gap-x-4 gap-y-1 text-xs">
+          <div>
+            <dt class="text-gray-400 dark:text-gray-500">Prüfintervall</dt>
+            <dd class="text-gray-700 dark:text-gray-300">{{ n.Pruefintervall_Monate ? n.Pruefintervall_Monate + ' Mon.' : '–' }}</dd>
+          </div>
+          <div>
+            <dt class="text-gray-400 dark:text-gray-500">Lebensdauer</dt>
+            <dd class="text-gray-700 dark:text-gray-300">{{ n.Max_Lebensdauer_Jahre ? n.Max_Lebensdauer_Jahre + ' J.' : '–' }}</dd>
+          </div>
+          <div>
+            <dt class="text-gray-400 dark:text-gray-500">Max. Wäschen</dt>
+            <dd class="text-gray-700 dark:text-gray-300">{{ n.Max_Waeschen ? n.Max_Waeschen + 'x' : '–' }}</dd>
+          </div>
+        </dl>
+        <p v-if="n.Beschreibung" class="mt-2 text-xs text-gray-500 dark:text-gray-400 line-clamp-3">{{ n.Beschreibung }}</p>
+      </div>
+    </div>
+
+    <!-- ── Desktop Tabelle ───────────────────────────────────────── -->
+    <div class="hidden md:block bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-x-auto">
       <table class="w-full text-sm">
         <thead class="bg-gray-50 dark:bg-gray-700/50">
           <tr>

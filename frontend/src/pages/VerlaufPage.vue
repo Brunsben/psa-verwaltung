@@ -42,7 +42,38 @@
     </div>
 
     <!-- Prüfungen Tab -->
-    <div v-if="verlaufTab === 'pruefungen'" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-x-auto">
+    <div v-if="verlaufTab === 'pruefungen'">
+    <!-- Mobile Karten -->
+    <div class="md:hidden space-y-2">
+      <div v-if="!pruefungenFiltered.length" class="text-center text-gray-400 dark:text-gray-500 text-sm py-8">
+        <div class="font-medium mb-1">Keine Prüfungen vorhanden</div>
+        <div class="text-xs">Prüfungen werden beim Erfassen automatisch hier eingetragen</div>
+      </div>
+      <div v-for="p in pruefungenFiltered" :key="p.Id"
+        class="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 p-4 shadow-sm">
+        <div class="flex items-start justify-between gap-2">
+          <div class="min-w-0 flex-1">
+            <div class="font-semibold text-gray-900 dark:text-white">{{ fmtDate(p.Datum) }}</div>
+            <div class="text-xs text-gray-600 dark:text-gray-400 mt-0.5">{{ p.Ausruestungstyp || '–' }}<span v-if="p.Seriennummer" class="font-mono text-gray-400 ml-1">{{ p.Seriennummer }}</span></div>
+          </div>
+          <span :class="p.Ergebnis === 'Bestanden'
+            ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400'
+            : p.Ergebnis === 'Nicht bestanden'
+            ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
+            : 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400'"
+            class="shrink-0 px-2 py-0.5 rounded-full text-xs font-semibold">
+            {{ p.Ergebnis || '–' }}
+          </span>
+        </div>
+        <dl class="mt-2.5 grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+          <div><dt class="text-gray-400 dark:text-gray-500">Kamerad</dt><dd class="text-gray-700 dark:text-gray-300">{{ p.Kamerad || '–' }}</dd></div>
+          <div><dt class="text-gray-400 dark:text-gray-500">Prüfer</dt><dd class="text-gray-700 dark:text-gray-300">{{ p.Pruefer || '–' }}</dd></div>
+          <div><dt class="text-gray-400 dark:text-gray-500">Nächste Prüfung</dt><dd class="text-gray-700 dark:text-gray-300">{{ fmtDate(p.Naechste_Pruefung) || '–' }}</dd></div>
+        </dl>
+      </div>
+    </div>
+    <!-- Desktop Tabelle -->
+    <div class="hidden md:block bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-x-auto">
       <table class="w-full text-sm">
         <thead>
           <tr class="border-b border-gray-100 dark:border-gray-700">
@@ -84,9 +115,31 @@
         </tbody>
       </table>
     </div>
+    </div>
 
     <!-- Wäschen Tab -->
-    <div v-if="verlaufTab === 'waesche'" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-x-auto">
+    <div v-if="verlaufTab === 'waesche'">
+    <!-- Mobile Karten -->
+    <div class="md:hidden space-y-2">
+      <div v-if="!waescheFiltered.length" class="text-center text-gray-400 dark:text-gray-500 text-sm py-8">
+        <div class="font-medium mb-1">Keine Wäschen vorhanden</div>
+        <div class="text-xs">Wäschen werden beim Erfassen automatisch hier eingetragen</div>
+      </div>
+      <div v-for="w in waescheFiltered" :key="w.Id"
+        class="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 p-4 shadow-sm">
+        <div class="min-w-0">
+          <div class="font-semibold text-gray-900 dark:text-white">{{ fmtDate(w.Datum) }}</div>
+          <div class="text-xs text-gray-600 dark:text-gray-400 mt-0.5">{{ w.Ausruestungstyp || '–' }}<span v-if="w.Seriennummer" class="font-mono text-gray-400 ml-1">{{ w.Seriennummer }}</span></div>
+        </div>
+        <dl class="mt-2.5 grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+          <div><dt class="text-gray-400 dark:text-gray-500">Kamerad</dt><dd class="text-gray-700 dark:text-gray-300">{{ w.Kamerad || '–' }}</dd></div>
+          <div><dt class="text-gray-400 dark:text-gray-500">Wäscheart</dt><dd class="text-gray-700 dark:text-gray-300">{{ w.Waescheart || '–' }}</dd></div>
+          <div v-if="w.Notizen" class="col-span-2"><dt class="text-gray-400 dark:text-gray-500">Notizen</dt><dd class="text-gray-700 dark:text-gray-300">{{ w.Notizen }}</dd></div>
+        </dl>
+      </div>
+    </div>
+    <!-- Desktop Tabelle -->
+    <div class="hidden md:block bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-x-auto">
       <table class="w-full text-sm">
         <thead>
           <tr class="border-b border-gray-100 dark:border-gray-700">
@@ -117,9 +170,44 @@
         </tbody>
       </table>
     </div>
+    </div>
 
     <!-- Ausgaben Tab -->
-    <div v-if="verlaufTab === 'ausgaben'" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-x-auto">
+    <div v-if="verlaufTab === 'ausgaben'">
+    <!-- Mobile Karten -->
+    <div class="md:hidden space-y-2">
+      <div v-if="!ausgabenFiltered.length" class="text-center text-gray-400 dark:text-gray-500 text-sm py-8">
+        <div class="font-medium mb-1">Keine Ausgaben vorhanden</div>
+        <div class="text-xs">Ausgaben werden beim Erfassen automatisch hier eingetragen</div>
+      </div>
+      <div v-for="ag in ausgabenFiltered" :key="ag.Id"
+        class="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 p-4 shadow-sm">
+        <div class="flex items-start justify-between gap-2">
+          <div class="min-w-0 flex-1">
+            <div class="font-semibold text-gray-900 dark:text-white">{{ ag.Ausruestungstyp || '–' }}</div>
+            <div v-if="ag.Seriennummer" class="text-xs font-mono text-gray-400 dark:text-gray-500 mt-0.5">{{ ag.Seriennummer }}</div>
+          </div>
+          <button v-if="!ag.Rueckgabedatum" @click="openRueckgabe(ag)"
+            class="shrink-0 text-xs px-2 py-1 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/40 font-medium whitespace-nowrap transition-colors">
+            <i class="ph ph-arrow-u-up-left"></i> Rückgabe
+          </button>
+        </div>
+        <dl class="mt-2.5 grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+          <div><dt class="text-gray-400 dark:text-gray-500">Kamerad</dt><dd class="text-gray-700 dark:text-gray-300">{{ ag.Kamerad || '–' }}</dd></div>
+          <div><dt class="text-gray-400 dark:text-gray-500">Ausgabe</dt><dd class="text-gray-700 dark:text-gray-300">{{ fmtDate(ag.Ausgabedatum) }}</dd></div>
+          <div>
+            <dt class="text-gray-400 dark:text-gray-500">Rückgabe</dt>
+            <dd>
+              <span v-if="ag.Rueckgabedatum" class="text-gray-700 dark:text-gray-300">{{ fmtDate(ag.Rueckgabedatum) }}</span>
+              <span v-else class="text-amber-500 dark:text-amber-400 font-semibold">noch ausgegeben</span>
+            </dd>
+          </div>
+          <div v-if="ag.Notizen" class="col-span-2"><dt class="text-gray-400 dark:text-gray-500">Notizen</dt><dd class="text-gray-700 dark:text-gray-300">{{ ag.Notizen }}</dd></div>
+        </dl>
+      </div>
+    </div>
+    <!-- Desktop Tabelle -->
+    <div class="hidden md:block bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-x-auto">
       <table class="w-full text-sm">
         <thead>
           <tr class="border-b border-gray-100 dark:border-gray-700">
@@ -159,6 +247,7 @@
           </tr>
         </tbody>
       </table>
+    </div>
     </div>
   </div>
 </template>

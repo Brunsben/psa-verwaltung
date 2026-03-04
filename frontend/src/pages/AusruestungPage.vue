@@ -42,7 +42,92 @@
       <button @click="selectedIds = []" class="btn-secondary text-xs py-1.5">Auswahl aufheben</button>
     </div>
 
-    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-x-auto">
+    <!-- ── Mobile Karten ────────────────────────────────────────── -->
+    <div class="md:hidden space-y-2">
+      <div v-if="!ausruestungFiltered.length" class="text-center text-gray-400 dark:text-gray-500 text-sm py-8">Keine Ausrüstung gefunden</div>
+      <div v-for="a in ausruestungFiltered" :key="a.Id"
+        :class="['bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 p-4 shadow-sm', selectedIds.includes(a.Id) ? 'border-teal-300 dark:border-teal-700 bg-teal-50/60 dark:bg-teal-900/10' : '']">
+        <div class="flex items-start gap-3">
+          <input type="checkbox" :checked="selectedIds.includes(a.Id)" @change="toggleSelect(a.Id)" class="mt-1 accent-teal-600 shrink-0" />
+          <div class="flex-1 min-w-0">
+            <!-- Primär: Typ + Wäschezähler -->
+            <div class="flex items-start justify-between gap-2">
+              <div class="min-w-0 flex-1">
+                <div class="font-semibold text-gray-900 dark:text-white">
+                  {{ typLabel(a.Ausruestungstyp, typen) }}
+                </div>
+                <template v-if="waeschenInfo(a.Id, a.Ausruestungstyp)" v-for="wi in [waeschenInfo(a.Id, a.Ausruestungstyp)]">
+                  <div :class="['text-xs mt-0.5 font-semibold', wi.count >= wi.max ? 'text-red-500 dark:text-red-400' : wi.count / wi.max >= 0.9 ? 'text-orange-500 dark:text-orange-400' : 'text-gray-400 dark:text-gray-500']">
+                    <i class="ph ph-washing-machine"></i> {{ wi.count }}/{{ wi.max }}
+                  </div>
+                </template>
+              </div>
+              <!-- Status-Select -->
+              <select :value="a.Status" @change="quickStatus(a, $event.target.value)"
+                :class="[statusBadge(a.Status), 'shrink-0 cursor-pointer border-0 appearance-none focus:outline-none focus:ring-1 focus:ring-red-400 pr-3 text-xs']"
+                title="Status ändern">
+                <option>Lager</option><option>Ausgegeben</option>
+                <option>Reinigung</option><option>In Reparatur</option><option>Ausgesondert</option>
+              </select>
+            </div>
+            <!-- Meta -->
+            <dl class="mt-2.5 grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+              <div><dt class="text-gray-400 dark:text-gray-500">Seriennr.</dt><dd class="text-gray-700 dark:text-gray-300 font-mono">{{ a.Seriennummer || '–' }}</dd></div>
+              <div><dt class="text-gray-400 dark:text-gray-500">Kamerad</dt><dd class="text-gray-700 dark:text-gray-300">{{ a.Kamerad || '–' }}</dd></div>
+              <div><dt class="text-gray-400 dark:text-gray-500">Größe</dt><dd class="text-gray-700 dark:text-gray-300">{{ a.Groesse || '–' }}</dd></div>
+              <div>
+                <dt class="text-gray-400 dark:text-gray-500">Nächste Prüfung</dt>
+                <dd>
+                  <template v-for="rel in [fmtDateRel(a.Naechste_Pruefung)]">
+                    <span v-if="!rel" class="text-gray-400 dark:text-gray-500">–</span>
+                    <template v-else>
+                      <div :class="[rel.cls, 'font-semibold leading-tight']">{{ rel.label }}</div>
+                      <div v-if="rel.sub" class="text-gray-400 dark:text-gray-500 leading-tight">{{ rel.sub }}</div>
+                    </template>
+                  </template>
+                </dd>
+              </div>
+              <div>
+                <dt class="text-gray-400 dark:text-gray-500">Lebensende</dt>
+                <dd>
+                  <template v-for="rel in [fmtDateRel(a.Lebensende_Datum)]">
+                    <span v-if="!rel" class="text-gray-400 dark:text-gray-500">–</span>
+                    <template v-else>
+                      <div :class="[rel.cls, 'font-semibold leading-tight']">{{ rel.label }}</div>
+                      <div v-if="rel.sub" class="text-gray-400 dark:text-gray-500 leading-tight">{{ rel.sub }}</div>
+                    </template>
+                  </template>
+                </dd>
+              </div>
+            </dl>
+            <!-- Aktionen -->
+            <div class="flex items-center gap-0.5 mt-3 pt-2.5 border-t border-gray-100 dark:border-gray-700">
+              <button @click="openAusruestungDetail(a)" title="Detail / History" class="icon-btn hover:text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/20 dark:hover:text-purple-400">
+                <i class="ph ph-list-magnifying-glass text-base"></i>
+              </button>
+              <button @click="openAusgabe(a)" title="Ausgabe / Rückgabe" class="icon-btn hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 dark:hover:text-blue-400">
+                <i class="ph ph-sign-out text-base"></i>
+              </button>
+              <button @click="openPruefung(a)" title="Prüfung erfassen" class="icon-btn hover:text-orange-500 hover:bg-orange-50 dark:hover:bg-orange-900/20 dark:hover:text-orange-400">
+                <i class="ph ph-clipboard-text text-base"></i>
+              </button>
+              <button @click="openWaesche(a)" title="Wäsche erfassen" class="icon-btn hover:text-teal-600 hover:bg-teal-50 dark:hover:bg-teal-900/20 dark:hover:text-teal-400">
+                <i class="ph ph-washing-machine text-base"></i>
+              </button>
+              <button @click="openAusruestungForm(a)" title="Bearbeiten" class="icon-btn hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 dark:hover:text-blue-400">
+                <i class="ph ph-pencil-simple text-base"></i>
+              </button>
+              <button @click="deleteAusruestung(a)" title="Löschen" class="icon-btn hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 dark:hover:text-red-400">
+                <i class="ph ph-trash text-base"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Desktop Tabelle ───────────────────────────────────────── -->
+    <div class="hidden md:block bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-x-auto">
       <table class="w-full text-sm">
         <thead>
           <tr class="border-b border-gray-100 dark:border-gray-700">
