@@ -11,23 +11,23 @@
 
     <!-- Tabs + Filter -->
     <div class="flex flex-wrap gap-3 mb-4 items-center">
-      <div class="flex overflow-x-auto bg-gray-100 dark:bg-gray-800 rounded-lg p-1 gap-1 shrink-0">
+      <div class="flex overflow-x-auto w-full sm:w-auto bg-gray-100 dark:bg-gray-800 rounded-lg p-1 gap-1">
         <button @click="verlaufTab = 'pruefungen'"
-          :class="['px-3 py-1.5 rounded-md text-sm font-medium transition-colors',
+          :class="['px-3 py-1.5 rounded-md text-sm font-medium transition-colors whitespace-nowrap',
             verlaufTab === 'pruefungen'
               ? 'bg-white dark:bg-gray-700 text-red-700 dark:text-red-400 shadow-sm'
               : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100']">
           <i class="ph ph-clipboard-text"></i> Prüfungen ({{ pruefungenFiltered.length }})
         </button>
         <button @click="verlaufTab = 'waesche'"
-          :class="['px-3 py-1.5 rounded-md text-sm font-medium transition-colors',
+          :class="['px-3 py-1.5 rounded-md text-sm font-medium transition-colors whitespace-nowrap',
             verlaufTab === 'waesche'
               ? 'bg-white dark:bg-gray-700 text-red-700 dark:text-red-400 shadow-sm'
               : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100']">
           <i class="ph ph-washing-machine"></i> Wäschen ({{ waescheFiltered.length }})
         </button>
         <button @click="verlaufTab = 'ausgaben'"
-          :class="['px-3 py-1.5 rounded-md text-sm font-medium transition-colors',
+          :class="['px-3 py-1.5 rounded-md text-sm font-medium transition-colors whitespace-nowrap',
             verlaufTab === 'ausgaben'
               ? 'bg-white dark:bg-gray-700 text-red-700 dark:text-red-400 shadow-sm'
               : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100']">
