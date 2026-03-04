@@ -11,7 +11,7 @@
 
     <!-- Tabs + Filter -->
     <div class="flex flex-wrap gap-3 mb-4 items-center">
-      <div class="flex bg-gray-100 dark:bg-gray-800 rounded-lg p-1 gap-1">
+      <div class="flex overflow-x-auto bg-gray-100 dark:bg-gray-800 rounded-lg p-1 gap-1 shrink-0">
         <button @click="verlaufTab = 'pruefungen'"
           :class="['px-3 py-1.5 rounded-md text-sm font-medium transition-colors',
             verlaufTab === 'pruefungen'

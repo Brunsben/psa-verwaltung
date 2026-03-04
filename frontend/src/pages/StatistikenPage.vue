@@ -53,7 +53,7 @@
           </div>
 
           <!-- Size Table (wenn Größen-Mapping vorhanden) -->
-          <div v-if="stat.hatGroessen" class="text-sm">
+          <div v-if="stat.hatGroessen" class="text-sm overflow-x-auto">
             <table class="w-full">
               <thead>
                 <tr class="text-xs text-gray-400 dark:text-gray-500 bg-gray-50 dark:bg-gray-700/40">

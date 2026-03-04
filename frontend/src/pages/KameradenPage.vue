@@ -15,9 +15,8 @@
 
     <div class="flex gap-3 mb-4 flex-wrap items-center">
       <input v-model="filterKameraden" placeholder="Name suchen…"
-        class="border border-gray-200 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-500
-               rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-400 focus:border-transparent"
-        style="width:14rem" />
+        class="w-full sm:w-56 border border-gray-200 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-500
+               rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-400 focus:border-transparent" />
       <label class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 ml-2 cursor-pointer select-none">
         <input type="checkbox" v-model="filterKameradenNurAktiv" class="accent-red-600" />
         Nur aktive
@@ -64,7 +63,7 @@
               </span>
             </td>
             <td class="px-4 py-2">
-              <div class="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+              <div class="flex items-center justify-end gap-1 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                 <button @click.stop="openKameradenForm(k)" title="Bearbeiten" class="icon-btn hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 dark:hover:text-blue-400">
                   <i class="ph ph-pencil-simple text-base"></i>
                 </button>

@@ -15,6 +15,8 @@ export const page        = ref('dashboard')
 export const sidebarOpen = ref(false)
 export const loading     = ref(false)
 export const toast       = reactive({ show: false, msg: '', type: 'ok' })
+export const isOffline        = ref(false)
+export const offlineTimestamp = ref<number | null>(null)
 
 export function showToast(msg: string, type = 'ok') {
   toast.msg = msg; toast.type = type; toast.show = true
@@ -22,6 +24,7 @@ export function showToast(msg: string, type = 'ok') {
 }
 
 export async function load(fn: () => Promise<void>) {
+  if (isOffline.value) { showToast('Nicht möglich: App ist offline', 'error'); return }
   loading.value = true
   try { await fn() }
   catch (e) { showToast(e instanceof Error ? e.message : String(e), 'error') }
@@ -109,9 +112,6 @@ export const changelog    = ref<ChangelogEntry[]>([])
 export const benutzer     = ref<Benutzer[]>([])
 
 // ── Offline ────────────────────────────────────────────────────────────────
-export const isOffline        = ref(false)
-export const offlineTimestamp = ref<number | null>(null)
-
 export function saveOfflineSnapshot() {
   try {
     localStorage.setItem('psa_offline_data', JSON.stringify({

@@ -72,6 +72,9 @@
       <!-- Offline Banner -->
       <OfflineBanner />
 
+      <!-- PWA Install Banner -->
+      <PwaInstallBanner />
+
       <!-- Hauptinhalt -->
       <main :class="['content-main min-h-screen bg-gray-50 dark:bg-gray-900 md:pl-56 transition-all']">
         <div class="px-4 py-6 max-w-7xl">
@@ -115,6 +118,7 @@ import { page, loggedIn, loginForm, loading, doLogin,
 import Sidebar from './components/layout/Sidebar.vue'
 import MobileHeader from './components/layout/MobileHeader.vue'
 import OfflineBanner from './components/layout/OfflineBanner.vue'
+import PwaInstallBanner from './components/layout/PwaInstallBanner.vue'
 import Toast from './components/ui/Toast.vue'
 import Loader from './components/ui/Loader.vue'
 

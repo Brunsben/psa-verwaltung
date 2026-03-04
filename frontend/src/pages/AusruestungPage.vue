@@ -11,9 +11,8 @@
     <!-- Filter + Export -->
     <div class="flex gap-3 mb-4 flex-wrap items-center">
       <input v-model="filterAusruestung" placeholder="Suche…"
-        class="border border-gray-200 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-500
-               rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-400 focus:border-transparent"
-        style="width:12rem" />
+        class="w-full sm:w-48 border border-gray-200 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-500
+               rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-400 focus:border-transparent" />
       <select v-model="filterTyp"
         class="border border-gray-200 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100
                rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-400 focus:border-transparent">
@@ -32,7 +31,7 @@
     </div>
 
     <!-- Massenauswahl-Aktionsleiste -->
-    <div v-if="selectedIds.length" class="mb-3 flex items-center gap-3 bg-teal-50 dark:bg-teal-900/20 border border-teal-200 dark:border-teal-800 rounded-xl px-4 py-2.5">
+    <div v-if="selectedIds.length" class="mb-3 flex flex-wrap items-center gap-3 bg-teal-50 dark:bg-teal-900/20 border border-teal-200 dark:border-teal-800 rounded-xl px-4 py-2.5">
       <span class="text-sm font-semibold text-teal-700 dark:text-teal-400">{{ selectedIds.length }} ausgewählt</span>
       <button @click="openMassenWaesche" class="btn-primary bg-teal-600 hover:bg-teal-700 text-sm py-1.5">
         <i class="ph ph-washing-machine"></i> Massenwäsche
@@ -104,7 +103,7 @@
               </template>
             </td>
             <td class="px-4 py-2">
-              <div class="flex items-center justify-end gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+              <div class="flex items-center justify-end gap-0.5 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                 <button @click="openAusruestungDetail(a)" title="Detail / History" class="icon-btn hover:text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/20 dark:hover:text-purple-400">
                   <i class="ph ph-list-magnifying-glass text-base"></i>
                 </button>
