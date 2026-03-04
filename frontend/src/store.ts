@@ -289,7 +289,10 @@ export const ausruestungFiltered = computed(() => {
 export const ausgabenFiltered = computed(() =>
   [...ausgaben.value]
     .sort((a, b) => new Date(b.Ausgabedatum || 0).getTime() - new Date(a.Ausgabedatum || 0).getTime())
-    .filter(ag => !filterVerlaufKamerad.value || ag.Kamerad === filterVerlaufKamerad.value)
+    .filter(ag => {
+      if (myKameradName.value) return ag.Kamerad === myKameradName.value
+      return !filterVerlaufKamerad.value || ag.Kamerad === filterVerlaufKamerad.value
+    })
 )
 
 export const pruefungenByAusruestung = computed(() => {

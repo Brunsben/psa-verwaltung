@@ -34,7 +34,7 @@
           <i class="ph ph-sign-out"></i><span class="hidden sm:inline"> Ausgaben</span> ({{ ausgabenFiltered.length }})
         </button>
       </div>
-      <select v-model="filterVerlaufKamerad"
+      <select v-if="canEdit" v-model="filterVerlaufKamerad"
         class="border border-gray-200 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-400 focus:border-transparent">
         <option value="">Alle Kameraden</option>
         <option v-for="k in kameradenliste" :key="k.Id" :value="k.label">{{ k.label }}</option>
@@ -187,7 +187,7 @@
             <div class="font-semibold text-gray-900 dark:text-white">{{ ag.Ausruestungstyp || '–' }}</div>
             <div v-if="ag.Seriennummer" class="text-xs font-mono text-gray-400 dark:text-gray-500 mt-0.5">{{ ag.Seriennummer }}</div>
           </div>
-          <button v-if="!ag.Rueckgabedatum" @click="openRueckgabe(ag)"
+          <button v-if="canEdit && !ag.Rueckgabedatum" @click="openRueckgabe(ag)"
             class="shrink-0 text-xs px-2 py-1 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/40 font-medium whitespace-nowrap transition-colors">
             <i class="ph ph-arrow-u-up-left"></i> Rückgabe
           </button>
@@ -233,7 +233,7 @@
             </td>
             <td class="px-4 py-2.5 text-gray-500 dark:text-gray-400 text-xs">{{ ag.Notizen || '' }}</td>
             <td class="px-4 py-2.5">
-              <button v-if="!ag.Rueckgabedatum" @click="openRueckgabe(ag)"
+              <button v-if="canEdit && !ag.Rueckgabedatum" @click="openRueckgabe(ag)"
                 class="text-xs px-2 py-1 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/40 font-medium whitespace-nowrap transition-colors">
                 <i class="ph ph-arrow-u-up-left"></i> Rückgabe
               </button>
@@ -257,7 +257,7 @@ import {
   pruefungen, waescheListe, ausgaben,
   pruefungenFiltered, waescheFiltered, ausgabenFiltered,
   verlaufTab, filterVerlaufKamerad, kameradenliste,
-  openRueckgabe,
+  openRueckgabe, canEdit,
 } from '../store.js'
 import { fmtDate } from '../utils/formatters.js'
 </script>

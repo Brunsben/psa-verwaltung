@@ -5,7 +5,7 @@
         <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Ausrüstung</h1>
         <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">{{ ausruestung.length }} Stücke &nbsp;·&nbsp; {{ stats.ausgegeben }} ausgegeben</p>
       </div>
-      <button @click="openAusruestungForm()" class="btn-primary">+ Neu</button>
+      <button v-if="canEdit" @click="openAusruestungForm()" class="btn-primary">+ Neu</button>
     </div>
 
     <!-- Filter + Export -->
@@ -31,7 +31,7 @@
     </div>
 
     <!-- Massenauswahl-Aktionsleiste -->
-    <div v-if="selectedIds.length" class="mb-3 flex flex-wrap items-center gap-3 bg-teal-50 dark:bg-teal-900/20 border border-teal-200 dark:border-teal-800 rounded-xl px-4 py-2.5">
+    <div v-if="canEdit && selectedIds.length" class="mb-3 flex flex-wrap items-center gap-3 bg-teal-50 dark:bg-teal-900/20 border border-teal-200 dark:border-teal-800 rounded-xl px-4 py-2.5">
       <span class="text-sm font-semibold text-teal-700 dark:text-teal-400">{{ selectedIds.length }} ausgewählt</span>
       <button @click="openMassenWaesche" class="btn-primary bg-teal-600 hover:bg-teal-700 text-sm py-1.5">
         <i class="ph ph-washing-machine"></i> Massenwäsche
@@ -63,9 +63,10 @@
                 </template>
               </div>
               <!-- Status-Select -->
-              <select :value="a.Status" @change="quickStatus(a, $event.target.value)"
-                :class="[statusBadge(a.Status), 'shrink-0 cursor-pointer border-0 appearance-none focus:outline-none focus:ring-1 focus:ring-red-400 pr-3 text-xs']"
-                title="Status ändern">
+              <select :value="a.Status" @change="canEdit && quickStatus(a, $event.target.value)"
+                :class="[statusBadge(a.Status), 'shrink-0 border-0 appearance-none focus:outline-none pr-3 text-xs', canEdit ? 'cursor-pointer focus:ring-1 focus:ring-red-400' : 'cursor-default pointer-events-none']"
+                :disabled="!canEdit"
+                title="Status">
                 <option>Lager</option><option>Ausgegeben</option>
                 <option>Reinigung</option><option>In Reparatur</option><option>Ausgesondert</option>
               </select>
@@ -105,21 +106,23 @@
               <button @click="openAusruestungDetail(a)" title="Detail / History" class="icon-btn hover:text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/20 dark:hover:text-purple-400">
                 <i class="ph ph-list-magnifying-glass text-base"></i>
               </button>
-              <button @click="openAusgabe(a)" title="Ausgabe / Rückgabe" class="icon-btn hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 dark:hover:text-blue-400">
-                <i class="ph ph-sign-out text-base"></i>
-              </button>
-              <button @click="openPruefung(a)" title="Prüfung erfassen" class="icon-btn hover:text-orange-500 hover:bg-orange-50 dark:hover:bg-orange-900/20 dark:hover:text-orange-400">
-                <i class="ph ph-clipboard-text text-base"></i>
-              </button>
-              <button @click="openWaesche(a)" title="Wäsche erfassen" class="icon-btn hover:text-teal-600 hover:bg-teal-50 dark:hover:bg-teal-900/20 dark:hover:text-teal-400">
-                <i class="ph ph-washing-machine text-base"></i>
-              </button>
-              <button @click="openAusruestungForm(a)" title="Bearbeiten" class="icon-btn hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 dark:hover:text-blue-400">
-                <i class="ph ph-pencil-simple text-base"></i>
-              </button>
-              <button @click="deleteAusruestung(a)" title="Löschen" class="icon-btn hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 dark:hover:text-red-400">
-                <i class="ph ph-trash text-base"></i>
-              </button>
+              <template v-if="canEdit">
+                <button @click="openAusgabe(a)" title="Ausgabe / Rückgabe" class="icon-btn hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 dark:hover:text-blue-400">
+                  <i class="ph ph-sign-out text-base"></i>
+                </button>
+                <button @click="openPruefung(a)" title="Prüfung erfassen" class="icon-btn hover:text-orange-500 hover:bg-orange-50 dark:hover:bg-orange-900/20 dark:hover:text-orange-400">
+                  <i class="ph ph-clipboard-text text-base"></i>
+                </button>
+                <button @click="openWaesche(a)" title="Wäsche erfassen" class="icon-btn hover:text-teal-600 hover:bg-teal-50 dark:hover:bg-teal-900/20 dark:hover:text-teal-400">
+                  <i class="ph ph-washing-machine text-base"></i>
+                </button>
+                <button @click="openAusruestungForm(a)" title="Bearbeiten" class="icon-btn hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 dark:hover:text-blue-400">
+                  <i class="ph ph-pencil-simple text-base"></i>
+                </button>
+                <button @click="deleteAusruestung(a)" title="Löschen" class="icon-btn hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 dark:hover:text-red-400">
+                  <i class="ph ph-trash text-base"></i>
+                </button>
+              </template>
             </div>
           </div>
         </div>
@@ -192,21 +195,23 @@
                 <button @click="openAusruestungDetail(a)" title="Detail / History" class="icon-btn hover:text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/20 dark:hover:text-purple-400">
                   <i class="ph ph-list-magnifying-glass text-base"></i>
                 </button>
-                <button @click="openAusgabe(a)" title="Ausgabe / Rückgabe" class="icon-btn hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 dark:hover:text-blue-400">
-                  <i class="ph ph-sign-out text-base"></i>
-                </button>
-                <button @click="openPruefung(a)" title="Prüfung erfassen" class="icon-btn hover:text-orange-500 hover:bg-orange-50 dark:hover:bg-orange-900/20 dark:hover:text-orange-400">
-                  <i class="ph ph-clipboard-text text-base"></i>
-                </button>
-                <button @click="openWaesche(a)" title="Wäsche erfassen" class="icon-btn hover:text-teal-600 hover:bg-teal-50 dark:hover:bg-teal-900/20 dark:hover:text-teal-400">
-                  <i class="ph ph-washing-machine text-base"></i>
-                </button>
-                <button @click="openAusruestungForm(a)" title="Bearbeiten" class="icon-btn hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 dark:hover:text-blue-400">
-                  <i class="ph ph-pencil-simple text-base"></i>
-                </button>
-                <button @click="deleteAusruestung(a)" title="Löschen" class="icon-btn hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 dark:hover:text-red-400">
-                  <i class="ph ph-trash text-base"></i>
-                </button>
+                <template v-if="canEdit">
+                  <button @click="openAusgabe(a)" title="Ausgabe / Rückgabe" class="icon-btn hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 dark:hover:text-blue-400">
+                    <i class="ph ph-sign-out text-base"></i>
+                  </button>
+                  <button @click="openPruefung(a)" title="Prüfung erfassen" class="icon-btn hover:text-orange-500 hover:bg-orange-50 dark:hover:bg-orange-900/20 dark:hover:text-orange-400">
+                    <i class="ph ph-clipboard-text text-base"></i>
+                  </button>
+                  <button @click="openWaesche(a)" title="Wäsche erfassen" class="icon-btn hover:text-teal-600 hover:bg-teal-50 dark:hover:bg-teal-900/20 dark:hover:text-teal-400">
+                    <i class="ph ph-washing-machine text-base"></i>
+                  </button>
+                  <button @click="openAusruestungForm(a)" title="Bearbeiten" class="icon-btn hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 dark:hover:text-blue-400">
+                    <i class="ph ph-pencil-simple text-base"></i>
+                  </button>
+                  <button @click="deleteAusruestung(a)" title="Löschen" class="icon-btn hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 dark:hover:text-red-400">
+                    <i class="ph ph-trash text-base"></i>
+                  </button>
+                </template>
               </div>
             </td>
           </tr>
@@ -227,7 +232,7 @@ import {
   sortBy, toggleAlle, toggleSelect, waeschenInfo, quickStatus,
   openAusruestungForm, openAusruestungDetail, deleteAusruestung,
   openAusgabe, openPruefung, openWaesche,
-  openMassenWaesche, openMassenPruefung, showToast,
+  openMassenWaesche, openMassenPruefung, showToast, canEdit,
 } from '../store.js'
 import { fmtDateRel, statusBadge, typLabel } from '../utils/formatters.js'
 import { exportCSV } from '../utils/pdf.js'
