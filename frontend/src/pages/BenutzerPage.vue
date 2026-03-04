@@ -5,7 +5,7 @@
         <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Benutzerverwaltung</h1>
         <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">{{ benutzer.length }} Benutzer</p>
       </div>
-      <button @click="openBenutzerForm()" class="btn-primary whitespace-nowrap shrink-0">+ Neuer Benutzer</button>
+      <button @click="openBenutzerForm()" class="btn-primary shrink-0">+ Neu</button>
     </div>
     <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-x-auto">
       <table class="w-full text-sm">
