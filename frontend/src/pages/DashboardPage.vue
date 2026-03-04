@@ -73,9 +73,37 @@
       <i class="ph ph-check-circle text-lg"></i>
       Keine dringenden Meldungen
     </div>
+
+    <!-- Backup-Status (nur Admin) -->
+    <div v-if="isAdmin" class="mt-6">
+      <h2 class="text-base font-semibold mb-3 text-gray-700 dark:text-gray-300">Backup-Status</h2>
+      <div v-if="!backupEntries.length"
+        class="bg-gray-50 dark:bg-gray-800 rounded-xl p-4 text-sm text-gray-400 flex items-center gap-2">
+        <i class="ph ph-database text-lg"></i>
+        Noch keine Backup-Einträge vorhanden
+        <span class="text-xs">(Backup-Workflow muss Einträge in Changelog schreiben)</span>
+      </div>
+      <div v-else class="space-y-1.5">
+        <div v-for="entry in backupEntries" :key="entry.Id"
+          class="flex items-center gap-3 bg-white dark:bg-gray-800 rounded-xl px-4 py-3 shadow-sm border border-gray-100 dark:border-gray-700">
+          <div :class="['w-7 h-7 rounded-lg flex items-center justify-center shrink-0',
+            entry.Aktion === 'Erfolg' ? 'bg-emerald-50 dark:bg-emerald-900/20' : 'bg-red-50 dark:bg-red-900/20']">
+            <i :class="['text-sm', entry.Aktion === 'Erfolg'
+              ? 'ph ph-check-circle text-emerald-500 dark:text-emerald-400'
+              : 'ph ph-warning-circle text-red-500 dark:text-red-400']"></i>
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="text-sm font-medium text-gray-800 dark:text-gray-200">{{ entry.Aktion }}</div>
+            <div v-if="entry.Details" class="text-xs text-gray-400 truncate">{{ entry.Details }}</div>
+          </div>
+          <div class="text-xs text-gray-400 shrink-0">{{ fmtDate(entry.Zeitpunkt) }}</div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { page, warnungen, stats, filterStatus } from '../store.js'
+import { page, warnungen, stats, filterStatus, isAdmin, backupEntries } from '../store.js'
+import { fmtDate } from '../utils/formatters.js'
 </script>

@@ -27,6 +27,7 @@
         <option>Reinigung</option><option>In Reparatur</option><option>Ausgesondert</option>
         <option value="Prüfung fällig">Prüfung fällig (≤30 Tage)</option>
       </select>
+      <button v-if="canEdit" @click="openAusruestungCsvImport" class="btn-secondary text-xs">↑ CSV Import</button>
       <button @click="onExportCSV" class="btn-secondary ml-auto text-xs">↓ CSV Export</button>
     </div>
 
@@ -233,6 +234,7 @@ import {
   openAusruestungForm, openAusruestungDetail, deleteAusruestung,
   openAusgabe, openPruefung, openWaesche,
   openMassenWaesche, openMassenPruefung, showToast, canEdit,
+  openAusruestungCsvImport,
 } from '../store.js'
 import { fmtDateRel, statusBadge, typLabel } from '../utils/formatters.js'
 import { exportCSV } from '../utils/pdf.js'

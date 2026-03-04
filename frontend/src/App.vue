@@ -5,7 +5,7 @@
       <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 w-full max-w-sm border border-gray-100 dark:border-gray-700">
         <div class="text-center mb-6">
           <span class="text-4xl">🔥</span>
-          <h1 class="text-xl font-bold text-gray-900 dark:text-white mt-2">FF Wietmarschen</h1>
+          <h1 class="text-xl font-bold text-gray-900 dark:text-white mt-2">{{ feuerwehrName }}</h1>
           <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">PSA-Verwaltung</p>
         </div>
         <div class="grid gap-3">
@@ -89,6 +89,7 @@
       <KameradenDetail />
       <CsvImport />
       <AusruestungForm />
+      <AusruestungCsvImport />
       <AusruestungDetail />
       <AusgabeForm />
       <RueckgabeForm />
@@ -99,6 +100,7 @@
       <TypenForm />
       <NormenForm />
       <BenutzerForm />
+      <PasswortForm />
       <QrScanner ref="qrScannerRef" />
     </template>
 
@@ -112,7 +114,7 @@
 import { ref, computed, nextTick, onMounted } from 'vue'
 import { page, loggedIn, loginForm, loading, doLogin,
          needsSetup, setupForm, doSetup,
-         modal, fetchAll } from './store.js'
+         modal, fetchAll, feuerwehrName } from './store.js'
 
 // Layout
 import Sidebar from './components/layout/Sidebar.vue'
@@ -127,6 +129,7 @@ import KameradenForm from './components/kameraden/KameradenForm.vue'
 import KameradenDetail from './components/kameraden/KameradenDetail.vue'
 import CsvImport from './components/kameraden/CsvImport.vue'
 import AusruestungForm from './components/ausruestung/AusruestungForm.vue'
+import AusruestungCsvImport from './components/ausruestung/AusruestungCsvImport.vue'
 import AusruestungDetail from './components/ausruestung/AusruestungDetail.vue'
 import AusgabeForm from './components/ausruestung/AusgabeForm.vue'
 import RueckgabeForm from './components/ausruestung/RueckgabeForm.vue'
@@ -137,10 +140,12 @@ import MassenPruefung from './components/ausruestung/MassenPruefung.vue'
 import TypenForm from './components/typen/TypenForm.vue'
 import NormenForm from './components/normen/NormenForm.vue'
 import BenutzerForm from './components/benutzer/BenutzerForm.vue'
+import PasswortForm from './components/benutzer/PasswortForm.vue'
 import QrScanner from './components/qr/QrScanner.vue'
 
 // Pages
 import DashboardPage from './pages/DashboardPage.vue'
+import UserDashboardPage from './pages/UserDashboardPage.vue'
 import WarnungenPage from './pages/WarnungenPage.vue'
 import KameradenPage from './pages/KameradenPage.vue'
 import AusruestungPage from './pages/AusruestungPage.vue'
@@ -153,6 +158,7 @@ import BenutzerPage from './pages/BenutzerPage.vue'
 
 const pageComponents = {
   dashboard: DashboardPage,
+  'mein-dashboard': UserDashboardPage,
   warnungen: WarnungenPage,
   kameraden: KameradenPage,
   ausruestung: AusruestungPage,

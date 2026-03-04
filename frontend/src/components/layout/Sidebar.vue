@@ -6,7 +6,7 @@
     <div class="flex items-center gap-3 px-5 py-5 border-b border-gray-100 dark:border-gray-800">
       <span class="text-xl">🔥</span>
       <div>
-        <div class="font-bold text-gray-900 dark:text-white text-sm leading-tight">FF Wietmarschen</div>
+        <div class="font-bold text-gray-900 dark:text-white text-sm leading-tight">{{ feuerwehrName }}</div>
         <div class="text-xs text-gray-400 dark:text-gray-500">PSA-Verwaltung</div>
       </div>
     </div>
@@ -54,6 +54,11 @@
           {{ currentUser.Rolle }}
         </span>
       </div>
+      <button @click="openPasswortForm"
+        class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100 transition-colors">
+        <i class="ph ph-key text-lg flex-shrink-0"></i>
+        Passwort ändern
+      </button>
       <button @click="doLogout"
         class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-gray-500 dark:text-gray-400 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400 transition-colors">
         <i class="ph ph-sign-out text-lg flex-shrink-0"></i>
@@ -70,7 +75,7 @@
 <script setup>
 import {
   page, sidebarOpen, visiblePages, warnungen,
-  darkMode, toggleDark, currentUser, doLogout,
+  darkMode, toggleDark, currentUser, doLogout, openPasswortForm, feuerwehrName,
 } from '../../store.js'
 
 defineEmits(['openQr'])

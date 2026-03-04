@@ -29,7 +29,7 @@ export function exportPDF(kamerad: Kamerad, store: PdfStore): void {
   doc.text('PSA-Nachweis', 14, y)
   doc.setFontSize(10)
   doc.setTextColor(107, 114, 128)
-  doc.text('FF Wietmarschen', 14, y + 7)
+  doc.text(window.CONFIG.feuerwehrName || 'FF Wietmarschen', 14, y + 7)
   y += 20
 
   // Kamerad-Info
@@ -130,7 +130,7 @@ export function exportPDF(kamerad: Kamerad, store: PdfStore): void {
   // Footer
   doc.setFontSize(7)
   doc.setTextColor(156, 163, 175)
-  doc.text(`PSA-Verwaltung · FF Wietmarschen · ${new Date().toLocaleDateString('de-DE')} ${new Date().toLocaleTimeString('de-DE')}`, 14, 290)
+  doc.text(`PSA-Verwaltung · ${window.CONFIG.feuerwehrName || 'FF Wietmarschen'} · ${new Date().toLocaleDateString('de-DE')} ${new Date().toLocaleTimeString('de-DE')}`, 14, 290)
 
   doc.save(`PSA-Nachweis_${label.replace(/\s+/g, '_')}_${todayStr()}.pdf`)
   store.showToast('PDF erstellt')

@@ -4,10 +4,10 @@
       class="p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
       <i class="ph ph-list text-xl"></i>
     </button>
-    <span class="font-semibold text-gray-900 dark:text-white text-sm">FF Wietmarschen · PSA</span>
+    <span class="font-semibold text-gray-900 dark:text-white text-sm">{{ feuerwehrName }} · PSA</span>
   </header>
 </template>
 
 <script setup>
-import { sidebarOpen } from '../../store.js'
+import { sidebarOpen, feuerwehrName } from '../../store.js'
 </script>

@@ -8,7 +8,7 @@ import { getAll, post, patch, del, TABLES,
          authenticate, isInitialized, createAdmin,
          setJwt, clearJwt } from './api/index.js'
 import { fmtDate, todayStr } from './utils/formatters.js'
-import type { Kamerad, Ausruestungstyp, Ausruestungstueck, Ausgabe, Pruefung, Waesche, Norm, Benutzer, ChangelogEntry, AppUser, CsvRow, GroesseKatEntry, Warnung } from './types/index.js'
+import type { Kamerad, Ausruestungstyp, Ausruestungstueck, Ausgabe, Pruefung, Waesche, Norm, Benutzer, ChangelogEntry, AppUser, CsvRow, AusruestungCsvRow, GroesseKatEntry, Warnung } from './types/index.js'
 
 // ── UI-Zustand ─────────────────────────────────────────────────────────────
 export const page        = ref('dashboard')
@@ -55,6 +55,8 @@ export const loginForm   = reactive({ username: '', pin: '', error: '' })
 export const needsSetup  = ref(false)
 export const setupForm   = reactive({ username: '', pin: '', pinConfirm: '', error: '' })
 
+export const feuerwehrName = window.CONFIG.feuerwehrName || 'FF Wietmarschen'
+
 export const userRole      = computed(() => (currentUser.value?.Rolle || '').toLowerCase())
 export const isAdmin       = computed(() => userRole.value === 'admin')
 export const isKleiderwart = computed(() => ['admin', 'kleiderwart'].includes(userRole.value))
@@ -83,16 +85,17 @@ export const DIENSTGRADE = [
 
 // ── Seitennavigation ───────────────────────────────────────────────────────
 export const pages = [
-  { id: 'dashboard',   label: 'Dashboard',    icon: '<i class="ph ph-gauge"></i>',                   roles: ['Admin','Kleiderwart'] },
-  { id: 'kameraden',   label: 'Kameraden',    icon: '<i class="ph ph-users-three"></i>',             roles: ['Admin','Kleiderwart'] },
-  { id: 'ausruestung', label: 'Ausrüstung',   icon: '<i class="ph ph-t-shirt"></i>',                 roles: ['Admin','Kleiderwart','User'] },
-  { id: 'typen',       label: 'Typen',        icon: '<i class="ph ph-tag"></i>',                     roles: ['Admin','Kleiderwart'] },
-  { id: 'verlauf',     label: 'Verlauf',      icon: '<i class="ph ph-clock-counter-clockwise"></i>', roles: ['Admin','Kleiderwart','User'] },
-  { id: 'normen',      label: 'Normen',       icon: '<i class="ph ph-seal-check"></i>',              roles: ['Admin','Kleiderwart'] },
-  { id: 'warnungen',   label: 'Warnungen',    icon: '<i class="ph ph-bell-ringing"></i>',            roles: ['Admin','Kleiderwart'] },
-  { id: 'statistiken', label: 'Statistiken',  icon: '<i class="ph ph-chart-bar"></i>',               roles: ['Admin','Kleiderwart'] },
-  { id: 'changelog',   label: 'Changelog',    icon: '<i class="ph ph-clock-counter-clockwise"></i>', roles: ['Admin','Kleiderwart'] },
-  { id: 'benutzer',    label: 'Benutzer',     icon: '<i class="ph ph-user-gear"></i>',               roles: ['Admin'] },
+  { id: 'dashboard',       label: 'Dashboard',       icon: '<i class="ph ph-gauge"></i>',                   roles: ['Admin','Kleiderwart'] },
+  { id: 'mein-dashboard',  label: 'Mein Dashboard',  icon: '<i class="ph ph-house"></i>',                   roles: ['User'] },
+  { id: 'kameraden',       label: 'Kameraden',       icon: '<i class="ph ph-users-three"></i>',             roles: ['Admin','Kleiderwart'] },
+  { id: 'ausruestung',     label: 'Ausrüstung',      icon: '<i class="ph ph-t-shirt"></i>',                 roles: ['Admin','Kleiderwart','User'] },
+  { id: 'typen',           label: 'Typen',           icon: '<i class="ph ph-tag"></i>',                     roles: ['Admin','Kleiderwart'] },
+  { id: 'verlauf',         label: 'Verlauf',         icon: '<i class="ph ph-clock-counter-clockwise"></i>', roles: ['Admin','Kleiderwart','User'] },
+  { id: 'normen',          label: 'Normen',          icon: '<i class="ph ph-seal-check"></i>',              roles: ['Admin','Kleiderwart'] },
+  { id: 'warnungen',       label: 'Warnungen',       icon: '<i class="ph ph-bell-ringing"></i>',            roles: ['Admin','Kleiderwart'] },
+  { id: 'statistiken',     label: 'Statistiken',     icon: '<i class="ph ph-chart-bar"></i>',               roles: ['Admin','Kleiderwart'] },
+  { id: 'changelog',       label: 'Changelog',       icon: '<i class="ph ph-clock-counter-clockwise"></i>', roles: ['Admin','Kleiderwart'] },
+  { id: 'benutzer',        label: 'Benutzer',        icon: '<i class="ph ph-user-gear"></i>',               roles: ['Admin'] },
 ]
 export const visiblePages = computed(() => {
   const role = (currentUser.value?.Rolle || '').toLowerCase()
@@ -173,7 +176,7 @@ export const modal = reactive({
   typForm: false, ausgabe: false, pruefung: false, waesche: false,
   kameradenDetail: false, normenForm: false, massenWaesche: false,
   massenPruefung: false, rueckgabe: false, ausruestungDetail: false,
-  csvImport: false, qrScanner: false, benutzerForm: false,
+  csvImport: false, ausruestungCsvImport: false, qrScanner: false, benutzerForm: false, passwortForm: false,
 })
 
 // ── Formular-Zustand ───────────────────────────────────────────────────────
@@ -192,7 +195,8 @@ export const form = reactive({
   massenPruefung:  {} as AnyForm,
   rueckgabe:       {} as AnyForm,
   rueckgabeAusgabe: null as Ausgabe | null,
-  csvImport:       { rows: [] as CsvRow[], fileName: '' },
+  csvImport:           { rows: [] as CsvRow[], fileName: '' },
+  ausruestungCsv:      { rows: [] as AusruestungCsvRow[], fileName: '' },
   benutzer:        { Id: null, Benutzername: '', PIN: '', Rolle: 'Kleiderwart', Aktiv: true, KameradId: '' } as AnyForm,
 })
 
@@ -344,6 +348,14 @@ export const changelogFiltered = computed(() => {
   if (filterChangelog.value) list = list.filter(c => c.Aktion === filterChangelog.value)
   return list
 })
+
+// ── Computed: Backup-Status ────────────────────────────────────────────────
+export const backupEntries = computed(() =>
+  [...changelog.value]
+    .filter(c => c.Tabelle === 'Backup')
+    .sort((a, b) => new Date(b.Zeitpunkt || 0).getTime() - new Date(a.Zeitpunkt || 0).getTime())
+    .slice(0, 10)
+)
 
 // ── Computed: Stats & Warnungen ────────────────────────────────────────────
 export const stats = computed(() => ({
@@ -571,6 +583,7 @@ export async function doLogin() {
     currentUser.value = result.user
     localStorage.setItem('psa_user', JSON.stringify(result.user))
     loggedIn.value     = true
+    page.value         = (result.user.Rolle || '').toLowerCase() === 'user' ? 'mein-dashboard' : 'dashboard'
     loginForm.username = ''
     loginForm.pin      = ''
     await fetchAll()
@@ -755,6 +768,107 @@ export async function importKameraden() {
     }
     modal.csvImport = false
     showToast(`${valid.length} Kamerad${valid.length !== 1 ? 'en' : ''} importiert`)
+    await fetchAll()
+  })
+}
+
+// ── Ausrüstung CSV-Import ──────────────────────────────────────────────────
+export function downloadAusruestungBeispielCSV() {
+  const header = 'Ausruestungstyp;Seriennummer;Kamerad;Status;Groesse;Naechste_Pruefung;Kaufdatum;Notizen'
+  const rows   = [
+    'Feuerschutzhaube Typ 1;SN-001;;Lager;M;2026-12-01;;',
+    'Feuerschutzhose Typ 2;SN-002;Max Mustermann;Ausgegeben;52;2026-06-15;2024-01-01;',
+  ]
+  const csv  = '\uFEFF' + [header, ...rows].join('\n')
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+  const url  = URL.createObjectURL(blob)
+  const a    = document.createElement('a')
+  a.href = url; a.download = 'ausruestung_vorlage.csv'; a.click()
+  URL.revokeObjectURL(url)
+}
+
+export function openAusruestungCsvImport() {
+  form.ausruestungCsv = { rows: [], fileName: '' }
+  modal.ausruestungCsvImport = true
+}
+
+export function onAusruestungCsvFile(event: Event) {
+  const file = (event.target as HTMLInputElement).files?.[0]
+  if (!file) return
+  form.ausruestungCsv.fileName = file.name
+  const reader = new FileReader()
+  reader.onload = (e: ProgressEvent<FileReader>) => {
+    const text  = (e.target!.result as string).replace(/\r\n/g, '\n').replace(/\r/g, '\n')
+    const lines = text.split('\n').filter(l => l.trim())
+    if (lines.length < 2) { showToast('CSV hat keine Datenzeilen', 'error'); return }
+    const delim   = lines[0].includes(';') ? ';' : ','
+    const headers = lines[0].split(delim).map(h => h.trim().replace(/^"|"$/g, ''))
+    const bekannteTypen = typen.value.map(t => (t.Bezeichnung || '').toLowerCase())
+    const rows: AusruestungCsvRow[] = []
+    for (let i = 1; i < lines.length; i++) {
+      const vals = lines[i].split(delim).map(v => v.trim().replace(/^"|"$/g, ''))
+      const row: Record<string, string | boolean> = {}
+      headers.forEach((h, idx) => { row[h] = vals[idx] ?? '' })
+      const _Typ = String(row.Ausruestungstyp || row.ausruestungstyp || '')
+      row._Typ = _Typ
+      if (!_Typ) {
+        row._error = 'Ausruestungstyp ist Pflichtfeld'
+      } else if (!bekannteTypen.includes(_Typ.toLowerCase())) {
+        row._error = `Unbekannter Typ: "${_Typ}"`
+      } else {
+        row._error = ''
+      }
+      const sn = String(row.Seriennummer || '')
+      row._duplicate = !row._error && !!sn && ausruestung.value.some(a =>
+        a.Seriennummer === sn &&
+        (a.Ausruestungstyp || '').toLowerCase() === _Typ.toLowerCase()
+      )
+      rows.push(row as AusruestungCsvRow)
+    }
+    form.ausruestungCsv.rows = rows
+    if (!rows.length) showToast('Keine Zeilen gefunden', 'error')
+  }
+  reader.readAsText(file, 'UTF-8')
+  ;(event.target as HTMLInputElement).value = ''
+}
+
+function parseDateCsv(val: string): string | null {
+  if (!val) return null
+  // DD.MM.YYYY → YYYY-MM-DD
+  const de = val.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/)
+  if (de) return `${de[3]}-${de[2].padStart(2, '0')}-${de[1].padStart(2, '0')}`
+  // already YYYY-MM-DD
+  if (/^\d{4}-\d{2}-\d{2}$/.test(val)) return val
+  return null
+}
+
+export async function importAusruestung() {
+  const valid      = form.ausruestungCsv.rows.filter(r => !r._error)
+  const duplicates = valid.filter(r => r._duplicate)
+  if (!valid.length) { showToast('Keine gültigen Zeilen zum Importieren', 'error'); return }
+  if (duplicates.length) {
+    const sns = duplicates.map(r => `${r._Typ} / ${r.Seriennummer}`).join(', ')
+    const ok = confirm(`${duplicates.length} mögliche Duplikate (Seriennummer+Typ bereits vorhanden):\n${sns}\n\nTrotzdem importieren?`)
+    if (!ok) return
+  }
+  await load(async () => {
+    const statusWerte = ['Lager', 'Ausgegeben', 'Reinigung', 'In Reparatur', 'Ausgesondert']
+    for (const row of valid) {
+      const typMatch = typen.value.find(t => (t.Bezeichnung || '').toLowerCase() === (row._Typ as string).toLowerCase())
+      const status   = String(row.Status || '')
+      await post('Ausruestungstuecke', {
+        Ausruestungstyp:  typMatch?.Bezeichnung || row._Typ,
+        Seriennummer:     row.Seriennummer || null,
+        Kamerad:          row.Kamerad || null,
+        Status:           statusWerte.includes(status) ? status : 'Lager',
+        Groesse:          row.Groesse || null,
+        Naechste_Pruefung: parseDateCsv(String(row.Naechste_Pruefung || '')),
+        Kaufdatum:         parseDateCsv(String(row.Kaufdatum || '')),
+        Notizen:           row.Notizen || null,
+      })
+    }
+    modal.ausruestungCsvImport = false
+    showToast(`${valid.length} Ausrüstungsstück${valid.length !== 1 ? 'e' : ''} importiert`)
     await fetchAll()
   })
 }
@@ -1203,6 +1317,38 @@ export async function saveBenutzer() {
     }
     modal.benutzerForm = false
     showToast('Benutzer gespeichert')
+  })
+}
+
+// ── Passwort selbst ändern ─────────────────────────────────────────────────
+export const passwortChangeForm = reactive({ altPasswort: '', neuesPasswort: '', bestaetigung: '', error: '' })
+
+export function openPasswortForm() {
+  passwortChangeForm.altPasswort   = ''
+  passwortChangeForm.neuesPasswort = ''
+  passwortChangeForm.bestaetigung  = ''
+  passwortChangeForm.error         = ''
+  modal.passwortForm = true
+}
+
+export async function savePasswort() {
+  passwortChangeForm.error = ''
+  if (!passwortChangeForm.altPasswort || !passwortChangeForm.neuesPasswort) {
+    passwortChangeForm.error = 'Bitte alle Felder ausfüllen.'; return
+  }
+  if (passwortChangeForm.neuesPasswort !== passwortChangeForm.bestaetigung) {
+    passwortChangeForm.error = 'Passwörter stimmen nicht überein.'; return
+  }
+  if (passwortChangeForm.neuesPasswort.length < 4) {
+    passwortChangeForm.error = 'Passwort muss mindestens 4 Zeichen haben.'; return
+  }
+  await load(async () => {
+    // Aktuelles Passwort verifizieren
+    await authenticate(currentUser.value!.Benutzername, passwortChangeForm.altPasswort)
+    // Passwort aktualisieren
+    await patch('Benutzer', currentUser.value!.Id, { PIN: passwortChangeForm.neuesPasswort.trim() })
+    modal.passwortForm = false
+    showToast('Passwort geändert')
   })
 }
 

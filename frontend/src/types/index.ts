@@ -146,10 +146,17 @@ export interface Warnung {
   detail: string
 }
 
-// CSV-Import Zeile
+// CSV-Import Zeile (Kameraden)
 export interface CsvRow extends Record<string, string | boolean> {
   _Vorname: string
   _Name: string
+  _error: string
+  _duplicate: boolean
+}
+
+// CSV-Import Zeile (Ausrüstung)
+export interface AusruestungCsvRow extends Record<string, string | boolean> {
+  _Typ: string
   _error: string
   _duplicate: boolean
 }

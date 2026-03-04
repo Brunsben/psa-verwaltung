@@ -23,6 +23,7 @@
           <div>
             <label class="label">Seriennummer</label>
             <input v-model="form.ausruestung.Seriennummer" class="input" />
+            <p v-if="duplikatWarnung" class="text-xs text-orange-600 dark:text-orange-400 mt-1">⚠ {{ duplikatWarnung }}</p>
           </div>
           <div>
             <label class="label">Größe</label>
@@ -74,6 +75,19 @@
 <script setup>
 import { computed } from 'vue'
 import { modal, form, typen, ausruestung, kameradenliste, saveAusruestung, autoFillAusruestungDaten, autoFillLebensdauer } from '../../store.js'
+
+// Duplikat-Warnung: gleiche Seriennummer + gleicher Typ (anderes Stück)
+const duplikatWarnung = computed(() => {
+  const sn  = String(form.ausruestung.Seriennummer || '').trim()
+  const typ = form.ausruestung.Ausruestungstyp
+  if (!sn || !typ) return null
+  const existing = ausruestung.value.find(a =>
+    a.Seriennummer === sn &&
+    a.Ausruestungstyp === typ &&
+    a.Id !== form.ausruestung.Id
+  )
+  return existing ? `Seriennummer bereits für diesen Typ vorhanden` : null
+})
 
 // Vorhandene Größen des gleichen Typs als Vorschläge – dynamisch, selbstbauend
 const groesseOptions = computed(() => {

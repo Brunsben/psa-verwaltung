@@ -17,6 +17,7 @@ cat > "$CONFIG_JS" << 'EOF'
 // Nicht in Git einchecken (.gitignore).
 window.CONFIG = {
   api: '/api',
+  feuerwehrName: 'FF Wietmarschen',
 };
 EOF
 
