@@ -207,6 +207,15 @@ export const selectedAusruestung = ref<Ausruestungstueck | null>(null)
 export const detailFromKamerad   = ref<Kamerad | null>(null)
 export const qrResult            = ref('')
 export const qrError             = ref('')
+// Wenn gesetzt, füllt der QR-Scanner dieses Feld in form.ausruestung (statt Ausrüstung zu suchen)
+export const qrScanTarget        = ref<string | null>(null)
+
+export function openQrForField(field: 'QR_Code' | 'Seriennummer') {
+  qrScanTarget.value = field
+  qrResult.value     = ''
+  qrError.value      = ''
+  modal.qrScanner    = true
+}
 
 // ── Datum-Schwellwerte (einmalig berechnet) ────────────────────────────────
 const _today = new Date()

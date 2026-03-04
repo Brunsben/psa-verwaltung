@@ -3,7 +3,9 @@
     <div v-if="modal.qrScanner" class="modal-backdrop">
       <div class="modal-box">
         <div class="flex items-center justify-between mb-4">
-          <h2 class="text-lg font-bold text-gray-900 dark:text-white">QR-Scanner</h2>
+          <h2 class="text-lg font-bold text-gray-900 dark:text-white">
+            {{ qrScanTarget === 'Seriennummer' ? 'Seriennummer scannen' : qrScanTarget === 'QR_Code' ? 'QR-Code scannen' : 'QR-Scanner' }}
+          </h2>
           <button @click="close" class="icon-btn hover:bg-gray-100 dark:hover:bg-gray-700">
             <i class="ph ph-x text-base"></i>
           </button>
@@ -27,7 +29,7 @@
 <script setup>
 import { nextTick } from 'vue'
 import {
-  modal, qrResult, qrError,
+  modal, qrResult, qrError, qrScanTarget, form,
   ausruestung, showToast, openAusruestungDetail,
 } from '../../store.js'
 
@@ -47,6 +49,14 @@ async function start() {
     { fps: 10, qrbox: { width: 250, height: 250 } },
     (decodedText) => {
       qrResult.value = decodedText
+      // Feld-Modus: gescannten Wert in Formularfeld schreiben
+      if (qrScanTarget.value) {
+        form.ausruestung[qrScanTarget.value] = decodedText
+        showToast(`${qrScanTarget.value === 'QR_Code' ? 'QR-Code' : 'Seriennummer'} übernommen`)
+        close()
+        return
+      }
+      // Normal-Modus: Ausrüstung suchen und Detail öffnen
       const found = ausruestung.value.find(a =>
         a.QR_Code === decodedText || a.Seriennummer === decodedText
       )
@@ -69,9 +79,10 @@ async function close() {
     try { await scanner.stop() } catch(e) {}
     scanner = null
   }
-  modal.qrScanner = false
-  qrResult.value  = ''
-  qrError.value   = ''
+  modal.qrScanner    = false
+  qrResult.value     = ''
+  qrError.value      = ''
+  qrScanTarget.value = null
 }
 
 // Startet Scanner wenn Modal geöffnet wird

@@ -22,7 +22,12 @@
           </div>
           <div>
             <label class="label">Seriennummer</label>
-            <input v-model="form.ausruestung.Seriennummer" class="input" />
+            <div class="flex gap-1.5">
+              <input v-model="form.ausruestung.Seriennummer" class="input flex-1" />
+              <button type="button" @click="openQrForField('Seriennummer')" class="icon-btn border border-gray-200 dark:border-gray-600 px-2" title="Seriennummer scannen">
+                <i class="ph ph-camera text-base"></i>
+              </button>
+            </div>
             <p v-if="duplikatWarnung" class="text-xs text-orange-600 dark:text-orange-400 mt-1">⚠ {{ duplikatWarnung }}</p>
           </div>
           <div>
@@ -34,7 +39,12 @@
           </div>
           <div>
             <label class="label">QR-Code</label>
-            <input v-model="form.ausruestung.QR_Code" class="input" />
+            <div class="flex gap-1.5">
+              <input v-model="form.ausruestung.QR_Code" class="input flex-1" />
+              <button type="button" @click="openQrForField('QR_Code')" class="icon-btn border border-gray-200 dark:border-gray-600 px-2" title="QR-Code scannen">
+                <i class="ph ph-qr-code text-base"></i>
+              </button>
+            </div>
           </div>
           <div>
             <label class="label">Herstellungsdatum</label>
@@ -74,7 +84,7 @@
 
 <script setup>
 import { computed } from 'vue'
-import { modal, form, typen, ausruestung, kameradenliste, saveAusruestung, autoFillAusruestungDaten, autoFillLebensdauer } from '../../store.js'
+import { modal, form, typen, ausruestung, kameradenliste, saveAusruestung, autoFillAusruestungDaten, autoFillLebensdauer, openQrForField } from '../../store.js'
 
 // Duplikat-Warnung: gleiche Seriennummer + gleicher Typ (anderes Stück)
 const duplikatWarnung = computed(() => {
