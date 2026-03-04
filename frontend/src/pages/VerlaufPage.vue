@@ -13,25 +13,25 @@
     <div class="flex flex-wrap gap-3 mb-4 items-center">
       <div class="flex overflow-x-auto min-w-0 w-full sm:w-auto bg-gray-100 dark:bg-gray-800 rounded-lg p-1 gap-1">
         <button @click="verlaufTab = 'pruefungen'"
-          :class="['px-3 py-1.5 rounded-md text-sm font-medium transition-colors whitespace-nowrap',
+          :class="['px-3 py-1.5 rounded-md text-sm font-medium transition-colors',
             verlaufTab === 'pruefungen'
               ? 'bg-white dark:bg-gray-700 text-red-700 dark:text-red-400 shadow-sm'
               : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100']">
-          <i class="ph ph-clipboard-text"></i> Prüfungen ({{ pruefungenFiltered.length }})
+          <i class="ph ph-clipboard-text"></i><span class="hidden sm:inline"> Prüfungen</span> ({{ pruefungenFiltered.length }})
         </button>
         <button @click="verlaufTab = 'waesche'"
-          :class="['px-3 py-1.5 rounded-md text-sm font-medium transition-colors whitespace-nowrap',
+          :class="['px-3 py-1.5 rounded-md text-sm font-medium transition-colors',
             verlaufTab === 'waesche'
               ? 'bg-white dark:bg-gray-700 text-red-700 dark:text-red-400 shadow-sm'
               : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100']">
-          <i class="ph ph-washing-machine"></i> Wäschen ({{ waescheFiltered.length }})
+          <i class="ph ph-washing-machine"></i><span class="hidden sm:inline"> Wäschen</span> ({{ waescheFiltered.length }})
         </button>
         <button @click="verlaufTab = 'ausgaben'"
-          :class="['px-3 py-1.5 rounded-md text-sm font-medium transition-colors whitespace-nowrap',
+          :class="['px-3 py-1.5 rounded-md text-sm font-medium transition-colors',
             verlaufTab === 'ausgaben'
               ? 'bg-white dark:bg-gray-700 text-red-700 dark:text-red-400 shadow-sm'
               : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100']">
-          <i class="ph ph-sign-out"></i> Ausgaben ({{ ausgabenFiltered.length }})
+          <i class="ph ph-sign-out"></i><span class="hidden sm:inline"> Ausgaben</span> ({{ ausgabenFiltered.length }})
         </button>
       </div>
       <select v-model="filterVerlaufKamerad"
