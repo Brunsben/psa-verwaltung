@@ -15,7 +15,7 @@
         class="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-700 flex items-center justify-between gap-2 cursor-pointer hover:shadow-md hover:border-red-200 dark:hover:border-red-800 transition-all">
         <div class="min-w-0">
           <div class="text-2xl font-bold text-gray-900 dark:text-white">{{ stats.kameraden }}</div>
-          <div class="text-xs font-medium text-gray-500 dark:text-gray-400 mt-0.5 truncate">Kameraden aktiv</div>
+          <div class="text-xs font-medium text-gray-500 dark:text-gray-400 mt-0.5">Kameraden aktiv</div>
         </div>
         <div class="w-9 h-9 rounded-xl bg-red-50 dark:bg-red-900/20 flex items-center justify-center flex-shrink-0">
           <i class="ph ph-users-three text-lg text-red-500 dark:text-red-400"></i>
@@ -25,7 +25,7 @@
         class="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-700 flex items-center justify-between gap-2 cursor-pointer hover:shadow-md hover:border-blue-200 dark:hover:border-blue-800 transition-all">
         <div class="min-w-0">
           <div class="text-2xl font-bold text-gray-900 dark:text-white">{{ stats.ausruestung }}</div>
-          <div class="text-xs font-medium text-gray-500 dark:text-gray-400 mt-0.5 truncate">Ausrüstungsstücke</div>
+          <div class="text-xs font-medium text-gray-500 dark:text-gray-400 mt-0.5">Ausrüstungsstücke</div>
         </div>
         <div class="w-9 h-9 rounded-xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center flex-shrink-0">
           <i class="ph ph-t-shirt text-lg text-blue-500 dark:text-blue-400"></i>
@@ -35,7 +35,7 @@
         class="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-700 flex items-center justify-between gap-2 cursor-pointer hover:shadow-md hover:border-orange-200 dark:hover:border-orange-800 transition-all">
         <div class="min-w-0">
           <div class="text-2xl font-bold text-gray-900 dark:text-white">{{ stats.pruefungFaellig }}</div>
-          <div class="text-xs font-medium text-gray-500 dark:text-gray-400 mt-0.5 truncate">Prüfungen ≤ 30 Tage</div>
+          <div class="text-xs font-medium text-gray-500 dark:text-gray-400 mt-0.5">Prüfungen ≤ 30 Tage</div>
         </div>
         <div class="w-9 h-9 rounded-xl bg-orange-50 dark:bg-orange-900/20 flex items-center justify-center flex-shrink-0">
           <i class="ph ph-warning text-lg text-orange-500 dark:text-orange-400"></i>
@@ -46,7 +46,7 @@
           warnungen.length > 0 ? 'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700 hover:border-red-200 dark:hover:border-red-800' : 'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700 hover:border-green-200 dark:hover:border-green-800']">
         <div class="min-w-0">
           <div :class="warnungen.length > 0 ? 'text-2xl font-bold text-red-600 dark:text-red-400' : 'text-2xl font-bold text-green-600 dark:text-green-400'">{{ warnungen.length }}</div>
-          <div class="text-xs font-medium text-gray-500 dark:text-gray-400 mt-0.5 truncate">Aktive Warnungen</div>
+          <div class="text-xs font-medium text-gray-500 dark:text-gray-400 mt-0.5">Aktive Warnungen</div>
         </div>
         <div :class="warnungen.length > 0 ? 'w-9 h-9 rounded-xl bg-red-50 dark:bg-red-900/20 flex items-center justify-center flex-shrink-0' : 'w-9 h-9 rounded-xl bg-green-50 dark:bg-green-900/20 flex items-center justify-center flex-shrink-0'">
           <i :class="warnungen.length > 0 ? 'ph ph-bell-ringing text-lg text-red-500 dark:text-red-400' : 'ph ph-check-circle text-lg text-green-500 dark:text-green-400'"></i>

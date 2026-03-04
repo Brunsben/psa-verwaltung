@@ -38,7 +38,9 @@
             <td class="px-4 py-3 text-gray-600 dark:text-gray-400">{{ n.Pruefintervall_Monate ? n.Pruefintervall_Monate + ' Mon.' : '–' }}</td>
             <td class="px-4 py-3 text-gray-600 dark:text-gray-400">{{ n.Max_Lebensdauer_Jahre ? n.Max_Lebensdauer_Jahre + ' J.' : '–' }}</td>
             <td class="px-4 py-3 text-gray-600 dark:text-gray-400">{{ n.Max_Waeschen ? n.Max_Waeschen + 'x' : '–' }}</td>
-            <td class="px-4 py-3 text-gray-500 dark:text-gray-400 text-xs max-w-xs">{{ n.Beschreibung || '' }}</td>
+            <td class="px-4 py-3 text-gray-500 dark:text-gray-400 text-xs max-w-xs">
+              <span class="line-clamp-3" :title="n.Beschreibung || ''">{{ n.Beschreibung || '' }}</span>
+            </td>
             <td class="px-4 py-3">
               <div class="flex gap-1 justify-end">
                 <button @click="openNormenForm(n)" title="Bearbeiten" class="icon-btn hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 dark:hover:text-blue-400">
