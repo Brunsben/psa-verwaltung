@@ -3,7 +3,7 @@
 /* Dark mode über class-Strategie */
 @variant dark (&:where(.dark, .dark *));
 
-html, body { overflow-x: hidden; max-width: 100vw; }
+html, body { width: 100%; }
 [v-cloak] { display: none; }
 
 /* ── Übergänge ──────────────────────────────────────────────────── */

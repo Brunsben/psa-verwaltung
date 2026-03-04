@@ -76,7 +76,7 @@
       <PwaInstallBanner />
 
       <!-- Hauptinhalt -->
-      <main :class="['content-main min-h-screen bg-gray-50 dark:bg-gray-900 md:pl-56 transition-all']">
+      <main :class="['content-main min-h-screen bg-gray-50 dark:bg-gray-900 md:pl-56 transition-all overflow-x-hidden']">
         <div class="px-4 py-6 max-w-7xl">
           <Transition name="fade" mode="out-in" @enter="onPageEnter">
             <component :is="currentPageComponent" :key="page" />

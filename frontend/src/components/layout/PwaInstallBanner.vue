@@ -1,7 +1,7 @@
 <template>
   <!-- Android/Chrome: nativer Install-Prompt -->
   <div v-if="showNative"
-    class="sticky top-0 z-40 bg-blue-50 dark:bg-blue-900/30 border-b border-blue-200 dark:border-blue-700 px-4 py-2 flex items-center justify-between gap-3 text-blue-800 dark:text-blue-300 text-sm">
+    class="sticky top-14 md:top-0 z-30 bg-blue-50 dark:bg-blue-900/30 border-b border-blue-200 dark:border-blue-700 px-4 py-2 flex items-center justify-between gap-3 text-blue-800 dark:text-blue-300 text-sm">
     <div class="flex items-center gap-2">
       <i class="ph ph-device-mobile text-base"></i>
       <span>App installieren für schnellen Zugriff vom Homescreen</span>
@@ -18,7 +18,7 @@
 
   <!-- iOS Safari: Anleitung -->
   <div v-if="showIos"
-    class="sticky top-0 z-40 bg-blue-50 dark:bg-blue-900/30 border-b border-blue-200 dark:border-blue-700 px-4 py-2 flex items-center justify-between gap-3 text-blue-800 dark:text-blue-300 text-sm">
+    class="sticky top-14 md:top-0 z-30 bg-blue-50 dark:bg-blue-900/30 border-b border-blue-200 dark:border-blue-700 px-4 py-2 flex items-center justify-between gap-3 text-blue-800 dark:text-blue-300 text-sm">
     <div class="flex items-center gap-2 min-w-0">
       <i class="ph ph-device-mobile text-base shrink-0"></i>
       <span>Zum Homescreen: Teilen-Symbol <i class="ph ph-export"></i> → „Zum Home-Bildschirm"</span>
