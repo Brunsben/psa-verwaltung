@@ -8,7 +8,7 @@ import { getAll, post, patch, del, TABLES,
          authenticate, isInitialized, createAdmin,
          setJwt, clearJwt } from './api/index.js'
 import { fmtDate, todayStr } from './utils/formatters.js'
-import type { Kamerad, Ausruestungstyp, Ausruestungstueck, Ausgabe, Pruefung, Waesche, Norm, Benutzer, ChangelogEntry, AppUser, CsvRow, AusruestungCsvRow, GroesseKatEntry, Warnung } from './types/index.js'
+import type { Kamerad, Ausruestungstyp, Ausruestungstueck, Ausgabe, Pruefung, Waesche, Norm, Benutzer, ChangelogEntry, AppUser, CsvRow, AusruestungCsvRow, GroesseKatEntry, Warnung, Schadensdokumentation } from './types/index.js'
 
 // ── UI-Zustand ─────────────────────────────────────────────────────────────
 export const page        = ref('dashboard')
@@ -110,9 +110,10 @@ export const typen        = ref<Ausruestungstyp[]>([])
 export const ausgaben     = ref<Ausgabe[]>([])
 export const pruefungen   = ref<Pruefung[]>([])
 export const waescheListe = ref<Waesche[]>([])
-export const normen       = ref<Norm[]>([])
-export const changelog    = ref<ChangelogEntry[]>([])
-export const benutzer     = ref<Benutzer[]>([])
+export const normen                = ref<Norm[]>([])
+export const changelog             = ref<ChangelogEntry[]>([])
+export const benutzer              = ref<Benutzer[]>([])
+export const schadensdokumentation = ref<Schadensdokumentation[]>([])
 
 // ── Offline ────────────────────────────────────────────────────────────────
 export function saveOfflineSnapshot() {
@@ -176,7 +177,7 @@ export const modal = reactive({
   typForm: false, ausgabe: false, pruefung: false, waesche: false,
   kameradenDetail: false, normenForm: false, massenWaesche: false,
   massenPruefung: false, rueckgabe: false, ausruestungDetail: false,
-  csvImport: false, ausruestungCsvImport: false, qrScanner: false, benutzerForm: false, passwortForm: false,
+  csvImport: false, ausruestungCsvImport: false, qrScanner: false, benutzerForm: false, passwortForm: false, schaden: false,
 })
 
 // ── Formular-Zustand ───────────────────────────────────────────────────────
@@ -198,6 +199,7 @@ export const form = reactive({
   csvImport:           { rows: [] as CsvRow[], fileName: '' },
   ausruestungCsv:      { rows: [] as AusruestungCsvRow[], fileName: '' },
   benutzer:        { Id: null, Benutzername: '', PIN: '', Rolle: 'Kleiderwart', Aktiv: true, KameradId: '' } as AnyForm,
+  schaden:         {} as AnyForm,
 })
 
 // ── Detail-Navigation ──────────────────────────────────────────────────────
@@ -334,6 +336,16 @@ export const ausgabenByAusruestung = computed(() => {
     if (!ag.Ausruestungstueck_Id) return
     if (!map.has(ag.Ausruestungstueck_Id)) map.set(ag.Ausruestungstueck_Id, [])
     map.get(ag.Ausruestungstueck_Id).push(ag)
+  })
+  return map
+})
+
+export const schadensByAusruestung = computed(() => {
+  const map = new Map<number, Schadensdokumentation[]>()
+  schadensdokumentation.value.forEach(s => {
+    if (!s.Ausruestungstueck_Id) return
+    if (!map.has(s.Ausruestungstueck_Id)) map.set(s.Ausruestungstueck_Id, [])
+    map.get(s.Ausruestungstueck_Id)!.push(s)
   })
   return map
 })
@@ -552,17 +564,19 @@ export async function fetchAll(renderChartsCallback?: (() => void) | null) {
       getAll('Normen'),
       TABLES.Changelog ? getAll('Changelog') : Promise.resolve([]),
       TABLES.Benutzer  ? getAll('Benutzer')  : Promise.resolve([]),
+      getAll('Schadensdokumentation'),
     ])
     const val = (i: number) => { const r = results[i]; return r.status === 'fulfilled' ? r.value : [] }
-    kameraden.value    = val(0) as unknown as Kamerad[]
-    ausruestung.value  = val(1) as unknown as Ausruestungstueck[]
-    typen.value        = val(2) as unknown as Ausruestungstyp[]
-    ausgaben.value     = val(3) as unknown as Ausgabe[]
-    pruefungen.value   = val(4) as unknown as Pruefung[]
-    waescheListe.value = val(5) as unknown as Waesche[]
-    normen.value       = val(6) as unknown as Norm[]
-    changelog.value    = val(7) as unknown as ChangelogEntry[]
-    benutzer.value     = val(8) as unknown as Benutzer[]
+    kameraden.value             = val(0) as unknown as Kamerad[]
+    ausruestung.value           = val(1) as unknown as Ausruestungstueck[]
+    typen.value                 = val(2) as unknown as Ausruestungstyp[]
+    ausgaben.value              = val(3) as unknown as Ausgabe[]
+    pruefungen.value            = val(4) as unknown as Pruefung[]
+    waescheListe.value          = val(5) as unknown as Waesche[]
+    normen.value                = val(6) as unknown as Norm[]
+    changelog.value             = val(7) as unknown as ChangelogEntry[]
+    benutzer.value              = val(8) as unknown as Benutzer[]
+    schadensdokumentation.value = val(9) as unknown as Schadensdokumentation[]
     isOffline.value    = false
     saveOfflineSnapshot()
     if (renderChartsCallback) {
@@ -1043,12 +1057,12 @@ export function recalcNaechstePruefung() {
   form.pruefung.naechste = d.toISOString().split('T')[0]
 }
 
-export function onPruefungFoto(event: Event) {
+// Generische Foto-Upload-Funktion (800px, JPEG 70%)
+export function onFotoUpload(event: Event, callback: (dataUrl: string) => void) {
   const file = (event.target as HTMLInputElement).files?.[0]
   if (!file) return
   const reader = new FileReader()
   reader.onload = (e: ProgressEvent<FileReader>) => {
-    // Bild komprimieren via Canvas
     const img = new Image()
     img.src = e.target!.result as string
     img.onload = () => {
@@ -1058,10 +1072,49 @@ export function onPruefungFoto(event: Event) {
       if (w > MAX) { h = h * MAX / w; w = MAX }
       canvas.width = w; canvas.height = h
       canvas.getContext('2d')!.drawImage(img, 0, 0, w, h)
-      form.pruefung.foto = canvas.toDataURL('image/jpeg', 0.7)
+      callback(canvas.toDataURL('image/jpeg', 0.7))
     }
   }
   reader.readAsDataURL(file)
+}
+
+export function onPruefungFoto(event: Event) {
+  onFotoUpload(event, (url) => { form.pruefung.foto = url })
+}
+
+// ── Schadensdokumentation ──────────────────────────────────────────────────
+export function openSchaden(a: Ausruestungstueck) {
+  form.aktion = a
+  form.schaden = { datum: todayStr(), beschreibung: '', foto: null }
+  modal.schaden = true
+}
+
+export async function saveSchaden() {
+  if (!form.schaden.foto) { showToast('Bitte ein Foto aufnehmen', 'error'); return }
+  await load(async () => {
+    await post('Schadensdokumentation', {
+      Datum:                 form.schaden.datum,
+      Beschreibung:          form.schaden.beschreibung || null,
+      Foto:                  form.schaden.foto,
+      Erstellt_Von:          currentUser.value?.Benutzername || null,
+      Ausruestungstueck_Id:  form.aktion.Id,
+      Ausruestungstyp:       form.aktion.Ausruestungstyp || null,
+      Seriennummer:          form.aktion.Seriennummer    || null,
+    })
+    modal.schaden = false
+    showToast('Schaden dokumentiert')
+    logChange('Schadensdokumentation', 'Erstellt', `${form.aktion.Ausruestungstyp} – ${form.schaden.beschreibung || 'Foto'}`)
+    await fetchAll()
+  })
+}
+
+export async function deleteSchaden(s: Schadensdokumentation) {
+  if (!confirm('Diesen Schadenseintrag wirklich löschen?')) return
+  await load(async () => {
+    await del('Schadensdokumentation', s.Id)
+    showToast('Eintrag gelöscht')
+    await fetchAll()
+  })
 }
 
 export async function savePruefung() {
@@ -1228,6 +1281,7 @@ export async function saveTyp() {
       Pruefintervall_Monate: form.typ.Pruefintervall_Monate ? Number(form.typ.Pruefintervall_Monate) : null,
       Max_Waeschen:          form.typ.Max_Waeschen          ? Number(form.typ.Max_Waeschen)          : null,
       Beschreibung:          form.typ.Beschreibung          || null,
+      Foto:                  form.typ.Foto                  || null,
     }
     if (Id) await patch('Ausruestungstypen', Id, payload)
     else    await post('Ausruestungstypen', payload)

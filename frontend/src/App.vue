@@ -101,6 +101,7 @@
       <NormenForm />
       <BenutzerForm />
       <PasswortForm />
+      <SchadensForm />
       <QrScanner ref="qrScannerRef" />
     </template>
 
@@ -141,6 +142,7 @@ import TypenForm from './components/typen/TypenForm.vue'
 import NormenForm from './components/normen/NormenForm.vue'
 import BenutzerForm from './components/benutzer/BenutzerForm.vue'
 import PasswortForm from './components/benutzer/PasswortForm.vue'
+import SchadensForm from './components/ausruestung/SchadensForm.vue'
 import QrScanner from './components/qr/QrScanner.vue'
 
 // Pages

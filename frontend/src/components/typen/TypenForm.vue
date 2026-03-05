@@ -55,6 +55,29 @@
             <label class="label">Beschreibung</label>
             <textarea v-model="form.typ.Beschreibung" rows="2" class="input resize-none"></textarea>
           </div>
+          <div>
+            <label class="label">Beispielfoto (optional)</label>
+            <div class="flex gap-2">
+              <label class="btn-secondary cursor-pointer text-sm flex items-center gap-1.5">
+                <i class="ph ph-camera"></i> Foto aufnehmen
+                <input type="file" accept="image/*" capture="environment"
+                  @change="e => onFotoUpload(e, url => form.typ.Foto = url)" class="hidden" />
+              </label>
+              <label class="btn-secondary cursor-pointer text-sm flex items-center gap-1.5">
+                <i class="ph ph-image"></i> Datei wählen
+                <input type="file" accept="image/*"
+                  @change="e => onFotoUpload(e, url => form.typ.Foto = url)" class="hidden" />
+              </label>
+            </div>
+            <div v-if="form.typ.Foto" class="mt-2 relative">
+              <img :src="form.typ.Foto"
+                class="w-full max-h-40 object-cover rounded-lg border border-gray-200 dark:border-gray-600" />
+              <button @click="form.typ.Foto = null"
+                class="absolute top-1 right-1 bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-700">
+                <i class="ph ph-x"></i>
+              </button>
+            </div>
+          </div>
         </div>
         <div class="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-100 dark:border-gray-700">
           <button @click="modal.typForm = false" class="btn-secondary">Abbrechen</button>
@@ -66,5 +89,5 @@
 </template>
 
 <script setup>
-import { modal, form, typenKategorien, normenFuerAktuellenTyp, onTypChange, onNormSelected, saveTyp } from '../../store.js'
+import { modal, form, typenKategorien, normenFuerAktuellenTyp, onTypChange, onNormSelected, saveTyp, onFotoUpload } from '../../store.js'
 </script>

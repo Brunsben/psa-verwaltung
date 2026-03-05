@@ -28,6 +28,7 @@ export interface Ausruestungstyp {
   Max_Lebensdauer_Jahre: number | null
   Max_Waeschen: number | null
   Norm: string | null
+  Foto: string | null
 }
 
 export interface Ausruestungstueck {
@@ -70,6 +71,20 @@ export interface Pruefung {
   Pruefer: string | null
   Naechste_Pruefung: string | null
   Notizen: string | null
+  Foto: string | null
+}
+
+export interface Schadensdokumentation {
+  id: number
+  Id: number
+  Ausruestungstueck_Id: number | null
+  Datum: string | null
+  Beschreibung: string | null
+  Foto: string | null
+  Erstellt_Von: string | null
+  Erstellt_Am: string | null
+  Ausruestungstyp: string | null
+  Seriennummer: string | null
 }
 
 export interface Waesche {
