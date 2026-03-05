@@ -74,7 +74,6 @@
             </div>
             <!-- Meta -->
             <dl class="mt-2.5 grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
-              <div><dt class="text-gray-400 dark:text-gray-500">Seriennr.</dt><dd class="text-gray-700 dark:text-gray-300 font-mono">{{ a.Seriennummer || '–' }}</dd></div>
               <div><dt class="text-gray-400 dark:text-gray-500">Kamerad</dt><dd class="text-gray-700 dark:text-gray-300">{{ a.Kamerad || '–' }}</dd></div>
               <div><dt class="text-gray-400 dark:text-gray-500">Größe</dt><dd class="text-gray-700 dark:text-gray-300">{{ a.Groesse || '–' }}</dd></div>
               <div>
@@ -138,7 +137,6 @@
             <th class="px-3 py-2.5 w-8">
               <input type="checkbox" :checked="alleAusgewaehlt" @change="toggleAlle" class="accent-teal-600 cursor-pointer" />
             </th>
-            <th @click="sortBy('Seriennummer')" class="px-4 py-2.5 text-left text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider cursor-pointer select-none hover:text-gray-600 dark:hover:text-gray-300">Seriennr. <span v-if="sortAusruestung.field==='Seriennummer'">{{ sortAusruestung.dir==='asc' ? '↑' : '↓' }}</span></th>
             <th @click="sortBy('Ausruestungstyp')" class="px-4 py-2.5 text-left text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider cursor-pointer select-none hover:text-gray-600 dark:hover:text-gray-300">Typ <span v-if="sortAusruestung.field==='Ausruestungstyp'">{{ sortAusruestung.dir==='asc' ? '↑' : '↓' }}</span></th>
             <th @click="sortBy('Kamerad')" class="px-4 py-2.5 text-left text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider cursor-pointer select-none hover:text-gray-600 dark:hover:text-gray-300">Kamerad <span v-if="sortAusruestung.field==='Kamerad'">{{ sortAusruestung.dir==='asc' ? '↑' : '↓' }}</span></th>
             <th @click="sortBy('Groesse')" class="px-4 py-2.5 text-left text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider cursor-pointer select-none hover:text-gray-600 dark:hover:text-gray-300">Größe <span v-if="sortAusruestung.field==='Groesse'">{{ sortAusruestung.dir==='asc' ? '↑' : '↓' }}</span></th>
@@ -153,7 +151,6 @@
             <td class="px-3 py-2">
               <input type="checkbox" :checked="selectedIds.includes(a.Id)" @change="toggleSelect(a.Id)" class="accent-teal-600 cursor-pointer" />
             </td>
-            <td class="px-4 py-2 font-mono text-xs text-gray-500 dark:text-gray-400">{{ a.Seriennummer || '–' }}</td>
             <td class="px-4 py-2 font-medium text-gray-800 dark:text-gray-200">
               {{ typLabel(a.Ausruestungstyp, typen) }}
               <template v-if="waeschenInfo(a.Id, a.Ausruestungstyp)" v-for="wi in [waeschenInfo(a.Id, a.Ausruestungstyp)]">
