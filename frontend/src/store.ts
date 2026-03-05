@@ -918,8 +918,8 @@ export function autoFillLebensdauer() {
 }
 
 export async function saveAusruestung() {
-  if (!form.ausruestung.Ausruestungstyp?.trim() || !form.ausruestung.Seriennummer?.trim()) {
-    showToast('"Typ" und "Seriennummer" sind Pflichtfelder', 'error'); return
+  if (!form.ausruestung.Ausruestungstyp?.trim()) {
+    showToast('"Typ" ist ein Pflichtfeld', 'error'); return
   }
   await load(async () => {
     const { Id } = form.ausruestung
