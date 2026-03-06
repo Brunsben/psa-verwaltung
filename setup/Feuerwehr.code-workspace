@@ -1,0 +1,17 @@
+{
+	"folders": [
+		{
+			"path": ".."
+		},
+		{
+			"path": "../../FoodBot"
+		},
+		{
+			"path": "../../Führerscheinkontrolle"
+		},
+		{
+			"path": "../../portal"
+		}
+	],
+	"settings": {}
+}
