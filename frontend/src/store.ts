@@ -47,13 +47,15 @@ function safeJsonParse<T>(key: string, fallback: T): T {
   } catch { return fallback }
 }
 
-export const loggedIn    = ref(!!localStorage.getItem('psa_jwt'))
-export const currentUser = ref<AppUser | null>(safeJsonParse('psa_user', null))
+export const loggedIn    = ref(!!(localStorage.getItem('psa_jwt') || localStorage.getItem('fw_jwt')))
+export const currentUser = ref<AppUser | null>(safeJsonParse('psa_user', null) || safeJsonParse('fw_user', null))
 
 // Bei abgelaufenem JWT automatisch ausloggen
 window.addEventListener('psa:unauthorized', () => {
   clearJwt()
   localStorage.removeItem('psa_user')
+  localStorage.removeItem('fw_jwt')
+  localStorage.removeItem('fw_user')
   loggedIn.value    = false
   currentUser.value = null
   showToast('Sitzung abgelaufen – bitte neu anmelden', 'error')
@@ -658,9 +660,12 @@ export async function doSetup() {
 export function doLogout() {
   clearJwt()
   localStorage.removeItem('psa_user')
+  localStorage.removeItem('fw_jwt')
+  localStorage.removeItem('fw_user')
   loggedIn.value     = false
   currentUser.value  = null
   page.value         = 'dashboard'
+  window.location.href = '/'
 }
 
 // ── Kameraden-Aktionen ─────────────────────────────────────────────────────

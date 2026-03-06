@@ -19,7 +19,7 @@ export const TABLES = {
 export const T = (name: string): string => name
 
 // ── JWT-Token-Verwaltung ──────────────────────────────────────────────────
-export const getJwt   = (): string | null => localStorage.getItem('psa_jwt')
+export const getJwt   = (): string | null => localStorage.getItem('psa_jwt') || localStorage.getItem('fw_jwt')
 export const setJwt   = (token: string): void => { localStorage.setItem('psa_jwt', token) }
 export const clearJwt = (): void => { localStorage.removeItem('psa_jwt') }
 
