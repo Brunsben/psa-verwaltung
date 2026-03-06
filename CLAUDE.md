@@ -1,62 +1,99 @@
-# CLAUDE.md
+# CLAUDE.md — Feuerwehr-Apps Projektstatus
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Zentrale Wissensdatei für alle drei Feuerwehr-Apps der OF Wietmarschen. Enthält Architektur, erledigte Arbeiten, offene Aufgaben und den Unifikationsplan.
 
-## Overview
+---
 
-This is an n8n workflow automation workspace. It uses the **n8n-mcp** MCP server to interact directly with a live n8n instance via MCP tools, and **n8n-skills** for expert guidance on node configuration, expressions, and workflow patterns.
+## Feuerwehr-Apps Übersicht
 
-## Connected n8n Instance
+| App | Repo | Tech-Stack | DB | Auth | Port | Deployment |
+|-----|------|------------|----|------|------|------------|
+| **PSA-Verwaltung** | `Brunsben/psa-verwaltung` | Vue 3, Vite, Tailwind 4, TypeScript | PostgreSQL 17 | JWT (PostgREST) | 8182 | Docker Compose (4 Container) |
+| **FoodBot** | `Brunsben/FoodBot` | Flask 3.0, Gunicorn, Jinja2, pyserial | SQLite (SQLAlchemy) | Session (Single PW) | 8183 | Docker (1 Container) |
+| **Führerscheinkontrolle** | `Brunsben/FK-App` | Next.js 16, React 19, TypeScript, shadcn/ui | SQLite (Drizzle ORM) | NextAuth v5, bcrypt | 3000 | Systemd (kein Docker) |
 
-- **URL:** configured in `.mcp.json` (your n8n instance URL)
-- **API Key:** configured in `.mcp.json`
-- **API Key expiry:** renew in n8n → Settings → API → Create API Key, then update `.mcp.json`
+**Gemeinsam:** Raspberry Pi, Cloudflare Tunnel, Feuerwehr-Rot `#dc2626`
 
-## MCP Tools Available
+---
 
-The `n8n-mcp` server provides direct access to the n8n instance:
+## Git-Referenzpunkte
 
-| Tool | Purpose |
-|------|---------|
-| `n8n_list_workflows` | List all workflows |
-| `n8n_get_workflow` | Get a workflow by ID |
-| `n8n_create_workflow` | Create a new workflow |
-| `n8n_update_partial_workflow` | Incrementally update a workflow |
-| `n8n_update_full_workflow` | Replace a workflow entirely |
-| `n8n_delete_workflow` | Delete a workflow |
-| `n8n_test_workflow` | Trigger/test a workflow |
-| `n8n_executions` | List or inspect executions |
-| `n8n_validate_workflow` | Validate workflow before deploying |
-| `n8n_autofix_workflow` | Auto-fix common validation errors |
-| `search_nodes` | Search n8n nodes by keyword |
-| `get_node` | Get node schema and docs |
-| `search_templates` | Find workflow templates |
-| `n8n_deploy_template` | Deploy a template directly to n8n |
-| `validate_node` | Validate a single node config |
-| `n8n_health_check` | Check MCP server + n8n connectivity |
+### Tag `pre-unification` (6. März 2026)
+Letzter funktionierender Stand **vor** der Multi-App-Unifikation. Jederzeit zurückkehren mit `git checkout pre-unification`.
 
-Always prefer `n8n_update_partial_workflow` over full updates when modifying existing workflows.
+| Repo | Commit | Branch |
+|------|--------|--------|
+| PSA-Verwaltung | `d817540` | `main` |
+| FoodBot | `fc1ef6e` | `main` |
+| Führerscheinkontrolle | `2e9c72b` | `main` |
 
-## Installed Skills
+### Aktiver Entwicklungsbranch
+Alle Unifikations-Arbeiten laufen auf **`feature/unification`** (in allen 3 Repos). Merge auf `main` erst wenn stabil.
 
-Located in `~/.claude/skills/`:
+---
 
-- **`/n8n-mcp-tools-expert`** — Which MCP tool to use and how (start here for tool selection)
-- **`/n8n-workflow-patterns`** — Architectural patterns for webhook, scheduled, AI agent, and API workflows
-- **`/n8n-node-configuration`** — Required fields and property dependencies per node type
-- **`/n8n-expression-syntax`** — `{{ }}` syntax, `$json`, `$node`, `$input`, etc.
-- **`/n8n-validation-expert`** — Interpreting and fixing validation errors
-- **`/n8n-code-javascript`** — JavaScript in Code nodes (`$input`, `$helpers`, DateTime)
-- **`/n8n-code-python`** — Python in Code nodes and its limitations
+## Architektur-Entscheidungen (bestätigt)
 
-## PSA-Verwaltung (PostgREST)
+1. **Schema-Umbenennung** — `pxicv3djlauluse` → `fw_psa` (NocoDB-Altlast bereinigen)
+2. **UUIDs statt Integer-IDs** — Alle Primärschlüssel werden `uuid DEFAULT gen_random_uuid()` (kollisionsfrei über Schemas hinweg)
+3. **Flask bleibt RFID-Proxy** — FoodBot-Backend bleibt Flask für ELATEC TWN4 Hardware-Anbindung (pyserial), bekommt aber JWT-Auth-Middleware
+4. **Shared PostgreSQL** — Ein DB-Server, vier Schemas: `fw_common`, `fw_psa`, `fw_food`, `fw_fuehrerschein`
+5. **Repos bleiben getrennt** — Jede App ist eigenständig lauffähig, Portal als viertes Repo
 
-- **API:** `http://10.10.1.238:8182/api/{tabelle}` (intern), `https://psa.ofwietmarschen.org/api/{tabelle}` (extern)
-- **Auth:** JWT-basiert (PostgREST validiert Bearer-Token, `psa_anon` hat nur Zugriff auf Login-RPC-Funktionen)
-- **Schema:** `pxicv3djlauluse` (PostgreSQL-Schema)
+---
 
-| Tabelle | PostgREST-Endpunkt |
-| - | - |
+## Infrastruktur
+
+### Raspberry Pi (10.10.1.238)
+- **Docker:** PSA (4 Container), FoodBot (1 Container), Portal (geplant)
+- **Systemd:** Führerscheinkontrolle (Next.js), Cloudflare Tunnel
+- **Cloudflare Tunnel:** `psa.ofwietmarschen.org`, `food.ofwietmarschen.org`, `fk.ofwietmarschen.org`
+
+### Ziel-Architektur (nach Unifikation)
+```
+nginx (Reverse Proxy)
+├── /           → Portal (Vue 3 SPA)
+├── /psa/       → PSA-Frontend + PostgREST API
+├── /food/      → FoodBot-Frontend + Flask API
+└── /fk/        → FK-Frontend + Next.js API
+
+PostgreSQL 17
+├── fw_common          (members, accounts, auth)
+├── fw_psa             (Ausrüstung, Prüfungen, etc.)
+├── fw_food            (Bestellungen, Rezepte, etc.)
+└── fw_fuehrerschein   (Kontrollen, Uploads, etc.)
+```
+
+### Docker-Netzwerk (geplant)
+```
+fw-network (bridge)
+├── postgres       (shared, Port 5432 intern)
+├── postgrest      (fw_common + fw_psa)
+├── psa-frontend   (nginx, Port 8182)
+├── foodbot        (Flask/Gunicorn, Port 8183)
+├── fk-app         (Next.js, Port 3000)
+└── portal         (nginx, Port 80/443)
+```
+
+---
+
+## n8n Integration
+
+- **URL:** konfiguriert in `.mcp.json`
+- **MCP-Tools:** `n8n_list_workflows`, `n8n_get_workflow`, `n8n_create_workflow`, `n8n_update_partial_workflow`, `n8n_test_workflow`, `search_nodes`, `get_node`, etc.
+- **Skills:** `~/.claude/skills/` — n8n-mcp-tools-expert, n8n-workflow-patterns, n8n-node-configuration, n8n-expression-syntax, n8n-validation-expert, n8n-code-javascript, n8n-code-python
+- **Relevante Workflows:** Backup, Prüfungs-Reminder, Wäsch-Limit, Lebensende-Warnung (siehe `workflows/`)
+
+---
+
+## PSA-Verwaltung — API-Referenz
+
+- **API:** `https://psa.ofwietmarschen.org/api/{tabelle}` (extern), `http://10.10.1.238:8182/api/{tabelle}` (intern)
+- **Auth:** JWT-basiert (`psa_anon` → nur Login-RPCs, `psa_user` → Daten mit RLS)
+- **Schema:** `pxicv3djlauluse` (wird zu `fw_psa`, siehe Schritt 0)
+
+| Tabelle | Endpunkt |
+|---------|----------|
 | Kameraden | `/api/Kameraden` |
 | Ausruestungstypen | `/api/Ausruestungstypen` |
 | Ausruestungstuecke | `/api/Ausruestungstuecke` |
@@ -67,41 +104,37 @@ Located in `~/.claude/skills/`:
 | Benutzer | `/api/Benutzer` |
 | Changelog | `/api/Changelog` |
 | Schadensdokumentation | `/api/Schadensdokumentation` |
-| login_attempts | (kein Direktzugriff, nur über `authenticate()`) |
 
-**Filter-Syntax:** `?Feld=op.Wert` (z.B. `?Status=neq.Ausgesondert&Naechste_Pruefung=lte.2026-12-31`)
+**Filter:** `?Feld=op.Wert` (z.B. `?Status=neq.Ausgesondert&Naechste_Pruefung=lte.2026-12-31`)
 
 **RPC-Funktionen:**
+
 | Funktion | Auth | Beschreibung |
-| - | - | - |
+|----------|------|-------------|
 | `POST /api/rpc/authenticate` | anon | Login → JWT-Token |
 | `POST /api/rpc/is_initialized` | anon | Prüft ob Admin existiert |
 | `POST /api/rpc/create_admin` | anon | Ersteinrichtung (nur wenn leer) |
 | `POST /api/rpc/change_password` | JWT | Eigenes Passwort ändern |
 
-**JWT-Claims:**
-- `role`: immer `psa_user` (PostgREST-Rolle)
-- `sub`: Benutzername
-- `app_role`: `Admin` / `Kleiderwart` / `User` (anwendungsbezogen)
-- `kamerad_id`: verknüpfte Kameraden-ID (für User-Rolle)
+**JWT-Claims:** `role` (psa_user), `sub` (Benutzername), `app_role` (Admin/Kleiderwart/User), `kamerad_id` (für User-RLS)
 
-> Cloudflare Tunnel läuft als Systemdienst auf dem Pi (`sudo systemctl status cloudflared`). Startet automatisch nach Neustart.
+---
 
-## Security-Architektur (Stand: März 2026)
+## Security-Architektur (März 2026) ✅
 
-### ✅ Umgesetzt
-1. **Bcrypt-PIN-Hashing** — Trigger `hash_pin` auf `Benutzer` hasht PINs automatisch bei INSERT/UPDATE (`pgcrypto crypt()/gen_salt('bf')`). Bestehende Klartext-PINs müssen einmalig migriert werden (siehe unten).
-2. **Brute-Force-Schutz** — Tabelle `login_attempts` zählt Fehlversuche. Nach 5 Fehlern in 15 Min → Account temporär gesperrt. `authenticate()` bereinigt Einträge >24h.
-3. **JWT-Lockdown automatisiert** — `install.sh` führt `postgres-jwt-lockdown.sql` automatisch aus. Kein manueller Schritt mehr nötig.
-4. **Row-Level Security (RLS)** — Auf allen Tabellen aktiv. Admin/Kleiderwart: voller Zugriff. User: nur eigene Daten. Hilfsfunktionen: `current_app_role()`, `current_kamerad_id()`, `current_kamerad_name()`.
-5. **Content-Security-Policy** — CSP + Permissions-Policy Header in `nginx.conf.template`.
-6. **PIN-Mindestanforderungen** — ≥6 Zeichen, Server (Trigger + RPC-Funktionen) + Client (`store.ts`).
-7. **Sichere Passwortänderung** — `change_password()` RPC statt direktem PATCH auf Benutzer-Tabelle.
-8. **v-html eliminiert** — Icons in Sidebar per `:class`-Binding statt `v-html`.
-9. **JSON.parse abgesichert** — `safeJsonParse()` mit try/catch für localStorage.
+### Umgesetzt (Commit `d817540`)
+1. **Bcrypt-PIN-Hashing** — Trigger `hash_pin` auf `Benutzer`, pgcrypto `crypt()/gen_salt('bf')` → `postgres-init.sql`
+2. **Brute-Force-Schutz** — `login_attempts` Tabelle, 5 Fehlversuche/15 Min → Sperre → `postgres-init.sql`
+3. **JWT-Lockdown automatisiert** — `install.sh` führt `postgres-jwt-lockdown.sql` automatisch aus
+4. **Row-Level Security (RLS)** — Alle 10 Tabellen, Admin/Kleiderwart: voll, User: eigene Daten → `postgres-jwt-lockdown.sql`
+5. **CSP + Permissions-Policy** — Header in `nginx.conf.template`
+6. **PIN-Mindestlänge ≥6** — Server (Trigger + RPCs) + Client (`store.ts`)
+7. **change_password RPC** — Statt direktem PATCH auf Benutzer → `postgres-init.sql`, `api/index.ts`
+8. **v-html eliminiert** — Sidebar Icons per `:class`-Binding → `Sidebar.vue`, `store.ts`
+9. **safeJsonParse** — try/catch für localStorage → `store.ts`
 
-### ⚠️ Noch zu erledigen (nach Deployment)
-1. **Bestehende Klartext-PINs migrieren** — Einmalig auf dem Server ausführen:
+### ⚠️ Noch offen (Produktion)
+1. **Klartext-PINs migrieren** — Einmalig auf dem Server:
    ```sql
    docker exec -i nocodb_postgres psql -U nocodb -d nocodb -c "
      UPDATE pxicv3djlauluse.\"Benutzer\"
@@ -110,16 +143,52 @@ Located in `~/.claude/skills/`:
    "
    ```
 2. **PostgREST neustarten** nach DB-Änderungen: `cd setup && docker compose restart postgrest`
-3. **n8n-Workflows prüfen** — Workflows die direkt auf die DB oder API zugreifen müssen evtl. JWT-Token mitschicken (betrifft: Backup, Prüfungs-Reminder, Wäsch-Limit etc.)
-4. **Testen**: Login, Passwort ändern, Benutzer anlegen/bearbeiten, RLS für User-Rolle
-5. **Optional: JWT in httpOnly-Cookie** statt localStorage (erfordert PostgREST-Proxy-Anpassung)
+3. **n8n-Workflows prüfen** — Backup, Prüfungs-Reminder etc. brauchen ggf. JWT-Token
+4. **Testen:** Login, Passwort ändern, Benutzer CRUD, RLS User-Rolle
+5. **Optional:** JWT in httpOnly-Cookie statt localStorage
 
-## Typical Workflow
+---
 
-1. **Search** for relevant nodes: `search_nodes`
-2. **Check** node schema before configuring: `get_node`
-3. **Validate** before saving: `validate_node` / `validate_workflow`
-4. **Auto-fix** common issues: `n8n_autofix_workflow`
-5. **Test** after deployment: `n8n_test_workflow`
+## Unifikationsplan
 
-When creating workflows from scratch, check `search_templates` first — deploying an existing template is faster than building from zero.
+### Schritt 0 — DB-Fundament & PSA-Normalisierung
+- [ ] `fw_common`-Schema erstellen: `members`-Tabelle (UUID, Vorname, Name, Dienstgrad, etc.), `accounts`-Tabelle (UUID, username, PIN, role, member_id FK), Auth-Funktionen → neue Datei `setup/postgres-common.sql`
+- [ ] Schema umbenennen `pxicv3djlauluse` → `fw_psa` → ~87 Stellen in 5 Dateien: `postgres-init.sql` (~38×), `postgres-jwt-lockdown.sql` (~40×), `docker-compose.yml` (1×), `migration-fotos.sql` (6×), `README.md` (2-3×)
+- [ ] UUID-Migration: Integer-IDs → UUID → 12 Interfaces in `types/index.ts` (`id: number` → `id: string`), API-Layer `api/index.ts` (4 CRUD-Funktionen), alle SQL-Tabellen
+- [ ] FK-Normalisierung: Denormalisierte String-Referenzen (`"Vorname Name"`) → `member_id` UUID-FK → ~15 Stellen in `store.ts` (z.B. `Ausgaben`, `Pruefungen`, `Waesche` verweisen auf Kameraden per Stringvergleich)
+- [ ] PostgREST Resource Embedding konfigurieren (JOINs über FKs statt Client-seitige Zuordnung)
+- [ ] `docker-compose.yml` anpassen: `PGRST_DB_SCHEMAS: "fw_common,fw_psa"`
+
+### Schritt 1 — Portal-Landingpage
+- [ ] Neues Repo `feuerwehr-portal` erstellen (Vue 3 SPA, Vite, Tailwind 4)
+- [ ] Master `docker-compose.yml` für alle Services
+- [ ] nginx Reverse-Proxy: `/` → Portal, `/psa/` → PSA, `/food/` → FoodBot, `/fk/` → FK
+- [ ] Cloudflare Tunnel auf Portal umleiten (`fw.ofwietmarschen.org`)
+- [ ] App-Kacheln mit Status-Badges (online/offline)
+
+### Schritt 2 — FoodBot modernisieren
+- [ ] Jinja2-Templates → Tailwind CSS
+- [ ] SQLite → PostgreSQL (`fw_food`-Schema), SQLAlchemy-Models anpassen
+- [ ] Flask JWT-Auth-Middleware (Token aus `fw_common.accounts` validieren)
+- [ ] Docker-Container in fw-network einbinden
+- [ ] RFID-WebSocket-Endpunkt für Hardware-Proxy
+
+### Schritt 3 — Führerscheinkontrolle containerisieren
+- [ ] Dockerfile + docker-compose Service erstellen
+- [ ] SQLite → PostgreSQL (`fw_fuehrerschein`-Schema), Drizzle `pg-core` statt `better-sqlite3`
+- [ ] NextAuth → JWT-Validierung gegen `fw_common`
+- [ ] Verschlüsselte Uploads auf Shared Volume migrieren
+
+### Schritt 4 — FoodBot Vue 3 Frontend
+- [ ] Jinja2 SSR → Vue 3 SPA (analog PSA-Frontend)
+- [ ] Flask → reine REST-API + RFID-WebSocket-Proxy
+- [ ] Geteilte UI-Komponenten mit Portal extrahieren
+
+---
+
+## Bekannte Eigenheiten
+
+- **NocoDB-Altlast:** PSA-Tabellen haben deutsch-gemischte Spaltennamen (`Naechste_Pruefung`, `Ausruestungstuecke_Id`) und denormalisierte String-Referenzen statt FKs
+- **PostgREST-Schema:** Frontend-Code referenziert das Schema **nicht** direkt (nur Backend-SQL-Dateien betroffen)
+- **Cloudflare Tunnel:** Systemd-Service `cloudflared`, Konfiguration in `/etc/cloudflare/`
+- **FoodBot RFID:** ELATEC TWN4 Multitech via pyserial an `/dev/ttyUSB0`, Flask dient als Hardware-Proxy
