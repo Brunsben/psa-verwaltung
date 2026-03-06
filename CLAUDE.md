@@ -180,16 +180,17 @@ fw-network (bridge)
 - [ ] Jinja2-Templates → Tailwind CSS (verschoben auf Schritt 4)
 - [ ] RFID-WebSocket-Endpunkt für Hardware-Proxy (bestehend, funktioniert weiter)
 
-### Schritt 3 — Führerscheinkontrolle containerisieren
-- [ ] Dockerfile + docker-compose Service erstellen
-- [ ] SQLite → PostgreSQL (`fw_fuehrerschein`-Schema), Drizzle `pg-core` statt `better-sqlite3`
-- [ ] NextAuth → JWT-Validierung gegen `fw_common`
-- [ ] Verschlüsselte Uploads auf Shared Volume migrieren
+### Schritt 3 — Führerscheinkontrolle containerisieren ✅
+- [x] Dockerfile + docker-compose Service erstellen → FK `Dockerfile`, `docker-compose.yml`, Portal `docker-compose.yml` Service-Block
+- [x] SQLite → PostgreSQL (`fw_fuehrerschein`-Schema), Drizzle `pg-core` statt `better-sqlite3` → `setup/postgres-fk.sql`, `drizzle/schema.ts`, `drizzle.config.ts`
+- [x] NextAuth → JWT-Validierung gegen `fw_common` → `lib/auth.ts` (HMAC-SHA256 direkt), Session-Wrapper entfernt
+- [ ] Verschlüsselte Uploads auf Shared Volume migrieren (offen)
 
-### Schritt 4 — FoodBot Vue 3 Frontend
-- [ ] Jinja2 SSR → Vue 3 SPA (analog PSA-Frontend)
-- [ ] Flask → reine REST-API + RFID-WebSocket-Proxy
-- [ ] Geteilte UI-Komponenten mit Portal extrahieren
+### Schritt 4 — FoodBot Vue 3 Frontend ✅
+- [x] Jinja2 SSR → Vue 3 SPA (analog PSA-Frontend) → 7 Pages (Touch, Kitchen, Admin, Weekly, Stats, History, Mobile), Store, API, UI-Komponenten
+- [x] Flask → reine REST-API (~30 Endpoints) + RFID-WebSocket-Proxy → `app/api.py` komplett neu
+- [x] Docker 3-Stage Build (Node+Python+Prod) → `Dockerfile`, `frontend/Dockerfile`, `frontend/nginx.conf`
+- [ ] Geteilte UI-Komponenten mit Portal extrahieren (offen)
 
 ---
 
