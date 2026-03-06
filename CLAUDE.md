@@ -39,6 +39,7 @@ Alle Unifikations-Arbeiten laufen auf **`feature/unification`** (in allen 3 Repo
 3. **Flask bleibt RFID-Proxy** — FoodBot-Backend bleibt Flask für ELATEC TWN4 Hardware-Anbindung (pyserial), bekommt aber JWT-Auth-Middleware
 4. **Shared PostgreSQL** — Ein DB-Server, vier Schemas: `fw_common`, `fw_psa`, `fw_food`, `fw_fuehrerschein`
 5. **Repos bleiben getrennt** — Jede App ist eigenständig lauffähig, Portal als viertes Repo
+6. **App-Berechtigungen** — `fw_common.app_permissions` ermöglicht pro Benutzer unterschiedliche Rollen pro App (Admin in PSA, User in FK etc.)
 
 ---
 
@@ -146,6 +147,11 @@ fw-network (bridge)
 3. **n8n-Workflows prüfen** — Backup, Prüfungs-Reminder etc. brauchen ggf. JWT-Token
 4. **Testen:** Login, Passwort ändern, Benutzer CRUD, RLS User-Rolle
 5. **Optional:** JWT in httpOnly-Cookie statt localStorage
+6. **App-Permissions migrieren** — `setup/migration-app-permissions.sql` auf dem Server ausführen:
+   ```bash
+   docker exec -i nocodb_postgres psql -U nocodb -d nocodb < setup/migration-app-permissions.sql
+   docker compose restart postgrest
+   ```
 
 ---
 

@@ -78,6 +78,19 @@ CREATE TABLE IF NOT EXISTS fw_common.login_attempts (
 CREATE INDEX IF NOT EXISTS idx_login_attempts_user_time
   ON fw_common.login_attempts(benutzername, zeitpunkt);
 
+-- ── App-Berechtigungen (pro App eigene Rolle) ─────────────────────────────
+-- Erlaubt pro Benutzer unterschiedliche Rollen in jeder App.
+-- Wenn kein Eintrag für eine App existiert, wird accounts."Rolle" als Fallback verwendet.
+CREATE TABLE IF NOT EXISTS fw_common.app_permissions (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  account_id  UUID NOT NULL REFERENCES fw_common.accounts(id) ON DELETE CASCADE,
+  app         TEXT NOT NULL CHECK (app IN ('psa', 'food', 'fk')),
+  rolle       TEXT NOT NULL DEFAULT 'User'
+                CHECK (rolle IN ('Admin', 'Kleiderwart', 'User')),
+  created_at  TIMESTAMPTZ DEFAULT now(),
+  UNIQUE (account_id, app)
+);
+
 -- ── Schema-Grants ─────────────────────────────────────────────────────────
 GRANT USAGE ON SCHEMA fw_common TO psa_anon;
 GRANT USAGE ON SCHEMA fw_common TO psa_user;
@@ -159,6 +172,8 @@ DECLARE
   u          record;
   token      text;
   fail_count integer;
+  psa_role   text;
+  perms      json;
 BEGIN
   -- Brute-Force-Schutz
   SELECT count(*) INTO fail_count
@@ -193,10 +208,22 @@ BEGIN
   DELETE FROM fw_common.login_attempts
     WHERE zeitpunkt < now() - interval '24 hours';
 
+  -- App-spezifische Rolle ermitteln (Fallback: accounts."Rolle")
+  SELECT coalesce(ap.rolle, u."Rolle") INTO psa_role
+    FROM fw_common.accounts a
+    LEFT JOIN fw_common.app_permissions ap ON ap.account_id = a.id AND ap.app = 'psa'
+   WHERE a.id = u.id;
+
+  -- Alle App-Berechtigungen als JSON-Objekt {"psa":"Admin","fk":"Admin","food":"User"}
+  SELECT coalesce(json_object_agg(ap.app, ap.rolle), '{}'::json) INTO perms
+    FROM fw_common.app_permissions ap
+   WHERE ap.account_id = u.id;
+
   token := fw_common.jwt_sign(json_build_object(
     'role', 'psa_user',
     'sub',  u."Benutzername",
-    'app_role', u."Rolle",
+    'app_role', psa_role,
+    'app_permissions', perms,
     'kamerad_id', u."KameradId",
     'iat',  extract(epoch from now())::integer,
     'exp',  extract(epoch from now() + interval '8 hours')::integer
@@ -207,7 +234,8 @@ BEGIN
       'Id',          u.id,
       'Benutzername', u."Benutzername",
       'Rolle',        u."Rolle",
-      'KameradId',    u."KameradId"
+      'KameradId',    u."KameradId",
+      'app_permissions', perms
     )
   );
 END;
@@ -322,3 +350,29 @@ GRANT EXECUTE ON FUNCTION fw_common.change_password(text, text) TO psa_user;
 -- login_attempts: kein direkter Zugriff
 REVOKE ALL ON fw_common.login_attempts FROM psa_user;
 REVOKE ALL ON fw_common.login_attempts FROM psa_anon;
+
+-- ── Hilfsfunktion: App-Rolle ermitteln ───────────────────────────────────
+-- Kann von jeder App genutzt werden, um die Rolle eines Accounts für eine
+-- bestimmte App zu ermitteln (mit Fallback auf accounts."Rolle").
+
+CREATE OR REPLACE FUNCTION fw_common.get_app_role(p_account_id uuid, p_app text)
+  RETURNS text LANGUAGE sql STABLE SECURITY DEFINER AS $$
+  SELECT coalesce(
+    (SELECT rolle FROM fw_common.app_permissions WHERE account_id = p_account_id AND app = p_app),
+    (SELECT "Rolle" FROM fw_common.accounts WHERE id = p_account_id)
+  );
+$$;
+
+GRANT EXECUTE ON FUNCTION fw_common.get_app_role(uuid, text) TO psa_user;
+
+-- ── Migration: Bestehende Admin-Accounts → app_permissions ───────────────
+-- Einmalig ausführen: Kopiert die bestehende accounts."Rolle" als Berechtigung
+-- für alle drei Apps, damit keine Berechtigungen verloren gehen.
+-- (Idempotent — INSERT ON CONFLICT DO NOTHING)
+
+-- INSERT INTO fw_common.app_permissions (account_id, app, rolle)
+-- SELECT id, app, "Rolle"
+--   FROM fw_common.accounts
+--   CROSS JOIN (VALUES ('psa'), ('food'), ('fk')) AS apps(app)
+--  WHERE "Rolle" != 'User'
+-- ON CONFLICT (account_id, app) DO NOTHING;
