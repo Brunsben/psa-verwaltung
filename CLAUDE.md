@@ -9,7 +9,7 @@ Zentrale Wissensdatei für alle drei Feuerwehr-Apps der OF Wietmarschen. Enthäl
 | App | Repo | Tech-Stack | DB | Auth | Port | Deployment |
 |-----|------|------------|----|------|------|------------|
 | **PSA-Verwaltung** | `Brunsben/psa-verwaltung` | Vue 3, Vite, Tailwind 4, TypeScript | PostgreSQL 17 | JWT (PostgREST) | 8182 | Docker Compose (4 Container) |
-| **FoodBot** | `Brunsben/FoodBot` | Flask 3.0, Gunicorn, Jinja2, pyserial | SQLite (SQLAlchemy) | Session (Single PW) | 8183 | Docker (1 Container) |
+| **FoodBot** | `Brunsben/FoodBot` | Flask 3.0, Gunicorn, Jinja2, pyserial | PostgreSQL 17 (fw_food) | JWT (fw_common) | 5001 | Docker Compose (fw-network) |
 | **Führerscheinkontrolle** | `Brunsben/FK-App` | Next.js 16, React 19, TypeScript, shadcn/ui | SQLite (Drizzle ORM) | NextAuth v5, bcrypt | 3000 | Systemd (kein Docker) |
 
 **Gemeinsam:** Raspberry Pi, Cloudflare Tunnel, Feuerwehr-Rot `#dc2626`
@@ -166,12 +166,19 @@ fw-network (bridge)
 - [x] Cloudflare Tunnel Doku (siehe unten)
 - [x] App-Kacheln mit Status-Badges (online/offline via Health-Checks, 60s Intervall)
 
-### Schritt 2 — FoodBot modernisieren
-- [ ] Jinja2-Templates → Tailwind CSS
-- [ ] SQLite → PostgreSQL (`fw_food`-Schema), SQLAlchemy-Models anpassen
-- [ ] Flask JWT-Auth-Middleware (Token aus `fw_common.accounts` validieren)
-- [ ] Docker-Container in fw-network einbinden
-- [ ] RFID-WebSocket-Endpunkt für Hardware-Proxy
+### Schritt 2 — FoodBot modernisieren ✅
+- [x] SQLite → PostgreSQL (`fw_food`-Schema), SQLAlchemy-Models anpassen → `setup/postgres-food.sql`, 7 Tabellen mit UUIDs, FK zu `fw_common.members`
+- [x] User-Model eliminiert → Mitglieder aus `fw_common.members` (read-only, Raw SQL), RFID-Karten + Mobile-Tokens in eigene Tabellen
+- [x] Flask JWT-Auth-Middleware (Token aus `fw_common.accounts` validieren) → `app/auth.py`, HMAC-SHA256, Dual-Auth (JWT + Admin-PW Fallback)
+- [x] Alle Python-Module migriert: `models.py`, `config.py`, `auth.py`, `__init__.py`, `utils.py`, `rfid.py`, `routes.py`, `api.py`, `stats.py`, `history.py`
+- [x] Spalten-Umbenennung: `date→datum`, `description→beschreibung`, `count→anzahl`, `menu_choice→menu_wahl`, `deadline_enabled→frist_aktiv`, `registration_deadline→anmeldefrist`, `user_id→member_id`
+- [x] Alle 8 betroffenen Templates aktualisiert (touch, admin, kitchen, kitchen_print, mobile, qr, history, history_detail) + `touch.js`
+- [x] Admin-Bereich umgebaut: User-CRUD entfernt → Mitglieder-Liste (read-only) + RFID-Karten-Verwaltung
+- [x] Dockerfile: PostgreSQL Client-Libs (`libpq-dev`/`libpq5`) hinzugefügt
+- [x] Docker-Container in fw-network einbinden → `docker-compose.yml` FoodBot-Service aktiviert, nginx Port-Korrektur
+- [x] Migrations-Skript: `scripts/migrate_sqlite_to_postgres.py` (User→Member Mapping via Personalnummer, RFID+Token Extraktion)
+- [ ] Jinja2-Templates → Tailwind CSS (verschoben auf Schritt 4)
+- [ ] RFID-WebSocket-Endpunkt für Hardware-Proxy (bestehend, funktioniert weiter)
 
 ### Schritt 3 — Führerscheinkontrolle containerisieren
 - [ ] Dockerfile + docker-compose Service erstellen
