@@ -67,9 +67,9 @@ cd setup
 docker compose up -d postgres
 docker exec nocodb_postgres psql -U nocodb -d nocodb \
   -c "CREATE ROLE psa_anon NOLOGIN;" \
-  -c "GRANT USAGE ON SCHEMA pxicv3djlauluse TO psa_anon;" \
-  -c "GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA pxicv3djlauluse TO psa_anon;" \
-  -c "GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA pxicv3djlauluse TO psa_anon;" \
+  -c "GRANT USAGE ON SCHEMA fw_psa TO psa_anon;" \
+  -c "GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA fw_psa TO psa_anon;" \
+  -c "GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA fw_psa TO psa_anon;" \
   -c "CREATE ROLE psa_auth NOINHERIT LOGIN PASSWORD 'DEIN_PASSWORT';" \
   -c "GRANT psa_anon TO psa_auth;"
 ```

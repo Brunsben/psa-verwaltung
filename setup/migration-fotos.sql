@@ -1,15 +1,19 @@
--- PSA-Verwaltung: Migration – Fotos
+-- PSA-Verwaltung: Migration – Fotos (Legacy)
+-- HINWEIS: Für Neuinstallationen sind diese Tabellen bereits in postgres-init.sql.
+-- Dieses Skript nur für bestehende Installationen vor fw_psa-Migration.
+--
 -- Ausführen mit:
 --   docker exec -i psa_postgres psql -U nocodb nocodb < setup/migration-fotos.sql
 
 -- 1. Beispielfoto pro Ausrüstungstyp
-ALTER TABLE pxicv3djlauluse."Ausruestungstypen"
+ALTER TABLE fw_psa."Ausruestungstypen"
   ADD COLUMN IF NOT EXISTS "Foto" TEXT;
 
--- 2. Schadensdokumentation (mehrere Fotos pro Ausrüstungsstück)
-CREATE TABLE IF NOT EXISTS pxicv3djlauluse."Schadensdokumentation" (
-  id                     SERIAL PRIMARY KEY,
-  "Ausruestungstueck_Id" INTEGER,
+-- 2. Schadensdokumentation (bereits in postgres-init.sql für Neuinstallationen)
+-- Nur für Alt-Migrationen:
+CREATE TABLE IF NOT EXISTS fw_psa."Schadensdokumentation" (
+  id                     UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  "Ausruestungstueck_Id" UUID REFERENCES fw_psa."Ausruestungstuecke"(id),
   "Datum"                DATE NOT NULL DEFAULT CURRENT_DATE,
   "Beschreibung"         TEXT,
   "Foto"                 TEXT NOT NULL,
@@ -20,10 +24,4 @@ CREATE TABLE IF NOT EXISTS pxicv3djlauluse."Schadensdokumentation" (
 );
 
 GRANT SELECT, INSERT, UPDATE, DELETE
-  ON pxicv3djlauluse."Schadensdokumentation" TO psa_anon;
-GRANT USAGE, SELECT
-  ON SEQUENCE pxicv3djlauluse."Schadensdokumentation_id_seq" TO psa_anon;
-GRANT SELECT, INSERT, UPDATE, DELETE
-  ON pxicv3djlauluse."Schadensdokumentation" TO psa_auth;
-GRANT USAGE, SELECT
-  ON SEQUENCE pxicv3djlauluse."Schadensdokumentation_id_seq" TO psa_auth;
+  ON fw_psa."Schadensdokumentation" TO psa_user;

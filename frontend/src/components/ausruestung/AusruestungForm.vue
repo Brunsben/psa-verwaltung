@@ -15,9 +15,9 @@
           </div>
           <div class="col-span-2">
             <label class="label">Kamerad</label>
-            <select v-model="form.ausruestung.Kamerad" class="input">
+            <select v-model="form.ausruestung.Kamerad_Id" class="input">
               <option value="">– (kein / Lager) –</option>
-              <option v-for="k in kameradenliste" :key="k.Id" :value="k.label">{{ k.label }}</option>
+              <option v-for="k in kameradenliste" :key="k.Id" :value="k.Id">{{ k.label }}</option>
             </select>
           </div>
           <div>

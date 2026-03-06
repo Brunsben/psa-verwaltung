@@ -11,9 +11,9 @@ const API = window.CONFIG.api  // '/api'
 
 // Kompatibilitäts-Exports – store.js prüft TABLES.Benutzer etc.
 export const TABLES = {
-  Kameraden: true, Ausruestungstypen: true, Ausruestungstuecke: true,
+  members: true, Ausruestungstypen: true, Ausruestungstuecke: true,
   Ausgaben: true, Pruefungen: true, Waesche: true, Normen: true,
-  Benutzer: true, Changelog: true,
+  accounts: true, Changelog: true,
 } as const
 
 export const T = (name: string): string => name
@@ -110,8 +110,8 @@ export async function createAdmin(benutzername: string, pin: string): Promise<Au
  */
 export async function getAll<T extends Record<string, unknown> = Record<string, unknown>>(
   table: string,
-): Promise<(T & { Id: number })[]> {
-  const records = await api('GET', `${API}/${table}?limit=10000&order=id.asc`) as (T & { id: number })[]
+): Promise<(T & { Id: string })[]> {
+  const records = await api('GET', `${API}/${table}?limit=10000&order=id.asc`) as (T & { id: string })[]
   return records.map(r => ({ ...r, Id: r.id }))
 }
 
@@ -123,10 +123,10 @@ export async function getAll<T extends Record<string, unknown> = Record<string, 
 export const post = async (
   table: string,
   body: Record<string, unknown>,
-): Promise<(Record<string, unknown> & { Id: number }) | null> => {
+): Promise<(Record<string, unknown> & { Id: string }) | null> => {
   const result = await api('POST', `${API}/${table}`, body, {
     'Prefer': 'return=representation',
-  }) as (Record<string, unknown> & { id: number })[] | null
+  }) as (Record<string, unknown> & { id: string })[] | null
   const record = Array.isArray(result) ? result[0] : result
   return record ? { ...record, Id: record.id } : null
 }
@@ -134,7 +134,7 @@ export const post = async (
 /**
  * Aktualisiert einen Datensatz (per id-Filter statt Pfad-Segment).
  */
-export const patch = (table: string, id: number, body: Record<string, unknown>): Promise<unknown> =>
+export const patch = (table: string, id: string, body: Record<string, unknown>): Promise<unknown> =>
   api('PATCH', `${API}/${table}?id=eq.${id}`, body, {
     'Prefer': 'return=representation',
   })
@@ -142,7 +142,7 @@ export const patch = (table: string, id: number, body: Record<string, unknown>):
 /**
  * Löscht einen Datensatz (per id-Filter).
  */
-export const del = (table: string, id: number): Promise<unknown> =>
+export const del = (table: string, id: string): Promise<unknown> =>
   api('DELETE', `${API}/${table}?id=eq.${id}`)
 
 export { API }

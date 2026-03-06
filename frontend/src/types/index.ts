@@ -1,17 +1,17 @@
 // ── Domain-Typen (PSA-Verwaltung) ──────────────────────────────────────────
-// Alle Datenbankentitäten mit PostgreSQL-Spaltennamen.
-// PK: `id` (PostgreSQL) → wird in getAll() auf `Id` gemappt.
+// Datenbankentitäten mit PostgreSQL-Spaltennamen.
+// PK: `id` (UUID als string) → wird in getAll() auf `Id` gemappt.
 
 export interface Kamerad {
-  id: number
-  Id: number
+  id: string
+  Id: string
   Vorname: string | null
   Name: string | null
   Dienstgrad: string | null
   Email: string | null
   Jacke_Groesse: string | null
   Hose_Groesse: string | null
-  Stiefel_Groesse: string | number | null
+  Stiefel_Groesse: string | null
   Handschuh_Groesse: string | null
   Hemd_Groesse: string | null
   Poloshirt_Groesse: string | null
@@ -20,8 +20,8 @@ export interface Kamerad {
 }
 
 export interface Ausruestungstyp {
-  id: number
-  Id: number
+  id: string
+  Id: string
   Bezeichnung: string | null
   Typ: string | null
   Pruefintervall_Monate: number | null
@@ -32,11 +32,11 @@ export interface Ausruestungstyp {
 }
 
 export interface Ausruestungstueck {
-  id: number
-  Id: number
+  id: string
+  Id: string
   Ausruestungstyp: string | null
   Seriennummer: string | null
-  Kamerad: string | null
+  Kamerad_Id: string | null
   Status: string | null
   Kaufdatum: string | null
   Herstellungsdatum: string | null
@@ -50,22 +50,22 @@ export interface Ausruestungstueck {
 }
 
 export interface Ausgabe {
-  id: number
-  Id: number
-  Ausruestungstueck_Id: number | null
+  id: string
+  Id: string
+  Ausruestungstueck_Id: string | null
   Ausruestungstyp: string | null
-  Kamerad: string | null
+  Kamerad_Id: string | null
   Ausgabedatum: string | null
   Rueckgabedatum: string | null
   Notizen: string | null
 }
 
 export interface Pruefung {
-  id: number
-  Id: number
-  Ausruestungstueck_Id: number | null
+  id: string
+  Id: string
+  Ausruestungstueck_Id: string | null
   Ausruestungstyp: string | null
-  Kamerad: string | null
+  Kamerad_Id: string | null
   Datum: string | null
   Ergebnis: string | null
   Pruefer: string | null
@@ -75,9 +75,9 @@ export interface Pruefung {
 }
 
 export interface Schadensdokumentation {
-  id: number
-  Id: number
-  Ausruestungstueck_Id: number | null
+  id: string
+  Id: string
+  Ausruestungstueck_Id: string | null
   Datum: string | null
   Beschreibung: string | null
   Foto: string | null
@@ -88,18 +88,18 @@ export interface Schadensdokumentation {
 }
 
 export interface Waesche {
-  id: number
-  Id: number
-  Ausruestungstueck_Id: number | null
+  id: string
+  Id: string
+  Ausruestungstueck_Id: string | null
   Ausruestungstyp: string | null
-  Kamerad: string | null
+  Kamerad_Id: string | null
   Datum: string | null
   Notizen: string | null
 }
 
 export interface Norm {
-  id: number
-  Id: number
+  id: string
+  Id: string
   Bezeichnung: string | null
   Ausruestungstyp_Kategorie: string | null
   Normbezeichnung: string | null
@@ -111,18 +111,18 @@ export interface Norm {
 }
 
 export interface Benutzer {
-  id: number
-  Id: number
+  id: string
+  Id: string
   Benutzername: string
   PIN: string
   Rolle: 'Admin' | 'Kleiderwart' | 'User'
   Aktiv: boolean
-  KameradId: number | null
+  KameradId: string | null
 }
 
 export interface ChangelogEntry {
-  id: number
-  Id: number
+  id: string
+  Id: string
   Tabelle: string | null
   Aktion: string | null
   Details: string | null
@@ -132,10 +132,10 @@ export interface ChangelogEntry {
 
 // Benutzer-Objekt aus dem JWT-Token (kein PIN, kein Aktiv)
 export interface AppUser {
-  Id: number
+  Id: string
   Benutzername: string
   Rolle: 'Admin' | 'Kleiderwart' | 'User'
-  KameradId: number | null
+  KameradId: string | null
 }
 
 // Ergebnis des /rpc/authenticate und /rpc/create_admin Aufrufs
@@ -156,7 +156,7 @@ export interface GroesseKatEntry {
 export interface Warnung {
   id: string
   prio: 'rot' | 'orange' | 'gelb'
-  ausruestungId: number
+  ausruestungId: string
   titel: string
   detail: string
 }

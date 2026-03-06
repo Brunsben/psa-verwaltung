@@ -21,7 +21,7 @@
         <div class="grid grid-cols-2 md:grid-cols-3 gap-3 mb-5 text-sm">
           <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3">
             <div class="text-xs text-gray-400 dark:text-gray-500 mb-0.5">Kamerad</div>
-            <div class="font-medium text-gray-800 dark:text-gray-100">{{ selectedAusruestung.Kamerad || '–' }}</div>
+            <div class="font-medium text-gray-800 dark:text-gray-100">{{ kameradName(selectedAusruestung.Kamerad_Id) || '–' }}</div>
           </div>
           <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3">
             <div class="text-xs text-gray-400 dark:text-gray-500 mb-0.5">Herstellungsdatum</div>
@@ -64,7 +64,7 @@
               :key="ag.Id" class="flex items-center gap-3 text-sm bg-gray-50 dark:bg-gray-700/40 rounded-lg px-3 py-2">
               <i class="ph ph-sign-out text-blue-500 flex-shrink-0"></i>
               <span class="text-gray-500 dark:text-gray-400 w-20 flex-shrink-0">{{ fmtDate(ag.Ausgabedatum) }}</span>
-              <span class="font-medium text-gray-800 dark:text-gray-100">{{ ag.Kamerad || '–' }}</span>
+              <span class="font-medium text-gray-800 dark:text-gray-100">{{ kameradName(ag.Kamerad_Id) || '–' }}</span>
               <span v-if="ag.Rueckgabedatum" class="ml-auto text-xs text-gray-400">zurück {{ fmtDate(ag.Rueckgabedatum) }}</span>
               <span v-else class="ml-auto text-xs text-amber-500 font-semibold">noch ausgegeben</span>
             </div>
@@ -172,7 +172,7 @@ import {
   modal, selectedAusruestung, detailFromKamerad, selectedKamerad,
   ausgabenByAusruestung, pruefungenByAusruestung, waescheByAusruestung,
   schadensByAusruestung, waeschenInfo, openAusruestungForm,
-  openSchaden, deleteSchaden, canEdit, typen,
+  openSchaden, deleteSchaden, canEdit, typen, kameradName,
 } from '../../store.js'
 import { fmtDate, fmtDateRel, statusBadge } from '../../utils/formatters.js'
 

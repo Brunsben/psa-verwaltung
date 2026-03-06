@@ -5,190 +5,180 @@
 --  2. Row-Level Security (RLS) aktivieren
 --
 --  WICHTIG: Erst ausführen, nachdem JWT-Authentifizierung erfolgreich getestet!
---
---  Ausführen auf dem Pi:
---    docker exec -i nocodb_postgres psql -U nocodb -d nocodb \
---      -f /dev/stdin < setup/postgres-jwt-lockdown.sql
 -- ─────────────────────────────────────────────────────────────
 
 -- ── Anonymen Zugriff entfernen ────────────────────────────────────────────
 
 REVOKE SELECT, INSERT, UPDATE, DELETE
-  ON ALL TABLES IN SCHEMA pxicv3djlauluse FROM psa_anon;
+  ON ALL TABLES IN SCHEMA fw_common FROM psa_anon;
+REVOKE SELECT, INSERT, UPDATE, DELETE
+  ON ALL TABLES IN SCHEMA fw_psa FROM psa_anon;
 
-REVOKE USAGE, SELECT
-  ON ALL SEQUENCES IN SCHEMA pxicv3djlauluse FROM psa_anon;
+-- psa_anon behält USAGE auf Schemas (für /rpc/-Aufrufe nötig)
 
--- psa_anon behält USAGE auf Schema (für /rpc/-Aufrufe nötig)
--- und EXECUTE auf authenticate, is_initialized, create_admin.
--- Diese nutzen SECURITY DEFINER → greifen intern als Funktionseigentümer zu.
+-- ══════════════════════════════════════════════════════════════
+--  fw_common RLS
+-- ══════════════════════════════════════════════════════════════
 
--- ── Row-Level Security aktivieren ─────────────────────────────────────────
--- Admin/Kleiderwart: voller Zugriff auf alle Tabellen
--- User: nur eigene Daten (gefiltert über JWT-Claims app_role, kamerad_id)
---
--- Hilfsfunktionen (aus postgres-init.sql):
---   pxicv3djlauluse.current_app_role()      → 'Admin'|'Kleiderwart'|'User'
---   pxicv3djlauluse.current_kamerad_id()     → integer|NULL
---   pxicv3djlauluse.current_kamerad_name()   → 'Vorname Name'|NULL
+-- ── members ───────────────────────────────────────────────────────────────
+ALTER TABLE fw_common.members ENABLE ROW LEVEL SECURITY;
 
--- ── Kameraden ─────────────────────────────────────────────────────────────
-ALTER TABLE pxicv3djlauluse."Kameraden" ENABLE ROW LEVEL SECURITY;
-
-DROP POLICY IF EXISTS kameraden_admin ON pxicv3djlauluse."Kameraden";
-CREATE POLICY kameraden_admin ON pxicv3djlauluse."Kameraden"
+DROP POLICY IF EXISTS members_admin ON fw_common.members;
+CREATE POLICY members_admin ON fw_common.members
   FOR ALL TO psa_user
-  USING (pxicv3djlauluse.current_app_role() IN ('Admin', 'Kleiderwart'))
-  WITH CHECK (pxicv3djlauluse.current_app_role() IN ('Admin', 'Kleiderwart'));
+  USING (fw_common.current_app_role() IN ('Admin', 'Kleiderwart'))
+  WITH CHECK (fw_common.current_app_role() IN ('Admin', 'Kleiderwart'));
 
-DROP POLICY IF EXISTS kameraden_user_read ON pxicv3djlauluse."Kameraden";
-CREATE POLICY kameraden_user_read ON pxicv3djlauluse."Kameraden"
+DROP POLICY IF EXISTS members_user_read ON fw_common.members;
+CREATE POLICY members_user_read ON fw_common.members
   FOR SELECT TO psa_user
   USING (
-    pxicv3djlauluse.current_app_role() = 'User'
-    AND id = pxicv3djlauluse.current_kamerad_id()
+    fw_common.current_app_role() = 'User'
+    AND id = fw_common.current_kamerad_id()
   );
 
--- ── Ausrüstungstypen (Referenzdaten: alle dürfen lesen) ──────────────────
-ALTER TABLE pxicv3djlauluse."Ausruestungstypen" ENABLE ROW LEVEL SECURITY;
+-- ── accounts (nur Admin) ─────────────────────────────────────────────────
+ALTER TABLE fw_common.accounts ENABLE ROW LEVEL SECURITY;
 
-DROP POLICY IF EXISTS typen_read ON pxicv3djlauluse."Ausruestungstypen";
-CREATE POLICY typen_read ON pxicv3djlauluse."Ausruestungstypen"
+DROP POLICY IF EXISTS accounts_admin ON fw_common.accounts;
+CREATE POLICY accounts_admin ON fw_common.accounts
+  FOR ALL TO psa_user
+  USING (fw_common.current_app_role() = 'Admin')
+  WITH CHECK (fw_common.current_app_role() = 'Admin');
+
+-- ── login_attempts: kein direkter Zugriff ─────────────────────────────────
+ALTER TABLE fw_common.login_attempts ENABLE ROW LEVEL SECURITY;
+
+-- ══════════════════════════════════════════════════════════════
+--  fw_psa RLS
+-- ══════════════════════════════════════════════════════════════
+
+-- ── Ausrüstungstypen (Referenzdaten: alle dürfen lesen) ──────────────────
+ALTER TABLE fw_psa."Ausruestungstypen" ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS typen_read ON fw_psa."Ausruestungstypen";
+CREATE POLICY typen_read ON fw_psa."Ausruestungstypen"
   FOR SELECT TO psa_user USING (true);
 
-DROP POLICY IF EXISTS typen_admin ON pxicv3djlauluse."Ausruestungstypen";
-CREATE POLICY typen_admin ON pxicv3djlauluse."Ausruestungstypen"
+DROP POLICY IF EXISTS typen_admin ON fw_psa."Ausruestungstypen";
+CREATE POLICY typen_admin ON fw_psa."Ausruestungstypen"
   FOR ALL TO psa_user
-  USING (pxicv3djlauluse.current_app_role() IN ('Admin', 'Kleiderwart'))
-  WITH CHECK (pxicv3djlauluse.current_app_role() IN ('Admin', 'Kleiderwart'));
+  USING (fw_common.current_app_role() IN ('Admin', 'Kleiderwart'))
+  WITH CHECK (fw_common.current_app_role() IN ('Admin', 'Kleiderwart'));
 
 -- ── Ausrüstungsstücke ────────────────────────────────────────────────────
-ALTER TABLE pxicv3djlauluse."Ausruestungstuecke" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE fw_psa."Ausruestungstuecke" ENABLE ROW LEVEL SECURITY;
 
-DROP POLICY IF EXISTS ausr_admin ON pxicv3djlauluse."Ausruestungstuecke";
-CREATE POLICY ausr_admin ON pxicv3djlauluse."Ausruestungstuecke"
+DROP POLICY IF EXISTS ausr_admin ON fw_psa."Ausruestungstuecke";
+CREATE POLICY ausr_admin ON fw_psa."Ausruestungstuecke"
   FOR ALL TO psa_user
-  USING (pxicv3djlauluse.current_app_role() IN ('Admin', 'Kleiderwart'))
-  WITH CHECK (pxicv3djlauluse.current_app_role() IN ('Admin', 'Kleiderwart'));
+  USING (fw_common.current_app_role() IN ('Admin', 'Kleiderwart'))
+  WITH CHECK (fw_common.current_app_role() IN ('Admin', 'Kleiderwart'));
 
-DROP POLICY IF EXISTS ausr_user_read ON pxicv3djlauluse."Ausruestungstuecke";
-CREATE POLICY ausr_user_read ON pxicv3djlauluse."Ausruestungstuecke"
+DROP POLICY IF EXISTS ausr_user_read ON fw_psa."Ausruestungstuecke";
+CREATE POLICY ausr_user_read ON fw_psa."Ausruestungstuecke"
   FOR SELECT TO psa_user
   USING (
-    pxicv3djlauluse.current_app_role() = 'User'
-    AND "Kamerad" = pxicv3djlauluse.current_kamerad_name()
+    fw_common.current_app_role() = 'User'
+    AND "Kamerad_Id" = fw_common.current_kamerad_id()
   );
 
 -- ── Ausgaben ──────────────────────────────────────────────────────────────
-ALTER TABLE pxicv3djlauluse."Ausgaben" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE fw_psa."Ausgaben" ENABLE ROW LEVEL SECURITY;
 
-DROP POLICY IF EXISTS ausgaben_admin ON pxicv3djlauluse."Ausgaben";
-CREATE POLICY ausgaben_admin ON pxicv3djlauluse."Ausgaben"
+DROP POLICY IF EXISTS ausgaben_admin ON fw_psa."Ausgaben";
+CREATE POLICY ausgaben_admin ON fw_psa."Ausgaben"
   FOR ALL TO psa_user
-  USING (pxicv3djlauluse.current_app_role() IN ('Admin', 'Kleiderwart'))
-  WITH CHECK (pxicv3djlauluse.current_app_role() IN ('Admin', 'Kleiderwart'));
+  USING (fw_common.current_app_role() IN ('Admin', 'Kleiderwart'))
+  WITH CHECK (fw_common.current_app_role() IN ('Admin', 'Kleiderwart'));
 
-DROP POLICY IF EXISTS ausgaben_user_read ON pxicv3djlauluse."Ausgaben";
-CREATE POLICY ausgaben_user_read ON pxicv3djlauluse."Ausgaben"
+DROP POLICY IF EXISTS ausgaben_user_read ON fw_psa."Ausgaben";
+CREATE POLICY ausgaben_user_read ON fw_psa."Ausgaben"
   FOR SELECT TO psa_user
   USING (
-    pxicv3djlauluse.current_app_role() = 'User'
-    AND "Kamerad" = pxicv3djlauluse.current_kamerad_name()
+    fw_common.current_app_role() = 'User'
+    AND "Kamerad_Id" = fw_common.current_kamerad_id()
   );
 
 -- ── Prüfungen ─────────────────────────────────────────────────────────────
-ALTER TABLE pxicv3djlauluse."Pruefungen" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE fw_psa."Pruefungen" ENABLE ROW LEVEL SECURITY;
 
-DROP POLICY IF EXISTS pruef_admin ON pxicv3djlauluse."Pruefungen";
-CREATE POLICY pruef_admin ON pxicv3djlauluse."Pruefungen"
+DROP POLICY IF EXISTS pruef_admin ON fw_psa."Pruefungen";
+CREATE POLICY pruef_admin ON fw_psa."Pruefungen"
   FOR ALL TO psa_user
-  USING (pxicv3djlauluse.current_app_role() IN ('Admin', 'Kleiderwart'))
-  WITH CHECK (pxicv3djlauluse.current_app_role() IN ('Admin', 'Kleiderwart'));
+  USING (fw_common.current_app_role() IN ('Admin', 'Kleiderwart'))
+  WITH CHECK (fw_common.current_app_role() IN ('Admin', 'Kleiderwart'));
 
-DROP POLICY IF EXISTS pruef_user_read ON pxicv3djlauluse."Pruefungen";
-CREATE POLICY pruef_user_read ON pxicv3djlauluse."Pruefungen"
+DROP POLICY IF EXISTS pruef_user_read ON fw_psa."Pruefungen";
+CREATE POLICY pruef_user_read ON fw_psa."Pruefungen"
   FOR SELECT TO psa_user
   USING (
-    pxicv3djlauluse.current_app_role() = 'User'
-    AND "Kamerad" = pxicv3djlauluse.current_kamerad_name()
+    fw_common.current_app_role() = 'User'
+    AND "Kamerad_Id" = fw_common.current_kamerad_id()
   );
 
 -- ── Wäsche ────────────────────────────────────────────────────────────────
-ALTER TABLE pxicv3djlauluse."Waesche" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE fw_psa."Waesche" ENABLE ROW LEVEL SECURITY;
 
-DROP POLICY IF EXISTS waesche_admin ON pxicv3djlauluse."Waesche";
-CREATE POLICY waesche_admin ON pxicv3djlauluse."Waesche"
+DROP POLICY IF EXISTS waesche_admin ON fw_psa."Waesche";
+CREATE POLICY waesche_admin ON fw_psa."Waesche"
   FOR ALL TO psa_user
-  USING (pxicv3djlauluse.current_app_role() IN ('Admin', 'Kleiderwart'))
-  WITH CHECK (pxicv3djlauluse.current_app_role() IN ('Admin', 'Kleiderwart'));
+  USING (fw_common.current_app_role() IN ('Admin', 'Kleiderwart'))
+  WITH CHECK (fw_common.current_app_role() IN ('Admin', 'Kleiderwart'));
 
-DROP POLICY IF EXISTS waesche_user_read ON pxicv3djlauluse."Waesche";
-CREATE POLICY waesche_user_read ON pxicv3djlauluse."Waesche"
+DROP POLICY IF EXISTS waesche_user_read ON fw_psa."Waesche";
+CREATE POLICY waesche_user_read ON fw_psa."Waesche"
   FOR SELECT TO psa_user
   USING (
-    pxicv3djlauluse.current_app_role() = 'User'
-    AND "Kamerad" = pxicv3djlauluse.current_kamerad_name()
+    fw_common.current_app_role() = 'User'
+    AND "Kamerad_Id" = fw_common.current_kamerad_id()
   );
 
 -- ── Normen (Referenzdaten: alle dürfen lesen) ────────────────────────────
-ALTER TABLE pxicv3djlauluse."Normen" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE fw_psa."Normen" ENABLE ROW LEVEL SECURITY;
 
-DROP POLICY IF EXISTS normen_read ON pxicv3djlauluse."Normen";
-CREATE POLICY normen_read ON pxicv3djlauluse."Normen"
+DROP POLICY IF EXISTS normen_read ON fw_psa."Normen";
+CREATE POLICY normen_read ON fw_psa."Normen"
   FOR SELECT TO psa_user USING (true);
 
-DROP POLICY IF EXISTS normen_admin ON pxicv3djlauluse."Normen";
-CREATE POLICY normen_admin ON pxicv3djlauluse."Normen"
+DROP POLICY IF EXISTS normen_admin ON fw_psa."Normen";
+CREATE POLICY normen_admin ON fw_psa."Normen"
   FOR ALL TO psa_user
-  USING (pxicv3djlauluse.current_app_role() IN ('Admin', 'Kleiderwart'))
-  WITH CHECK (pxicv3djlauluse.current_app_role() IN ('Admin', 'Kleiderwart'));
-
--- ── Benutzer (nur Admin hat vollen Zugriff) ──────────────────────────────
-ALTER TABLE pxicv3djlauluse."Benutzer" ENABLE ROW LEVEL SECURITY;
-
-DROP POLICY IF EXISTS benutzer_admin ON pxicv3djlauluse."Benutzer";
-CREATE POLICY benutzer_admin ON pxicv3djlauluse."Benutzer"
-  FOR ALL TO psa_user
-  USING (pxicv3djlauluse.current_app_role() = 'Admin')
-  WITH CHECK (pxicv3djlauluse.current_app_role() = 'Admin');
+  USING (fw_common.current_app_role() IN ('Admin', 'Kleiderwart'))
+  WITH CHECK (fw_common.current_app_role() IN ('Admin', 'Kleiderwart'));
 
 -- ── Changelog (Admin/Kleiderwart lesen, alle dürfen schreiben) ───────────
-ALTER TABLE pxicv3djlauluse."Changelog" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE fw_psa."Changelog" ENABLE ROW LEVEL SECURITY;
 
-DROP POLICY IF EXISTS changelog_admin ON pxicv3djlauluse."Changelog";
-CREATE POLICY changelog_admin ON pxicv3djlauluse."Changelog"
+DROP POLICY IF EXISTS changelog_admin ON fw_psa."Changelog";
+CREATE POLICY changelog_admin ON fw_psa."Changelog"
   FOR ALL TO psa_user
-  USING (pxicv3djlauluse.current_app_role() IN ('Admin', 'Kleiderwart'))
-  WITH CHECK (pxicv3djlauluse.current_app_role() IN ('Admin', 'Kleiderwart'));
+  USING (fw_common.current_app_role() IN ('Admin', 'Kleiderwart'))
+  WITH CHECK (fw_common.current_app_role() IN ('Admin', 'Kleiderwart'));
 
-DROP POLICY IF EXISTS changelog_insert ON pxicv3djlauluse."Changelog";
-CREATE POLICY changelog_insert ON pxicv3djlauluse."Changelog"
+DROP POLICY IF EXISTS changelog_insert ON fw_psa."Changelog";
+CREATE POLICY changelog_insert ON fw_psa."Changelog"
   FOR INSERT TO psa_user
   WITH CHECK (true);
 
 -- ── Schadensdokumentation ─────────────────────────────────────────────────
-ALTER TABLE pxicv3djlauluse."Schadensdokumentation" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE fw_psa."Schadensdokumentation" ENABLE ROW LEVEL SECURITY;
 
-DROP POLICY IF EXISTS schaden_admin ON pxicv3djlauluse."Schadensdokumentation";
-CREATE POLICY schaden_admin ON pxicv3djlauluse."Schadensdokumentation"
+DROP POLICY IF EXISTS schaden_admin ON fw_psa."Schadensdokumentation";
+CREATE POLICY schaden_admin ON fw_psa."Schadensdokumentation"
   FOR ALL TO psa_user
-  USING (pxicv3djlauluse.current_app_role() IN ('Admin', 'Kleiderwart'))
-  WITH CHECK (pxicv3djlauluse.current_app_role() IN ('Admin', 'Kleiderwart'));
+  USING (fw_common.current_app_role() IN ('Admin', 'Kleiderwart'))
+  WITH CHECK (fw_common.current_app_role() IN ('Admin', 'Kleiderwart'));
 
-DROP POLICY IF EXISTS schaden_user_read ON pxicv3djlauluse."Schadensdokumentation";
-CREATE POLICY schaden_user_read ON pxicv3djlauluse."Schadensdokumentation"
+DROP POLICY IF EXISTS schaden_user_read ON fw_psa."Schadensdokumentation";
+CREATE POLICY schaden_user_read ON fw_psa."Schadensdokumentation"
   FOR SELECT TO psa_user
   USING (
-    pxicv3djlauluse.current_app_role() = 'User'
+    fw_common.current_app_role() = 'User'
     AND "Erstellt_Von" = current_setting('request.jwt.claim.sub', true)
   );
 
-DROP POLICY IF EXISTS schaden_user_insert ON pxicv3djlauluse."Schadensdokumentation";
-CREATE POLICY schaden_user_insert ON pxicv3djlauluse."Schadensdokumentation"
+DROP POLICY IF EXISTS schaden_user_insert ON fw_psa."Schadensdokumentation";
+CREATE POLICY schaden_user_insert ON fw_psa."Schadensdokumentation"
   FOR INSERT TO psa_user
-  WITH CHECK (pxicv3djlauluse.current_app_role() = 'User');
-
--- ── login_attempts: kein direkter Zugriff ─────────────────────────────────
-ALTER TABLE pxicv3djlauluse.login_attempts ENABLE ROW LEVEL SECURITY;
--- Keine Policies = kein Zugriff für psa_user/psa_anon
--- authenticate() ist SECURITY DEFINER und bypassed RLS als Table-Owner
+  WITH CHECK (fw_common.current_app_role() = 'User');

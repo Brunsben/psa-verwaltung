@@ -7,9 +7,9 @@
         <div class="grid gap-3">
           <div>
             <label class="label">Kamerad</label>
-            <select v-model="form.ausgabe.kamerad" class="input">
+            <select v-model="form.ausgabe.Kamerad_Id" class="input">
               <option value="">– Rückgabe (kein Kamerad) –</option>
-              <option v-for="k in kameradenliste" :key="k.Id" :value="k.label">{{ k.label }}</option>
+              <option v-for="k in kameradenliste" :key="k.Id" :value="k.Id">{{ k.label }}</option>
             </select>
             <div v-if="ausruestungGroesseHint" class="mt-1.5 flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg"
               :class="ausruestungGroesseHint.mismatch

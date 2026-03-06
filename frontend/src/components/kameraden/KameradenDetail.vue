@@ -116,6 +116,7 @@ import {
   modal, selectedKamerad, typen,
   ausruestungFuerKamerad, kameradenGroessen, letzteAktion, waeschenInfo,
   openAusruestungDetail, openKameradenForm, showToast, pruefungen, ausruestung,
+  kameradName,
 } from '../../store.js'
 import { fmtDate, fmtDateRel, typLabel, statusBadge } from '../../utils/formatters.js'
 import { exportPDF } from '../../utils/pdf.js'
@@ -126,6 +127,7 @@ function onExportPDF() {
     kameradenGroessen,
     ausruestungFuerKamerad,
     showToast,
+    kameradName,
   })
 }
 </script>

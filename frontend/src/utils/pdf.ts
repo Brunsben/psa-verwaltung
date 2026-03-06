@@ -8,6 +8,7 @@ interface PdfStore {
   ausruestungFuerKamerad: (k: Kamerad) => Ausruestungstueck[]
   pruefungen: { value: Pruefung[] }
   typen: { value: Ausruestungstyp[] }
+  kameradName: (id: string | null) => string
 }
 
 /**
@@ -102,7 +103,7 @@ export function exportPDF(kamerad: Kamerad, store: PdfStore): void {
   y += 7
 
   const kamPruefungen = store.pruefungen.value
-    .filter(p => p.Kamerad === label)
+    .filter(p => p.Kamerad_Id === kamerad.Id)
     .sort((a, b) => new Date(b.Datum || 0).getTime() - new Date(a.Datum || 0).getTime())
     .slice(0, 10)
 
@@ -143,13 +144,14 @@ export function exportCSV(
   list: Ausruestungstueck[],
   typen: Ausruestungstyp[],
   showToast: (msg: string, type?: string) => void,
+  kameradNameFn: (id: string | null) => string,
 ): void {
   const header = 'Seriennummer;Typ;Kamerad;Status;Nächste Prüfung;Lebensende;Notizen'
   const rows = list.map(a =>
     [
       a.Seriennummer || '',
       typLabel(a.Ausruestungstyp, typen),
-      a.Kamerad || '',
+      kameradNameFn(a.Kamerad_Id) || '',
       a.Status || '',
       fmtDate(a.Naechste_Pruefung),
       fmtDate(a.Lebensende_Datum),

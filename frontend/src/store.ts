@@ -211,7 +211,7 @@ export const form = reactive({
 
 // ── Detail-Navigation ──────────────────────────────────────────────────────
 export const selectedKamerad     = ref<Partial<Kamerad>>({})
-export const selectedIds         = ref<number[]>([])
+export const selectedIds         = ref<string[]>([])
 export const selectedAusruestung = ref<Ausruestungstueck | null>(null)
 export const detailFromKamerad   = ref<Kamerad | null>(null)
 export const qrResult            = ref('')
@@ -275,8 +275,8 @@ export function normenFuerTyp(kategorie: string) {
 
 // ── Computed: Ausrüstung ───────────────────────────────────────────────────
 export const ausruestungFiltered = computed(() => {
-  let list = myKameradName.value
-    ? ausruestung.value.filter(a => a.Kamerad === myKameradName.value)
+  let list = myKameradId.value
+    ? ausruestung.value.filter(a => a.Kamerad_Id === myKameradId.value)
     : ausruestung.value
   if (filterStatus.value === 'Prüfung fällig') {
     list = list.filter(a => a.Naechste_Pruefung && new Date(a.Naechste_Pruefung) <= _in30)
@@ -294,7 +294,7 @@ export const ausruestungFiltered = computed(() => {
     list = list.filter(a =>
       (a.Seriennummer || '').toLowerCase().includes(q) ||
       (a.Ausruestungstyp || '').toLowerCase().includes(q) ||
-      (a.Kamerad || '').toLowerCase().includes(q)
+      kameradName(a.Kamerad_Id).toLowerCase().includes(q)
     )
   }
   if (sortAusruestung.field) {
@@ -312,8 +312,8 @@ export const ausgabenFiltered = computed(() =>
   [...ausgaben.value]
     .sort((a, b) => new Date(b.Ausgabedatum || 0).getTime() - new Date(a.Ausgabedatum || 0).getTime())
     .filter(ag => {
-      if (myKameradName.value) return ag.Kamerad === myKameradName.value
-      return !filterVerlaufKamerad.value || ag.Kamerad === filterVerlaufKamerad.value
+      if (myKameradId.value) return ag.Kamerad_Id === myKameradId.value
+      return !filterVerlaufKamerad.value || ag.Kamerad_Id === filterVerlaufKamerad.value
     })
 )
 
@@ -348,7 +348,7 @@ export const ausgabenByAusruestung = computed(() => {
 })
 
 export const schadensByAusruestung = computed(() => {
-  const map = new Map<number, Schadensdokumentation[]>()
+  const map = new Map<string, Schadensdokumentation[]>()
   schadensdokumentation.value.forEach(s => {
     if (!s.Ausruestungstueck_Id) return
     if (!map.has(s.Ausruestungstueck_Id)) map.set(s.Ausruestungstueck_Id, [])
@@ -359,15 +359,15 @@ export const schadensByAusruestung = computed(() => {
 
 export const pruefungenFiltered = computed(() => {
   let list = [...pruefungen.value].sort((a, b) => new Date(b.Datum || 0).getTime() - new Date(a.Datum || 0).getTime())
-  if (myKameradName.value) list = list.filter(p => p.Kamerad === myKameradName.value)
-  else if (filterVerlaufKamerad.value) list = list.filter(p => p.Kamerad === filterVerlaufKamerad.value)
+  if (myKameradId.value) list = list.filter(p => p.Kamerad_Id === myKameradId.value)
+  else if (filterVerlaufKamerad.value) list = list.filter(p => p.Kamerad_Id === filterVerlaufKamerad.value)
   return list
 })
 
 export const waescheFiltered = computed(() => {
   let list = [...waescheListe.value].sort((a, b) => new Date(b.Datum || 0).getTime() - new Date(a.Datum || 0).getTime())
-  if (myKameradName.value) list = list.filter(w => w.Kamerad === myKameradName.value)
-  else if (filterVerlaufKamerad.value) list = list.filter(w => w.Kamerad === filterVerlaufKamerad.value)
+  if (myKameradId.value) list = list.filter(w => w.Kamerad_Id === myKameradId.value)
+  else if (filterVerlaufKamerad.value) list = list.filter(w => w.Kamerad_Id === filterVerlaufKamerad.value)
   return list
 })
 
@@ -396,16 +396,17 @@ export const stats = computed(() => ({
 export const warnungen = computed(() => {
   const w: Warnung[] = []
   ausruestung.value.forEach(a => {
+    const kName = kameradName(a.Kamerad_Id) || '–'
     if (a.Naechste_Pruefung) {
       const d = new Date(a.Naechste_Pruefung)
       if (d < _today) {
         w.push({ id: `p-${a.Id}`, prio: 'rot', ausruestungId: a.Id,
           titel: `Prüfung überfällig: ${a.Ausruestungstyp||'?'} (${a.Seriennummer||''})`,
-          detail: `Kamerad: ${a.Kamerad||'–'} · Fällig: ${fmtDate(a.Naechste_Pruefung)}` })
+          detail: `Kamerad: ${kName} · Fällig: ${fmtDate(a.Naechste_Pruefung)}` })
       } else if (d <= _in30) {
         w.push({ id: `p2-${a.Id}`, prio: 'orange', ausruestungId: a.Id,
           titel: `Prüfung bald fällig: ${a.Ausruestungstyp||'?'} (${a.Seriennummer||''})`,
-          detail: `Kamerad: ${a.Kamerad||'–'} · Fällig: ${fmtDate(a.Naechste_Pruefung)}` })
+          detail: `Kamerad: ${kName} · Fällig: ${fmtDate(a.Naechste_Pruefung)}` })
       }
     }
     if (a.Lebensende_Datum) {
@@ -413,11 +414,11 @@ export const warnungen = computed(() => {
       if (d < _today) {
         w.push({ id: `l-${a.Id}`, prio: 'rot', ausruestungId: a.Id,
           titel: `Lebensende überschritten: ${a.Ausruestungstyp||'?'} (${a.Seriennummer||''})`,
-          detail: `Kamerad: ${a.Kamerad||'–'} · Lebensende: ${fmtDate(a.Lebensende_Datum)}` })
+          detail: `Kamerad: ${kName} · Lebensende: ${fmtDate(a.Lebensende_Datum)}` })
       } else if (d <= _in180) {
         w.push({ id: `l2-${a.Id}`, prio: 'gelb', ausruestungId: a.Id,
           titel: `Lebensende in < 6 Monaten: ${a.Ausruestungstyp||'?'} (${a.Seriennummer||''})`,
-          detail: `Kamerad: ${a.Kamerad||'–'} · Lebensende: ${fmtDate(a.Lebensende_Datum)}` })
+          detail: `Kamerad: ${kName} · Lebensende: ${fmtDate(a.Lebensende_Datum)}` })
       }
     }
     const wi = waeschenInfo(a.Id, a.Ausruestungstyp)
@@ -425,16 +426,16 @@ export const warnungen = computed(() => {
       if (wi.count >= wi.max) {
         w.push({ id: `wmax-${a.Id}`, prio: 'rot', ausruestungId: a.Id,
           titel: `Waschzyklus-Limit erreicht: ${a.Ausruestungstyp||'?'} (${a.Seriennummer||''})`,
-          detail: `Kamerad: ${a.Kamerad||'–'} · ${wi.count}/${wi.max} Wäschen` })
+          detail: `Kamerad: ${kName} · ${wi.count}/${wi.max} Wäschen` })
       } else if (wi.count / wi.max >= 0.9) {
         w.push({ id: `wbald-${a.Id}`, prio: 'orange', ausruestungId: a.Id,
           titel: `Waschzyklus-Limit fast erreicht: ${a.Ausruestungstyp||'?'} (${a.Seriennummer||''})`,
-          detail: `Kamerad: ${a.Kamerad||'–'} · ${wi.count}/${wi.max} Wäschen (${wi.max - wi.count} verbleibend)` })
+          detail: `Kamerad: ${kName} · ${wi.count}/${wi.max} Wäschen (${wi.max - wi.count} verbleibend)` })
       }
     }
     // Größen-Abweichung: Ausrüstungsgröße ≠ hinterlegte Kamerad-Größe
-    if (a.Kamerad && a.Groesse && a.Status === 'Ausgegeben') {
-      const k = kameraden.value.find(x => `${x.Vorname} ${x.Name}` === a.Kamerad)
+    if (a.Kamerad_Id && a.Groesse && a.Status === 'Ausgegeben') {
+      const k = kameraden.value.find(x => x.Id === a.Kamerad_Id)
       if (k) {
         const typ = typen.value.find(t => t.Bezeichnung === a.Ausruestungstyp)
         const entry = typ?.Typ ? GROESSE_KAT_MAP[typ.Typ] : undefined
@@ -444,7 +445,7 @@ export const warnungen = computed(() => {
           if (kGroesse && kGroesse.toLowerCase() !== aGroesse.toLowerCase()) {
             w.push({ id: `gr-${a.Id}`, prio: 'gelb', ausruestungId: a.Id,
               titel: `Größe passt nicht: ${a.Ausruestungstyp||'?'} (${a.Seriennummer||''})`,
-              detail: `Kamerad: ${a.Kamerad} · Stück: ${aGroesse} · Erwartet: ${kGroesse}` })
+              detail: `Kamerad: ${kName} · Stück: ${aGroesse} · Erwartet: ${kGroesse}` })
           }
         }
       }
@@ -473,8 +474,8 @@ export const GROESSE_KAT_MAP: Record<string, GroesseKatEntry> = {
 
 // ── Computed: Größen-Hinweis (Ausgabe-Formular) ────────────────────────────
 export const ausruestungGroesseHint = computed(() => {
-  if (!form.ausgabe.kamerad) return null
-  const k = kameraden.value.find(x => `${x.Vorname} ${x.Name}` === form.ausgabe.kamerad)
+  if (!form.ausgabe.Kamerad_Id) return null
+  const k = kameraden.value.find(x => x.Id === form.ausgabe.Kamerad_Id)
   if (!k) return null
   const typ = typen.value.find(t => t.Bezeichnung === form.aktion.Ausruestungstyp)
   const entry = typ?.Typ ? GROESSE_KAT_MAP[typ.Typ] : undefined
@@ -486,7 +487,7 @@ export const ausruestungGroesseHint = computed(() => {
 })
 
 // ── Helper-Funktionen ──────────────────────────────────────────────────────
-export function waeschenInfo(ausruestungId: number, ausruestungstyp: string | null) {
+export function waeschenInfo(ausruestungId: string, ausruestungstyp: string | null) {
   const typ = typen.value.find(t => t.Bezeichnung === ausruestungstyp)
   if (!typ?.Max_Waeschen) return null
   const count = (waescheByAusruestung.value.get(ausruestungId) || []).length
@@ -494,11 +495,17 @@ export function waeschenInfo(ausruestungId: number, ausruestungstyp: string | nu
 }
 
 export function ausruestungFuerKamerad(k: Kamerad) {
-  const label = `${k.Vorname} ${k.Name}`
-  return ausruestung.value.filter(a => a.Kamerad === label)
+  return ausruestung.value.filter(a => a.Kamerad_Id === k.Id)
 }
 
-export function letzteAktion(ausruestungId: number, typ: string) {
+/** Gibt den Anzeigenamen (Vorname Name) für eine Kamerad-UUID zurück. */
+export function kameradName(kameradId: string | null): string {
+  if (!kameradId) return ''
+  const k = kameraden.value.find(x => x.Id === kameradId)
+  return k ? `${k.Vorname} ${k.Name}` : ''
+}
+
+export function letzteAktion(ausruestungId: string, typ: string) {
   const list: (Pruefung | Waesche)[] = (typ === 'pruefung'
     ? pruefungenByAusruestung.value.get(ausruestungId)
     : waescheByAusruestung.value.get(ausruestungId)) || []
@@ -518,7 +525,7 @@ export function kameradenGroessen(k: Kamerad) {
   ]
 }
 
-export function toggleSelect(id: number) {
+export function toggleSelect(id: string) {
   const idx = selectedIds.value.indexOf(id)
   if (idx === -1) selectedIds.value.push(id)
   else selectedIds.value.splice(idx, 1)
@@ -562,7 +569,7 @@ export async function fetchAll(renderChartsCallback?: (() => void) | null) {
     }
 
     const results = await Promise.allSettled([
-      getAll('Kameraden'),
+      getAll('members'),
       getAll('Ausruestungstuecke'),
       getAll('Ausruestungstypen'),
       getAll('Ausgaben'),
@@ -570,7 +577,7 @@ export async function fetchAll(renderChartsCallback?: (() => void) | null) {
       getAll('Waesche'),
       getAll('Normen'),
       TABLES.Changelog ? getAll('Changelog') : Promise.resolve([]),
-      TABLES.Benutzer  ? getAll('Benutzer')  : Promise.resolve([]),
+      TABLES.accounts  ? getAll('accounts')  : Promise.resolve([]),
       getAll('Schadensdokumentation'),
     ])
     const val = (i: number) => { const r = results[i]; return r.status === 'fulfilled' ? r.value : [] }
@@ -673,8 +680,6 @@ export async function saveKamerad() {
   }
   await load(async () => {
     const { Id } = form.kamerad
-    const oldK     = Id ? kameraden.value.find(k => k.Id === Id) : null
-    const oldLabel = oldK ? `${oldK.Vorname} ${oldK.Name}` : null
     const newLabel = `${form.kamerad.Vorname} ${form.kamerad.Name}`
     const payload = {
       Vorname:           form.kamerad.Vorname           || null,
@@ -690,13 +695,9 @@ export async function saveKamerad() {
       Fleece_Groesse:    form.kamerad.Fleece_Groesse    || null,
       Aktiv:             form.kamerad.Aktiv             ?? true,
     }
-    if (Id) await patch('Kameraden', Id, payload)
-    else    await post('Kameraden', payload)
-    if (Id && oldLabel && oldLabel !== newLabel) {
-      const affected = ausruestung.value.filter(a => a.Kamerad === oldLabel)
-      await Promise.all(affected.map(a => patch('Ausruestungstuecke', a.Id, { Kamerad: newLabel })))
-      if (affected.length) showToast(`${affected.length} Ausrüstungsstück${affected.length > 1 ? 'e' : ''} aktualisiert`)
-    }
+    if (Id) await patch('members', Id, payload)
+    else    await post('members', payload)
+    // Keine Rename-Propagation nötig – Ausrüstung referenziert über Kamerad_Id (FK)
     modal.kameradenForm = false
     showToast('Kamerad gespeichert')
     logChange('Kameraden', Id ? 'Bearbeitet' : 'Erstellt', newLabel)
@@ -706,13 +707,13 @@ export async function saveKamerad() {
 
 export async function deleteKamerad(k: Kamerad) {
   const label    = `${k.Vorname} ${k.Name}`
-  const assigned = ausruestung.value.filter(a => a.Kamerad === label).length
+  const assigned = ausruestung.value.filter(a => a.Kamerad_Id === k.Id).length
   const msg = assigned
     ? `${label} hat noch ${assigned} zugewiesene${assigned > 1 ? ' Ausrüstungsstücke' : 's Ausrüstungsstück'}. Trotzdem löschen?`
     : `${label} wirklich löschen?`
   if (!confirm(msg)) return
   await load(async () => {
-    await del('Kameraden', k.Id)
+    await del('members', k.Id)
     showToast('Gelöscht')
     logChange('Kameraden', 'Gelöscht', label)
     await fetchAll()
@@ -786,7 +787,7 @@ export async function importKameraden() {
     for (const row of valid) {
       const aktivRaw = String(row.Aktiv || row.aktiv || 'ja').toLowerCase().trim()
       const aktiv    = !['nein', '0', 'false', 'falsch', 'no'].includes(aktivRaw)
-      await post('Kameraden', {
+      await post('members', {
         Vorname:           row._Vorname,
         Name:              row._Name,
         Dienstgrad:        row.Dienstgrad    || null,
@@ -890,10 +891,12 @@ export async function importAusruestung() {
     for (const row of valid) {
       const typMatch = typen.value.find(t => (t.Bezeichnung || '').toLowerCase() === (row._Typ as string).toLowerCase())
       const status   = String(row.Status || '')
+      const kamName = String(row.Kamerad || '').trim()
+      const kamMatch = kamName ? kameraden.value.find(k => `${k.Vorname} ${k.Name}`.toLowerCase() === kamName.toLowerCase()) : null
       await post('Ausruestungstuecke', {
         Ausruestungstyp:  typMatch?.Bezeichnung || row._Typ,
         Seriennummer:     row.Seriennummer || null,
-        Kamerad:          row.Kamerad || null,
+        Kamerad_Id:       kamMatch?.Id || null,
         Status:           statusWerte.includes(status) ? status : 'Lager',
         Groesse:          row.Groesse || null,
         Naechste_Pruefung: parseDateCsv(String(row.Naechste_Pruefung || '')),
@@ -909,7 +912,7 @@ export async function importAusruestung() {
 
 // ── Ausrüstung-Aktionen ────────────────────────────────────────────────────
 export function openAusruestungForm(a: Partial<Ausruestungstueck> = {}) {
-  form.ausruestung = { Status: 'Lager', ...a, Ausruestungstyp: a.Ausruestungstyp || '', Kamerad: a.Kamerad || '' }
+  form.ausruestung = { Status: 'Lager', ...a, Ausruestungstyp: a.Ausruestungstyp || '', Kamerad_Id: a.Kamerad_Id || '' }
   modal.ausruestungForm = true
 }
 
@@ -948,11 +951,11 @@ export async function saveAusruestung() {
   }
   await load(async () => {
     const { Id } = form.ausruestung
-    const oldKamerad = Id ? (ausruestung.value.find(x => x.Id === Id)?.Kamerad || '') : ''
-    const newKamerad = form.ausruestung.Kamerad || ''
+    const oldKameradId = Id ? (ausruestung.value.find(x => x.Id === Id)?.Kamerad_Id || '') : ''
+    const newKameradId = form.ausruestung.Kamerad_Id || ''
     const payload = {
       Ausruestungstyp:   form.ausruestung.Ausruestungstyp  || null,
-      Kamerad:           form.ausruestung.Kamerad           || null,
+      Kamerad_Id:        form.ausruestung.Kamerad_Id        || null,
       Seriennummer:      form.ausruestung.Seriennummer      || null,
       Groesse:           form.ausruestung.Groesse           || null,
       QR_Code:           form.ausruestung.QR_Code           || null,
@@ -965,10 +968,10 @@ export async function saveAusruestung() {
     let savedId = Id
     if (Id) await patch('Ausruestungstuecke', Id, payload)
     else { const r = await post('Ausruestungstuecke', payload); savedId = r?.Id || null }
-    if (newKamerad !== oldKamerad) {
+    if (newKameradId !== oldKameradId) {
       await post('Ausgaben', {
         Ausgabedatum:         todayStr(),
-        Kamerad:              newKamerad || null,
+        Kamerad_Id:           newKameradId || null,
         Ausruestungstyp:      form.ausruestung.Ausruestungstyp || null,
         Seriennummer:         form.ausruestung.Seriennummer    || null,
         Ausruestungstueck_Id: savedId || null,
@@ -1003,17 +1006,17 @@ export async function quickStatus(item: Ausruestungstueck, newStatus: string) {
 // ── Ausgabe / Rückgabe ─────────────────────────────────────────────────────
 export function openAusgabe(a: Ausruestungstueck) {
   form.aktion  = a
-  form.ausgabe = { datum: todayStr(), kamerad: a.Kamerad || '', notizen: '' }
+  form.ausgabe = { datum: todayStr(), Kamerad_Id: a.Kamerad_Id || '', notizen: '' }
   modal.ausgabe = true
 }
 
 export async function saveAusgabe() {
-  if (!form.ausgabe.kamerad?.trim()) { showToast('"Kamerad" ist ein Pflichtfeld', 'error'); return }
+  if (!form.ausgabe.Kamerad_Id?.trim()) { showToast('"Kamerad" ist ein Pflichtfeld', 'error'); return }
   await load(async () => {
-    await patch('Ausruestungstuecke', form.aktion.Id, { Kamerad: form.ausgabe.kamerad, Status: 'Ausgegeben' })
+    await patch('Ausruestungstuecke', form.aktion.Id, { Kamerad_Id: form.ausgabe.Kamerad_Id, Status: 'Ausgegeben' })
     await post('Ausgaben', {
       Ausgabedatum:         form.ausgabe.datum,
-      Kamerad:              form.ausgabe.kamerad,
+      Kamerad_Id:           form.ausgabe.Kamerad_Id,
       Notizen:              form.ausgabe.notizen || null,
       Ausruestungstyp:      form.aktion.Ausruestungstyp,
       Seriennummer:         form.aktion.Seriennummer,
@@ -1021,7 +1024,7 @@ export async function saveAusgabe() {
     })
     modal.ausgabe = false
     showToast('Ausgabe gespeichert')
-    logChange('Ausgaben', 'Ausgegeben', `${form.aktion.Ausruestungstyp} → ${form.ausgabe.kamerad}`)
+    logChange('Ausgaben', 'Ausgegeben', `${form.aktion.Ausruestungstyp} → ${kameradName(form.ausgabe.Kamerad_Id)}`)
     await fetchAll()
   })
 }
@@ -1037,7 +1040,7 @@ export async function saveRueckgabe() {
     const ag = form.rueckgabeAusgabe
     if (ag) await patch('Ausgaben', ag.Id, { Rueckgabedatum: form.rueckgabe.datum })
     const ausrStueck = ausruestung.value.find(a => a.Id === ag?.Ausruestungstueck_Id)
-    if (ausrStueck) await patch('Ausruestungstuecke', ausrStueck.Id, { Kamerad: null, Status: 'Lager' })
+    if (ausrStueck) await patch('Ausruestungstuecke', ausrStueck.Id, { Kamerad_Id: null, Status: 'Lager' })
     modal.rueckgabe = false
     showToast('Rückgabe gespeichert')
     logChange('Ausgaben', 'Zurückgegeben', ag?.Ausruestungstyp || '?')
@@ -1139,7 +1142,7 @@ export async function savePruefung() {
       Notizen:              form.pruefung.notizen            || null,
       Foto:                 form.pruefung.foto               || null,
       Ausruestungstueck_Id: form.aktion.Id,
-      Kamerad:              form.aktion.Kamerad              || null,
+      Kamerad_Id:           form.aktion.Kamerad_Id           || null,
       Ausruestungstyp:      form.aktion.Ausruestungstyp      || null,
       Seriennummer:         form.aktion.Seriennummer         || null,
     })
@@ -1168,7 +1171,7 @@ export async function saveWaesche() {
       Waescheart:           form.waesche.art               || null,
       Notizen:              form.waesche.notizen            || null,
       Ausruestungstueck_Id: form.aktion.Id,
-      Kamerad:              form.aktion.Kamerad             || null,
+      Kamerad_Id:           form.aktion.Kamerad_Id          || null,
       Ausruestungstyp:      form.aktion.Ausruestungstyp     || null,
       Seriennummer:         form.aktion.Seriennummer        || null,
     })
@@ -1195,7 +1198,7 @@ export async function saveMassenWaesche() {
         Waescheart:           form.massenWaesche.art       || null,
         Notizen:              form.massenWaesche.notizen   || null,
         Ausruestungstueck_Id: a.Id,
-        Kamerad:              a.Kamerad                    || null,
+        Kamerad_Id:           a.Kamerad_Id                  || null,
         Ausruestungstyp:      a.Ausruestungstyp            || null,
         Seriennummer:         a.Seriennummer               || null,
       })
@@ -1233,7 +1236,7 @@ export async function saveMassenPruefung() {
         Naechste_Pruefung:    naechste,
         Notizen:              form.massenPruefung.notizen   || null,
         Ausruestungstueck_Id: a.Id,
-        Kamerad:              a.Kamerad                     || null,
+        Kamerad_Id:           a.Kamerad_Id                   || null,
         Ausruestungstyp:      a.Ausruestungstyp             || null,
         Seriennummer:         a.Seriennummer                || null,
       })
@@ -1389,12 +1392,12 @@ export async function saveBenutzer() {
       payload.PIN = form.benutzer.PIN.trim()
     }
     if (form.benutzer.Id) {
-      await patch('Benutzer', form.benutzer.Id, payload)
+      await patch('accounts', form.benutzer.Id, payload)
       const idx = benutzer.value.findIndex(b => b.Id === form.benutzer.Id)
       if (idx >= 0) benutzer.value[idx] = { ...benutzer.value[idx], ...payload }
       logChange('Benutzer', 'Bearbeitet', String(payload.Benutzername))
     } else {
-      const created = await post('Benutzer', payload)
+      const created = await post('accounts', payload)
       benutzer.value.push(created as unknown as Benutzer)
       logChange('Benutzer', 'Erstellt', String(payload.Benutzername))
     }
@@ -1439,7 +1442,7 @@ export async function deleteBenutzer(b: Benutzer) {
   if (b.Id === currentUser.value?.Id) { showToast('Eigenen Account nicht löschbar', 'error'); return }
   if (!confirm(`Benutzer "${b.Benutzername}" wirklich löschen?`)) return
   await load(async () => {
-    await del('Benutzer', b.Id)
+    await del('accounts', b.Id)
     benutzer.value = benutzer.value.filter(u => u.Id !== b.Id)
     logChange('Benutzer', 'Gelöscht', b.Benutzername)
     showToast('Benutzer gelöscht')

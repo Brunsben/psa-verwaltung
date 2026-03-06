@@ -74,7 +74,7 @@
             </div>
             <!-- Meta -->
             <dl class="mt-2.5 grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
-              <div><dt class="text-gray-400 dark:text-gray-500">Kamerad</dt><dd class="text-gray-700 dark:text-gray-300">{{ a.Kamerad || '–' }}</dd></div>
+              <div><dt class="text-gray-400 dark:text-gray-500">Kamerad</dt><dd class="text-gray-700 dark:text-gray-300">{{ kameradName(a.Kamerad_Id) || '–' }}</dd></div>
               <div><dt class="text-gray-400 dark:text-gray-500">Größe</dt><dd class="text-gray-700 dark:text-gray-300">{{ a.Groesse || '–' }}</dd></div>
               <div>
                 <dt class="text-gray-400 dark:text-gray-500">Nächste Prüfung</dt>
@@ -159,7 +159,7 @@
                 </div>
               </template>
             </td>
-            <td class="px-4 py-2 text-gray-600 dark:text-gray-400">{{ a.Kamerad || '–' }}</td>
+            <td class="px-4 py-2 text-gray-600 dark:text-gray-400">{{ kameradName(a.Kamerad_Id) || '–' }}</td>
             <td class="px-4 py-2 text-sm text-gray-600 dark:text-gray-400">{{ a.Groesse || '–' }}</td>
             <td class="px-4 py-2">
               <select :value="a.Status" @change="quickStatus(a, $event.target.value)"
@@ -231,12 +231,12 @@ import {
   openAusruestungForm, openAusruestungDetail, deleteAusruestung,
   openAusgabe, openPruefung, openWaesche,
   openMassenWaesche, openMassenPruefung, showToast, canEdit,
-  openAusruestungCsvImport,
+  openAusruestungCsvImport, kameradName,
 } from '../store.js'
 import { fmtDateRel, statusBadge, typLabel } from '../utils/formatters.js'
 import { exportCSV } from '../utils/pdf.js'
 
 function onExportCSV() {
-  exportCSV(ausruestungFiltered.value, typen.value, showToast)
+  exportCSV(ausruestungFiltered.value, typen.value, showToast, kameradName)
 }
 </script>

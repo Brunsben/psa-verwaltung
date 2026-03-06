@@ -79,15 +79,23 @@ for i in $(seq 1 30); do
 done
 echo ""
 
-# ── PostgreSQL-Rollen anlegen ──────────────────────────────
-echo "🔑 Lege PostgreSQL-Rollen an..."
+# ── Shared Schema (fw_common) anlegen ──────────────────────
+echo "🔑 Lege fw_common Schema an (Mitglieder, Konten, Auth)..."
 $COMPOSE exec -T postgres psql \
   -U "${POSTGRES_USER:-nocodb}" \
   -d "${POSTGRES_DB:-nocodb}" \
   -v "postgrest_password=${POSTGREST_DB_PASSWORD}" \
   -v "jwt_secret=${JWT_SECRET}" \
+  -f /dev/stdin < "$SCRIPT_DIR/postgres-common.sql"
+echo "✅ fw_common Schema angelegt"
+
+# ── PSA-Schema (fw_psa) anlegen ───────────────────────────
+echo "📦 Lege fw_psa Schema an (Ausrüstung, Prüfungen, etc.)..."
+$COMPOSE exec -T postgres psql \
+  -U "${POSTGRES_USER:-nocodb}" \
+  -d "${POSTGRES_DB:-nocodb}" \
   -f /dev/stdin < "$SCRIPT_DIR/postgres-init.sql"
-echo "✅ Rollen angelegt"
+echo "✅ fw_psa Schema angelegt"
 
 # ── Sicherheits-Lockdown (RLS + Anon-Zugriff entfernen) ────────
 echo "🔒 Aktiviere JWT-Lockdown und Row-Level Security..."

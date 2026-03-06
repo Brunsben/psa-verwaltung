@@ -35,7 +35,7 @@
                 <div class="min-w-0 flex-1">
                   <div class="font-semibold text-sm text-gray-900 dark:text-white truncate">{{ typLabel(a.Ausruestungstyp, typen) }}</div>
                   <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                    {{ a.Seriennummer || '–' }}<template v-if="a.Kamerad"> · {{ a.Kamerad }}</template>
+                    {{ a.Seriennummer || '–' }}<template v-if="kameradName(a.Kamerad_Id)"> · {{ kameradName(a.Kamerad_Id) }}</template>
                   </div>
                 </div>
                 <span :class="[statusBadge(a.Status), 'shrink-0 text-xs px-2 py-0.5 rounded-full font-medium']">{{ a.Status || '–' }}</span>
@@ -90,7 +90,7 @@
 import { computed, nextTick } from 'vue'
 import {
   modal, qrResult, qrError, qrScanTarget, form, ausruestung, typen,
-  showToast, canEdit,
+  showToast, canEdit, kameradName,
   openAusruestungDetail, openAusruestungForm,
   openAusgabe, openPruefung, openWaesche, deleteAusruestung,
 } from '../../store.js'

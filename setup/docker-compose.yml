@@ -4,7 +4,7 @@ services:
     container_name: psa_postgrest
     environment:
       PGRST_DB_URI: "postgresql://psa_auth:${POSTGREST_DB_PASSWORD}@postgres:5432/${POSTGRES_DB:-nocodb}"
-      PGRST_DB_SCHEMAS: "pxicv3djlauluse"
+      PGRST_DB_SCHEMAS: "fw_common,fw_psa"
       PGRST_DB_ANON_ROLE: "psa_anon"
       PGRST_SERVER_PORT: "3000"
       PGRST_DB_POOL: "5"

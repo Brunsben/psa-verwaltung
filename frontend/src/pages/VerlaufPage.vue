@@ -37,7 +37,7 @@
       <select v-if="canEdit" v-model="filterVerlaufKamerad"
         class="border border-gray-200 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-400 focus:border-transparent">
         <option value="">Alle Kameraden</option>
-        <option v-for="k in kameradenliste" :key="k.Id" :value="k.label">{{ k.label }}</option>
+        <option v-for="k in kameradenliste" :key="k.Id" :value="k.Id">{{ k.label }}</option>
       </select>
     </div>
 
@@ -66,7 +66,7 @@
           </span>
         </div>
         <dl class="mt-2.5 grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
-          <div><dt class="text-gray-400 dark:text-gray-500">Kamerad</dt><dd class="text-gray-700 dark:text-gray-300">{{ p.Kamerad || '–' }}</dd></div>
+          <div><dt class="text-gray-400 dark:text-gray-500">Kamerad</dt><dd class="text-gray-700 dark:text-gray-300">{{ kameradName(p.Kamerad_Id) || '–' }}</dd></div>
           <div><dt class="text-gray-400 dark:text-gray-500">Prüfer</dt><dd class="text-gray-700 dark:text-gray-300">{{ p.Pruefer || '–' }}</dd></div>
           <div><dt class="text-gray-400 dark:text-gray-500">Nächste Prüfung</dt><dd class="text-gray-700 dark:text-gray-300">{{ fmtDate(p.Naechste_Pruefung) || '–' }}</dd></div>
         </dl>
@@ -88,7 +88,7 @@
         <tbody class="divide-y divide-gray-50 dark:divide-gray-700">
           <tr v-for="p in pruefungenFiltered" :key="p.Id" class="hover:bg-gray-50 dark:hover:bg-gray-700/40 transition-colors">
             <td class="px-4 py-2.5 font-medium text-gray-800 dark:text-gray-200">{{ fmtDate(p.Datum) }}</td>
-            <td class="px-4 py-2.5 text-gray-600 dark:text-gray-400">{{ p.Kamerad || '–' }}</td>
+            <td class="px-4 py-2.5 text-gray-600 dark:text-gray-400">{{ kameradName(p.Kamerad_Id) || '–' }}</td>
             <td class="px-4 py-2.5 text-gray-600 dark:text-gray-400">
               <div class="font-medium text-gray-800 dark:text-gray-200">{{ p.Ausruestungstyp || '–' }}</div>
               <div v-if="p.Seriennummer" class="text-xs text-gray-400 dark:text-gray-500 font-mono mt-0.5">{{ p.Seriennummer }}</div>
@@ -132,7 +132,7 @@
           <div class="text-xs text-gray-600 dark:text-gray-400 mt-0.5">{{ w.Ausruestungstyp || '–' }}<span v-if="w.Seriennummer" class="font-mono text-gray-400 ml-1">{{ w.Seriennummer }}</span></div>
         </div>
         <dl class="mt-2.5 grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
-          <div><dt class="text-gray-400 dark:text-gray-500">Kamerad</dt><dd class="text-gray-700 dark:text-gray-300">{{ w.Kamerad || '–' }}</dd></div>
+          <div><dt class="text-gray-400 dark:text-gray-500">Kamerad</dt><dd class="text-gray-700 dark:text-gray-300">{{ kameradName(w.Kamerad_Id) || '–' }}</dd></div>
           <div><dt class="text-gray-400 dark:text-gray-500">Wäscheart</dt><dd class="text-gray-700 dark:text-gray-300">{{ w.Waescheart || '–' }}</dd></div>
           <div v-if="w.Notizen" class="col-span-2"><dt class="text-gray-400 dark:text-gray-500">Notizen</dt><dd class="text-gray-700 dark:text-gray-300">{{ w.Notizen }}</dd></div>
         </dl>
@@ -153,7 +153,7 @@
         <tbody class="divide-y divide-gray-50 dark:divide-gray-700">
           <tr v-for="w in waescheFiltered" :key="w.Id" class="hover:bg-gray-50 dark:hover:bg-gray-700/40 transition-colors">
             <td class="px-4 py-2.5 font-medium text-gray-800 dark:text-gray-200">{{ fmtDate(w.Datum) }}</td>
-            <td class="px-4 py-2.5 text-gray-600 dark:text-gray-400">{{ w.Kamerad || '–' }}</td>
+            <td class="px-4 py-2.5 text-gray-600 dark:text-gray-400">{{ kameradName(w.Kamerad_Id) || '–' }}</td>
             <td class="px-4 py-2.5 text-gray-600 dark:text-gray-400">
               <div class="font-medium text-gray-800 dark:text-gray-200">{{ w.Ausruestungstyp || '–' }}</div>
               <div v-if="w.Seriennummer" class="text-xs text-gray-400 dark:text-gray-500 font-mono mt-0.5">{{ w.Seriennummer }}</div>
@@ -193,7 +193,7 @@
           </button>
         </div>
         <dl class="mt-2.5 grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
-          <div><dt class="text-gray-400 dark:text-gray-500">Kamerad</dt><dd class="text-gray-700 dark:text-gray-300">{{ ag.Kamerad || '–' }}</dd></div>
+          <div><dt class="text-gray-400 dark:text-gray-500">Kamerad</dt><dd class="text-gray-700 dark:text-gray-300">{{ kameradName(ag.Kamerad_Id) || '–' }}</dd></div>
           <div><dt class="text-gray-400 dark:text-gray-500">Ausgabe</dt><dd class="text-gray-700 dark:text-gray-300">{{ fmtDate(ag.Ausgabedatum) }}</dd></div>
           <div>
             <dt class="text-gray-400 dark:text-gray-500">Rückgabe</dt>
@@ -226,7 +226,7 @@
               <span v-if="ag.Rueckgabedatum">{{ fmtDate(ag.Rueckgabedatum) }}</span>
               <span v-else class="text-amber-500 dark:text-amber-400 text-xs font-semibold">noch ausgegeben</span>
             </td>
-            <td class="px-4 py-2.5 text-gray-600 dark:text-gray-400">{{ ag.Kamerad || '–' }}</td>
+            <td class="px-4 py-2.5 text-gray-600 dark:text-gray-400">{{ kameradName(ag.Kamerad_Id) || '–' }}</td>
             <td class="px-4 py-2.5 text-gray-600 dark:text-gray-400">
               <div class="font-medium text-gray-800 dark:text-gray-200">{{ ag.Ausruestungstyp || '–' }}</div>
               <div v-if="ag.Seriennummer" class="text-xs text-gray-400 dark:text-gray-500 font-mono mt-0.5">{{ ag.Seriennummer }}</div>
@@ -257,7 +257,7 @@ import {
   pruefungen, waescheListe, ausgaben,
   pruefungenFiltered, waescheFiltered, ausgabenFiltered,
   verlaufTab, filterVerlaufKamerad, kameradenliste,
-  openRueckgabe, canEdit,
+  openRueckgabe, canEdit, kameradName,
 } from '../store.js'
 import { fmtDate } from '../utils/formatters.js'
 </script>

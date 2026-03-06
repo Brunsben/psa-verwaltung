@@ -5,7 +5,7 @@
         <h2 class="text-lg font-bold mb-1">Rückgabe erfassen</h2>
         <div class="text-sm text-gray-500 dark:text-gray-400 mb-5">
           {{ form.rueckgabeAusgabe?.Ausruestungstyp }} – {{ form.rueckgabeAusgabe?.Seriennummer }}<br>
-          <span class="text-xs">Kamerad: {{ form.rueckgabeAusgabe?.Kamerad || '–' }}</span>
+          <span class="text-xs">Kamerad: {{ kameradName(form.rueckgabeAusgabe?.Kamerad_Id) || '–' }}</span>
         </div>
         <div>
           <label class="label">Rückgabedatum</label>
@@ -23,5 +23,5 @@
 </template>
 
 <script setup>
-import { modal, form, saveRueckgabe } from '../../store.js'
+import { modal, form, saveRueckgabe, kameradName } from '../../store.js'
 </script>
