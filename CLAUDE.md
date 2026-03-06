@@ -151,13 +151,13 @@ fw-network (bridge)
 
 ## Unifikationsplan
 
-### Schritt 0 — DB-Fundament & PSA-Normalisierung
-- [ ] `fw_common`-Schema erstellen: `members`-Tabelle (UUID, Vorname, Name, Dienstgrad, etc.), `accounts`-Tabelle (UUID, username, PIN, role, member_id FK), Auth-Funktionen → neue Datei `setup/postgres-common.sql`
-- [ ] Schema umbenennen `pxicv3djlauluse` → `fw_psa` → ~87 Stellen in 5 Dateien: `postgres-init.sql` (~38×), `postgres-jwt-lockdown.sql` (~40×), `docker-compose.yml` (1×), `migration-fotos.sql` (6×), `README.md` (2-3×)
-- [ ] UUID-Migration: Integer-IDs → UUID → 12 Interfaces in `types/index.ts` (`id: number` → `id: string`), API-Layer `api/index.ts` (4 CRUD-Funktionen), alle SQL-Tabellen
-- [ ] FK-Normalisierung: Denormalisierte String-Referenzen (`"Vorname Name"`) → `member_id` UUID-FK → ~15 Stellen in `store.ts` (z.B. `Ausgaben`, `Pruefungen`, `Waesche` verweisen auf Kameraden per Stringvergleich)
-- [ ] PostgREST Resource Embedding konfigurieren (JOINs über FKs statt Client-seitige Zuordnung)
-- [ ] `docker-compose.yml` anpassen: `PGRST_DB_SCHEMAS: "fw_common,fw_psa"`
+### Schritt 0 — DB-Fundament & PSA-Normalisierung ✅
+- [x] `fw_common`-Schema erstellen: `members`-Tabelle (UUID, Vorname, Name, Dienstgrad, etc.), `accounts`-Tabelle (UUID, username, PIN, role, member_id FK), Auth-Funktionen → neue Datei `setup/postgres-common.sql`
+- [x] Schema umbenennen `pxicv3djlauluse` → `fw_psa` → ~87 Stellen in 5 Dateien: `postgres-init.sql` (~38×), `postgres-jwt-lockdown.sql` (~40×), `docker-compose.yml` (1×), `migration-fotos.sql` (6×), `README.md` (2-3×)
+- [x] UUID-Migration: Integer-IDs → UUID → 12 Interfaces in `types/index.ts` (`id: number` → `id: string`), API-Layer `api/index.ts` (4 CRUD-Funktionen), alle SQL-Tabellen
+- [x] FK-Normalisierung: Denormalisierte String-Referenzen (`"Vorname Name"`) → `Kamerad_Id` UUID-FK → ~80 Stellen in `store.ts`, 8 Vue-Komponenten, `pdf.ts` (Commit `9e299aa`)
+- [x] PostgREST Resource Embedding konfigurieren (JOINs über FKs statt Client-seitige Zuordnung)
+- [x] `docker-compose.yml` anpassen: `PGRST_DB_SCHEMAS: "fw_common,fw_psa"`
 
 ### Schritt 1 — Portal-Landingpage
 - [ ] Neues Repo `feuerwehr-portal` erstellen (Vue 3 SPA, Vite, Tailwind 4)
