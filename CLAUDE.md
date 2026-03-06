@@ -52,7 +52,7 @@ Located in `~/.claude/skills/`:
 ## PSA-Verwaltung (PostgREST)
 
 - **API:** `http://10.10.1.238:8182/api/{tabelle}` (intern), `https://psa.ofwietmarschen.org/api/{tabelle}` (extern)
-- **Auth:** keine (PostgREST anon-Rolle, nginx schützt den Endpunkt)
+- **Auth:** JWT-basiert (PostgREST validiert Bearer-Token, `psa_anon` hat nur Zugriff auf Login-RPC-Funktionen)
 - **Schema:** `pxicv3djlauluse` (PostgreSQL-Schema)
 
 | Tabelle | PostgREST-Endpunkt |
@@ -66,10 +66,53 @@ Located in `~/.claude/skills/`:
 | Normen | `/api/Normen` |
 | Benutzer | `/api/Benutzer` |
 | Changelog | `/api/Changelog` |
+| Schadensdokumentation | `/api/Schadensdokumentation` |
+| login_attempts | (kein Direktzugriff, nur über `authenticate()`) |
 
 **Filter-Syntax:** `?Feld=op.Wert` (z.B. `?Status=neq.Ausgesondert&Naechste_Pruefung=lte.2026-12-31`)
 
+**RPC-Funktionen:**
+| Funktion | Auth | Beschreibung |
+| - | - | - |
+| `POST /api/rpc/authenticate` | anon | Login → JWT-Token |
+| `POST /api/rpc/is_initialized` | anon | Prüft ob Admin existiert |
+| `POST /api/rpc/create_admin` | anon | Ersteinrichtung (nur wenn leer) |
+| `POST /api/rpc/change_password` | JWT | Eigenes Passwort ändern |
+
+**JWT-Claims:**
+- `role`: immer `psa_user` (PostgREST-Rolle)
+- `sub`: Benutzername
+- `app_role`: `Admin` / `Kleiderwart` / `User` (anwendungsbezogen)
+- `kamerad_id`: verknüpfte Kameraden-ID (für User-Rolle)
+
 > Cloudflare Tunnel läuft als Systemdienst auf dem Pi (`sudo systemctl status cloudflared`). Startet automatisch nach Neustart.
+
+## Security-Architektur (Stand: März 2026)
+
+### ✅ Umgesetzt
+1. **Bcrypt-PIN-Hashing** — Trigger `hash_pin` auf `Benutzer` hasht PINs automatisch bei INSERT/UPDATE (`pgcrypto crypt()/gen_salt('bf')`). Bestehende Klartext-PINs müssen einmalig migriert werden (siehe unten).
+2. **Brute-Force-Schutz** — Tabelle `login_attempts` zählt Fehlversuche. Nach 5 Fehlern in 15 Min → Account temporär gesperrt. `authenticate()` bereinigt Einträge >24h.
+3. **JWT-Lockdown automatisiert** — `install.sh` führt `postgres-jwt-lockdown.sql` automatisch aus. Kein manueller Schritt mehr nötig.
+4. **Row-Level Security (RLS)** — Auf allen Tabellen aktiv. Admin/Kleiderwart: voller Zugriff. User: nur eigene Daten. Hilfsfunktionen: `current_app_role()`, `current_kamerad_id()`, `current_kamerad_name()`.
+5. **Content-Security-Policy** — CSP + Permissions-Policy Header in `nginx.conf.template`.
+6. **PIN-Mindestanforderungen** — ≥6 Zeichen, Server (Trigger + RPC-Funktionen) + Client (`store.ts`).
+7. **Sichere Passwortänderung** — `change_password()` RPC statt direktem PATCH auf Benutzer-Tabelle.
+8. **v-html eliminiert** — Icons in Sidebar per `:class`-Binding statt `v-html`.
+9. **JSON.parse abgesichert** — `safeJsonParse()` mit try/catch für localStorage.
+
+### ⚠️ Noch zu erledigen (nach Deployment)
+1. **Bestehende Klartext-PINs migrieren** — Einmalig auf dem Server ausführen:
+   ```sql
+   docker exec -i nocodb_postgres psql -U nocodb -d nocodb -c "
+     UPDATE pxicv3djlauluse.\"Benutzer\"
+        SET \"PIN\" = crypt(\"PIN\", gen_salt('bf'))
+      WHERE \"PIN\" NOT LIKE '\$2a\$%' AND \"PIN\" NOT LIKE '\$2b\$%';
+   "
+   ```
+2. **PostgREST neustarten** nach DB-Änderungen: `cd setup && docker compose restart postgrest`
+3. **n8n-Workflows prüfen** — Workflows die direkt auf die DB oder API zugreifen müssen evtl. JWT-Token mitschicken (betrifft: Backup, Prüfungs-Reminder, Wäsch-Limit etc.)
+4. **Testen**: Login, Passwort ändern, Benutzer anlegen/bearbeiten, RLS für User-Rolle
+5. **Optional: JWT in httpOnly-Cookie** statt localStorage (erfordert PostgREST-Proxy-Anpassung)
 
 ## Typical Workflow
 

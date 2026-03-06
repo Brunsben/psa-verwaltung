@@ -89,6 +89,14 @@ $COMPOSE exec -T postgres psql \
   -f /dev/stdin < "$SCRIPT_DIR/postgres-init.sql"
 echo "✅ Rollen angelegt"
 
+# ── Sicherheits-Lockdown (RLS + Anon-Zugriff entfernen) ────────
+echo "🔒 Aktiviere JWT-Lockdown und Row-Level Security..."
+$COMPOSE exec -T postgres psql \
+  -U "${POSTGRES_USER:-nocodb}" \
+  -d "${POSTGRES_DB:-nocodb}" \
+  -f /dev/stdin < "$SCRIPT_DIR/postgres-jwt-lockdown.sql"
+echo "✅ Sicherheits-Lockdown aktiv"
+
 # ── Alle Container starten ────────────────────────────────
 echo ""
 echo "🚀 Starte alle Container (Frontend-Build dauert ~30s)..."

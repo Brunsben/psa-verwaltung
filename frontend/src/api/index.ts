@@ -78,6 +78,13 @@ export async function rpc(name: string, params: Record<string, unknown> = {}): P
   return r.json()
 }
 
+/**
+ * Ruft eine PostgREST-RPC-Funktion auf (mit Auth-Header, für authentifizierte Aktionen).
+ */
+export async function authRpc(name: string, params: Record<string, unknown> = {}): Promise<unknown> {
+  return api('POST', `${API}/rpc/${name}`, params)
+}
+
 // ── Auth-Funktionen (via PostgreSQL-Funktionen) ───────────────────────────
 
 /** Login: gibt { token, user } zurück */

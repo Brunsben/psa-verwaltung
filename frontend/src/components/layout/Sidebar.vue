@@ -19,7 +19,7 @@
           page === p.id
             ? 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400'
             : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100']">
-        <span class="nav-icon" v-html="p.icon"></span>
+        <i :class="[p.iconClass, 'text-xl flex-shrink-0']"></i>
         {{ p.label }}
         <span v-if="p.id === 'warnungen' && warnungen.length"
           class="ml-auto bg-red-500 text-white text-xs font-bold rounded-full px-1.5 py-0.5 leading-none">

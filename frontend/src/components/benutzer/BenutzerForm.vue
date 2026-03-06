@@ -9,8 +9,8 @@
             <input v-model="form.benutzer.Benutzername" class="input" placeholder="max.mustermann" autocomplete="off" />
           </div>
           <div class="col-span-2">
-            <label class="label">Passwort *</label>
-            <input v-model="form.benutzer.PIN" class="input" placeholder="Passwort eingeben" type="password" autocomplete="new-password" />
+            <label class="label">Passwort {{ form.benutzer.Id ? '(leer = unverändert)' : '*' }}</label>
+            <input v-model="form.benutzer.PIN" class="input" :placeholder="form.benutzer.Id ? 'Leer lassen = unverändert' : 'Mind. 6 Zeichen'" type="password" autocomplete="new-password" />
           </div>
           <div>
             <label class="label">Rolle</label>

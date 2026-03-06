@@ -6,7 +6,7 @@
 import { ref, reactive, computed } from 'vue'
 import { getAll, post, patch, del, TABLES,
          authenticate, isInitialized, createAdmin,
-         setJwt, clearJwt } from './api/index.js'
+         setJwt, clearJwt, authRpc } from './api/index.js'
 import { fmtDate, todayStr } from './utils/formatters.js'
 import type { Kamerad, Ausruestungstyp, Ausruestungstueck, Ausgabe, Pruefung, Waesche, Norm, Benutzer, ChangelogEntry, AppUser, CsvRow, AusruestungCsvRow, GroesseKatEntry, Warnung, Schadensdokumentation } from './types/index.js'
 
@@ -40,8 +40,15 @@ export function toggleDark() {
 }
 
 // ── Auth ───────────────────────────────────────────────────────────────────
+function safeJsonParse<T>(key: string, fallback: T): T {
+  try {
+    const raw = localStorage.getItem(key)
+    return raw ? JSON.parse(raw) as T : fallback
+  } catch { return fallback }
+}
+
 export const loggedIn    = ref(!!localStorage.getItem('psa_jwt'))
-export const currentUser = ref<AppUser | null>(JSON.parse(localStorage.getItem('psa_user') || 'null'))
+export const currentUser = ref<AppUser | null>(safeJsonParse('psa_user', null))
 
 // Bei abgelaufenem JWT automatisch ausloggen
 window.addEventListener('psa:unauthorized', () => {
@@ -85,17 +92,17 @@ export const DIENSTGRADE = [
 
 // ── Seitennavigation ───────────────────────────────────────────────────────
 export const pages = [
-  { id: 'dashboard',       label: 'Dashboard',       icon: '<i class="ph ph-gauge"></i>',                   roles: ['Admin','Kleiderwart'] },
-  { id: 'mein-dashboard',  label: 'Mein Dashboard',  icon: '<i class="ph ph-house"></i>',                   roles: ['User'] },
-  { id: 'kameraden',       label: 'Kameraden',       icon: '<i class="ph ph-users-three"></i>',             roles: ['Admin','Kleiderwart'] },
-  { id: 'ausruestung',     label: 'Ausrüstung',      icon: '<i class="ph ph-t-shirt"></i>',                 roles: ['Admin','Kleiderwart','User'] },
-  { id: 'typen',           label: 'Typen',           icon: '<i class="ph ph-tag"></i>',                     roles: ['Admin','Kleiderwart'] },
-  { id: 'verlauf',         label: 'Verlauf',         icon: '<i class="ph ph-clock-counter-clockwise"></i>', roles: ['Admin','Kleiderwart','User'] },
-  { id: 'normen',          label: 'Normen',          icon: '<i class="ph ph-seal-check"></i>',              roles: ['Admin','Kleiderwart'] },
-  { id: 'warnungen',       label: 'Warnungen',       icon: '<i class="ph ph-bell-ringing"></i>',            roles: ['Admin','Kleiderwart'] },
-  { id: 'statistiken',     label: 'Statistiken',     icon: '<i class="ph ph-chart-bar"></i>',               roles: ['Admin','Kleiderwart'] },
-  { id: 'changelog',       label: 'Changelog',       icon: '<i class="ph ph-clock-counter-clockwise"></i>', roles: ['Admin','Kleiderwart'] },
-  { id: 'benutzer',        label: 'Benutzer',        icon: '<i class="ph ph-user-gear"></i>',               roles: ['Admin'] },
+  { id: 'dashboard',       label: 'Dashboard',       iconClass: 'ph ph-gauge',                   roles: ['Admin','Kleiderwart'] },
+  { id: 'mein-dashboard',  label: 'Mein Dashboard',  iconClass: 'ph ph-house',                   roles: ['User'] },
+  { id: 'kameraden',       label: 'Kameraden',       iconClass: 'ph ph-users-three',             roles: ['Admin','Kleiderwart'] },
+  { id: 'ausruestung',     label: 'Ausrüstung',      iconClass: 'ph ph-t-shirt',                 roles: ['Admin','Kleiderwart','User'] },
+  { id: 'typen',           label: 'Typen',           iconClass: 'ph ph-tag',                     roles: ['Admin','Kleiderwart'] },
+  { id: 'verlauf',         label: 'Verlauf',         iconClass: 'ph ph-clock-counter-clockwise', roles: ['Admin','Kleiderwart','User'] },
+  { id: 'normen',          label: 'Normen',          iconClass: 'ph ph-seal-check',              roles: ['Admin','Kleiderwart'] },
+  { id: 'warnungen',       label: 'Warnungen',       iconClass: 'ph ph-bell-ringing',            roles: ['Admin','Kleiderwart'] },
+  { id: 'statistiken',     label: 'Statistiken',     iconClass: 'ph ph-chart-bar',               roles: ['Admin','Kleiderwart'] },
+  { id: 'changelog',       label: 'Changelog',       iconClass: 'ph ph-clock-counter-clockwise', roles: ['Admin','Kleiderwart'] },
+  { id: 'benutzer',        label: 'Benutzer',        iconClass: 'ph ph-user-gear',               roles: ['Admin'] },
 ]
 export const visiblePages = computed(() => {
   const role = (currentUser.value?.Rolle || '').toLowerCase()
@@ -617,6 +624,10 @@ export async function doSetup() {
   setupForm.error = ''
   if (!setupForm.username.trim() || !setupForm.pin.trim()) {
     setupForm.error = 'Bitte Benutzername und Passwort eingeben.'
+    return
+  }
+  if (setupForm.pin.length < 6) {
+    setupForm.error = 'Passwort muss mindestens 6 Zeichen haben.'
     return
   }
   if (setupForm.pin !== setupForm.pinConfirm) {
@@ -1349,7 +1360,7 @@ export async function deleteNorm(n: Norm) {
 // ── Benutzer CRUD ──────────────────────────────────────────────────────────
 export function openBenutzerForm(b: Benutzer | null = null) {
   if (b) {
-    Object.assign(form.benutzer, { Id: b.Id, Benutzername: b.Benutzername, PIN: b.PIN, Rolle: b.Rolle || 'Kleiderwart', Aktiv: b.Aktiv !== false, KameradId: b.KameradId || '' })
+    Object.assign(form.benutzer, { Id: b.Id, Benutzername: b.Benutzername, PIN: '', Rolle: b.Rolle || 'Kleiderwart', Aktiv: b.Aktiv !== false, KameradId: b.KameradId || '' })
   } else {
     Object.assign(form.benutzer, { Id: null, Benutzername: '', PIN: '', Rolle: 'Kleiderwart', Aktiv: true, KameradId: '' })
   }
@@ -1357,26 +1368,35 @@ export function openBenutzerForm(b: Benutzer | null = null) {
 }
 
 export async function saveBenutzer() {
-  if (!form.benutzer.Benutzername?.trim() || !form.benutzer.PIN?.trim()) {
-    showToast('Benutzername und Passwort sind Pflichtfelder', 'error'); return
+  const isEdit = !!form.benutzer.Id
+  if (!form.benutzer.Benutzername?.trim()) {
+    showToast('Benutzername ist ein Pflichtfeld', 'error'); return
+  }
+  if (!isEdit && !form.benutzer.PIN?.trim()) {
+    showToast('Passwort ist ein Pflichtfeld für neue Benutzer', 'error'); return
+  }
+  if (form.benutzer.PIN?.trim() && form.benutzer.PIN.trim().length < 6) {
+    showToast('Passwort muss mindestens 6 Zeichen haben', 'error'); return
   }
   await load(async () => {
-    const payload = {
+    const payload: Record<string, unknown> = {
       Benutzername: form.benutzer.Benutzername.trim(),
-      PIN:          form.benutzer.PIN.trim(),
       Rolle:        form.benutzer.Rolle,
       Aktiv:        form.benutzer.Aktiv,
       KameradId:    form.benutzer.KameradId || null,
+    }
+    if (form.benutzer.PIN?.trim()) {
+      payload.PIN = form.benutzer.PIN.trim()
     }
     if (form.benutzer.Id) {
       await patch('Benutzer', form.benutzer.Id, payload)
       const idx = benutzer.value.findIndex(b => b.Id === form.benutzer.Id)
       if (idx >= 0) benutzer.value[idx] = { ...benutzer.value[idx], ...payload }
-      logChange('Benutzer', 'Bearbeitet', payload.Benutzername)
+      logChange('Benutzer', 'Bearbeitet', String(payload.Benutzername))
     } else {
       const created = await post('Benutzer', payload)
       benutzer.value.push(created as unknown as Benutzer)
-      logChange('Benutzer', 'Erstellt', payload.Benutzername)
+      logChange('Benutzer', 'Erstellt', String(payload.Benutzername))
     }
     modal.benutzerForm = false
     showToast('Benutzer gespeichert')
@@ -1402,14 +1422,14 @@ export async function savePasswort() {
   if (passwortChangeForm.neuesPasswort !== passwortChangeForm.bestaetigung) {
     passwortChangeForm.error = 'Passwörter stimmen nicht überein.'; return
   }
-  if (passwortChangeForm.neuesPasswort.length < 4) {
-    passwortChangeForm.error = 'Passwort muss mindestens 4 Zeichen haben.'; return
+  if (passwortChangeForm.neuesPasswort.length < 6) {
+    passwortChangeForm.error = 'Passwort muss mindestens 6 Zeichen haben.'; return
   }
   await load(async () => {
-    // Aktuelles Passwort verifizieren
-    await authenticate(currentUser.value!.Benutzername, passwortChangeForm.altPasswort)
-    // Passwort aktualisieren
-    await patch('Benutzer', currentUser.value!.Id, { PIN: passwortChangeForm.neuesPasswort.trim() })
+    await authRpc('change_password', {
+      alt_pin: passwortChangeForm.altPasswort,
+      neues_pin: passwortChangeForm.neuesPasswort.trim(),
+    })
     modal.passwortForm = false
     showToast('Passwort geändert')
   })
