@@ -159,12 +159,12 @@ fw-network (bridge)
 - [x] PostgREST Resource Embedding konfigurieren (JOINs über FKs statt Client-seitige Zuordnung)
 - [x] `docker-compose.yml` anpassen: `PGRST_DB_SCHEMAS: "fw_common,fw_psa"`
 
-### Schritt 1 — Portal-Landingpage
-- [ ] Neues Repo `feuerwehr-portal` erstellen (Vue 3 SPA, Vite, Tailwind 4)
-- [ ] Master `docker-compose.yml` für alle Services
-- [ ] nginx Reverse-Proxy: `/` → Portal, `/psa/` → PSA, `/food/` → FoodBot, `/fk/` → FK
-- [ ] Cloudflare Tunnel auf Portal umleiten (`fw.ofwietmarschen.org`)
-- [ ] App-Kacheln mit Status-Badges (online/offline)
+### Schritt 1 — Portal-Landingpage ✅
+- [x] Portal-SPA erstellen (Vue 3, Vite, Tailwind 4) → `portal/` Verzeichnis mit App-Kacheln, Health-Checks, Dark Mode, Uhr
+- [x] Master `docker-compose.portal.yml` für alle Services (fw-network, shared PostgreSQL)
+- [x] nginx Reverse-Proxy: `/` → Portal, `/psa/` → PSA, `/food/` → FoodBot, `/fk/` → FK (+ WebSocket für RFID)
+- [x] Cloudflare Tunnel Doku (siehe unten)
+- [x] App-Kacheln mit Status-Badges (online/offline via Health-Checks, 60s Intervall)
 
 ### Schritt 2 — FoodBot modernisieren
 - [ ] Jinja2-Templates → Tailwind CSS
@@ -190,5 +190,5 @@ fw-network (bridge)
 
 - **NocoDB-Altlast:** PSA-Tabellen haben deutsch-gemischte Spaltennamen (`Naechste_Pruefung`, `Ausruestungstuecke_Id`) und denormalisierte String-Referenzen statt FKs
 - **PostgREST-Schema:** Frontend-Code referenziert das Schema **nicht** direkt (nur Backend-SQL-Dateien betroffen)
-- **Cloudflare Tunnel:** Systemd-Service `cloudflared`, Konfiguration in `/etc/cloudflare/`
+- **Cloudflare Tunnel:** Systemd-Service `cloudflared`, Konfiguration in `/etc/cloudflare/`. Umstellung auf Portal: `cloudflared tunnel route dns fw-tunnel fw.ofwietmarschen.org` → Service-URL auf `http://localhost:8180` (Portal-Port) ändern in `/etc/cloudflare/config.yml`, dann `sudo systemctl restart cloudflared`
 - **FoodBot RFID:** ELATEC TWN4 Multitech via pyserial an `/dev/ttyUSB0`, Flask dient als Hardware-Proxy

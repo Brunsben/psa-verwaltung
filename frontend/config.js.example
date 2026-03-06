@@ -3,5 +3,7 @@
 // Oder kopiere diese Datei als "config.js".
 
 window.CONFIG = {
+  // Standalone (Port 8182): '/api'
+  // Über Portal (/psa/):    '/psa/api'
   api: '/api',
 };
