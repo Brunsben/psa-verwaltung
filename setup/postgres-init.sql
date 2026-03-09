@@ -296,7 +296,8 @@ CREATE OR REPLACE FUNCTION pxicv3djlauluse.current_kamerad_id()
   END;
 $$;
 
--- Aktueller Kamerad-Name (für Tabellen die per Name verknüpft sind)
+-- Aktueller Kamerad-Name (Legacy-Hilfsfunktion, nicht mehr für RLS verwendet)
+-- RLS nutzt jetzt kamerad_id direkt (siehe migration-rls-kamerad-id.sql)
 CREATE OR REPLACE FUNCTION pxicv3djlauluse.current_kamerad_name()
   RETURNS text LANGUAGE sql STABLE SECURITY DEFINER AS $$
   SELECT k."Vorname" || ' ' || k."Name"

@@ -31,6 +31,11 @@ REVOKE USAGE, SELECT
 --   pxicv3djlauluse.current_app_role()      → 'Admin'|'Kleiderwart'|'User'
 --   pxicv3djlauluse.current_kamerad_id()     → integer|NULL
 --   pxicv3djlauluse.current_kamerad_name()   → 'Vorname Name'|NULL
+--
+-- HINWEIS: Die Migration setup/migration-rls-kamerad-id.sql ersetzt die
+-- hier definierten user_read-Policies (ausr, ausgaben, pruef, waesche)
+-- durch kamerad_id-basierte Integer-Vergleiche statt Kamerad-Textvergleiche.
+-- Nach Ausführung der Migration sind diese Policies überschrieben.
 
 -- ── Kameraden ─────────────────────────────────────────────────────────────
 ALTER TABLE pxicv3djlauluse."Kameraden" ENABLE ROW LEVEL SECURITY;
