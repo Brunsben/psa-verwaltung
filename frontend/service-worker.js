@@ -62,7 +62,7 @@ self.addEventListener('fetch', e => {
   }
 
   // config.js: Network-first (Laufzeitkonfiguration)
-  if (url.pathname === '/config.js') {
+  if (url.pathname === '/config.js' || url.pathname === '/psa/config.js') {
     e.respondWith(
       fetch(e.request).catch(() => caches.match(e.request))
     );
