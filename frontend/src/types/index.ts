@@ -9,6 +9,8 @@ export interface Kamerad {
   Name: string | null
   Dienstgrad: string | null
   Email: string | null
+  Personalnummer: string | null
+  KartenID: string | null
   Jacke_Groesse: string | null
   Hose_Groesse: string | null
   Stiefel_Groesse: string | number | null

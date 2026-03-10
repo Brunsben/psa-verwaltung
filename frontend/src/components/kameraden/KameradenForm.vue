@@ -24,6 +24,14 @@
             <input v-model="form.kamerad.Email" type="email" class="input" placeholder="max@feuerwehr.de" />
           </div>
           <div>
+            <label class="label">Personalnummer</label>
+            <input v-model="form.kamerad.Personalnummer" class="input" placeholder="z.B. 1234" />
+          </div>
+          <div>
+            <label class="label">Karten-ID (RFID)</label>
+            <input v-model="form.kamerad.KartenID" class="input" placeholder="z.B. A1B2C3" />
+          </div>
+          <div>
             <label class="label">Jacke</label>
             <input v-model="form.kamerad.Jacke_Groesse" placeholder="z.B. 52" class="input" />
           </div>

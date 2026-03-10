@@ -706,6 +706,8 @@ export async function saveKamerad() {
       Name:              form.kamerad.Name              || null,
       Dienstgrad:        form.kamerad.Dienstgrad        || null,
       Email:             form.kamerad.Email             || null,
+      Personalnummer:    form.kamerad.Personalnummer    || null,
+      KartenID:          form.kamerad.KartenID          || null,
       Jacke_Groesse:     form.kamerad.Jacke_Groesse     || null,
       Hose_Groesse:      form.kamerad.Hose_Groesse      || null,
       Stiefel_Groesse:   form.kamerad.Stiefel_Groesse   || null,
