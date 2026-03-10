@@ -89,7 +89,13 @@ export const loginForm   = reactive({ username: '', pin: '', error: '' })
 export const needsSetup  = ref(false)
 export const setupForm   = reactive({ username: '', pin: '', pinConfirm: '', error: '' })
 
-export const feuerwehrName = window.CONFIG.feuerwehrName || 'FF Wietmarschen'
+export const feuerwehrName = ref(window.CONFIG.feuerwehrName || 'Feuerwehr')
+
+// Zentralen Namen vom Portal laden
+fetch('/api/auth/config')
+  .then(r => r.ok ? r.json() : null)
+  .then(data => { if (data?.feuerwehrName) feuerwehrName.value = data.feuerwehrName })
+  .catch(() => { /* Fallback bleibt */ })
 
 export const userRole      = computed(() => (currentUser.value?.Rolle || '').toLowerCase())
 export const isAdmin       = computed(() => userRole.value === 'admin')
