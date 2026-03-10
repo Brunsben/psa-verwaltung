@@ -19,8 +19,13 @@ export const TABLES = {
 export const T = (name: string): string => name
 
 // ── JWT-Token-Verwaltung ──────────────────────────────────────────────────
-export const getJwt   = (): string | null => localStorage.getItem('psa_jwt')
-export const setJwt   = (token: string): void => { localStorage.setItem('psa_jwt', token) }
+// Im Portal-Modus (portalMode) wird kein localStorage-JWT verwendet.
+// Stattdessen mapped nginx den fw_jwt httpOnly-Cookie automatisch
+// als Bearer-Header an PostgREST weiter → sicherer gegen XSS.
+let _portalMode = false
+export function setPortalMode(v: boolean) { _portalMode = v }
+export const getJwt   = (): string | null => _portalMode ? null : localStorage.getItem('psa_jwt')
+export const setJwt   = (token: string): void => { if (!_portalMode) localStorage.setItem('psa_jwt', token) }
 export const clearJwt = (): void => { localStorage.removeItem('psa_jwt') }
 
 function authHeader(): Record<string, string> {
@@ -46,6 +51,7 @@ export async function api(
   const r = await fetch(path, {
     method,
     headers,
+    credentials: 'include',
     body: body ? JSON.stringify(body) : undefined,
   })
   if (r.status === 401) {

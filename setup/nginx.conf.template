@@ -9,9 +9,7 @@ server {
     add_header X-XSS-Protection "1; mode=block" always;
     add_header Referrer-Policy "strict-origin-when-cross-origin" always;
     add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
-    # TODO: 'unsafe-inline' für script-src entfernen, sobald Vite-Build ohne Inline-Scripts auskommt
-    # Mögliche Lösung: Nonce-basierte CSP oder Hash-basierte Whitelist
-    add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; worker-src 'self'; frame-ancestors 'self';" always;
+    add_header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; worker-src 'self'; frame-ancestors 'self';" always;
     add_header Permissions-Policy "camera=(self), microphone=()" always;
 
     # ── Frontend (SPA) ────────────────────────────────────

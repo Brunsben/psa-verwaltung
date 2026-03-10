@@ -6,7 +6,7 @@
 import { ref, reactive, computed } from 'vue'
 import { getAll, post, patch, del, TABLES,
          authenticate, isInitialized, createAdmin,
-         setJwt, clearJwt, authRpc } from './api/index.js'
+         setJwt, clearJwt, authRpc, setPortalMode } from './api/index.js'
 import { fmtDate, todayStr } from './utils/formatters.js'
 import type { Kamerad, Ausruestungstyp, Ausruestungstueck, Ausgabe, Pruefung, Waesche, Norm, Benutzer, ChangelogEntry, AppUser, CsvRow, AusruestungCsvRow, GroesseKatEntry, Warnung, Schadensdokumentation } from './types/index.js'
 
@@ -69,6 +69,7 @@ export async function tryPortalSSO(): Promise<boolean> {
     localStorage.setItem('psa_user', JSON.stringify(currentUser.value))
     loggedIn.value  = true
     portalMode.value = true
+    setPortalMode(true)  // API nutzt Cookie statt localStorage-JWT
     page.value = (data.Rolle || '').toLowerCase() === 'user' ? 'mein-dashboard' : 'dashboard'
     return true
   } catch {

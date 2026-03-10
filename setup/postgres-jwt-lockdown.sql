@@ -169,7 +169,10 @@ CREATE POLICY changelog_admin ON pxicv3djlauluse."Changelog"
 DROP POLICY IF EXISTS changelog_insert ON pxicv3djlauluse."Changelog";
 CREATE POLICY changelog_insert ON pxicv3djlauluse."Changelog"
   FOR INSERT TO psa_user
-  WITH CHECK (true);
+  WITH CHECK (
+    "Benutzer" = current_setting('request.jwt.claim.sub', true)
+    OR pxicv3djlauluse.current_app_role() IN ('Admin', 'Kleiderwart')
+  );
 
 -- ── Schadensdokumentation ─────────────────────────────────────────────────
 ALTER TABLE pxicv3djlauluse."Schadensdokumentation" ENABLE ROW LEVEL SECURITY;
