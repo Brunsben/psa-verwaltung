@@ -675,11 +675,13 @@ export async function doSetup() {
 }
 
 export function doLogout() {
+  const wasPortal = portalMode.value
   clearJwt()
   localStorage.removeItem('psa_user')
   loggedIn.value     = false
   currentUser.value  = null
   page.value         = 'dashboard'
+  if (wasPortal) window.location.href = '/'
 }
 
 // ── Kameraden-Aktionen ─────────────────────────────────────────────────────

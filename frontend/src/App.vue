@@ -82,6 +82,12 @@
             <component :is="currentPageComponent" :key="page" />
           </Transition>
         </div>
+
+        <footer class="py-6 text-center text-xs text-gray-400 dark:text-gray-600 border-t border-gray-100 dark:border-gray-800 mt-8">
+          <a href="https://github.com/Brunsben" target="_blank" class="hover:text-gray-600 dark:hover:text-gray-400 transition-colors">
+            Entwickelt von Benjamin Bruns
+          </a>
+        </footer>
       </main>
 
       <!-- Feature-Modals -->

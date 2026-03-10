@@ -62,7 +62,7 @@
       <button @click="doLogout"
         class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-gray-500 dark:text-gray-400 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400 transition-colors">
         <i class="ph ph-sign-out text-lg flex-shrink-0"></i>
-        Abmelden
+        {{ portalMode ? 'Zum Portal' : 'Abmelden' }}
       </button>
     </div>
   </aside>
@@ -76,6 +76,7 @@
 import {
   page, sidebarOpen, visiblePages, warnungen,
   darkMode, toggleDark, currentUser, doLogout, openPasswortForm, feuerwehrName,
+  portalMode,
 } from '../../store.js'
 
 defineEmits(['openQr'])
