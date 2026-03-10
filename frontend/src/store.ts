@@ -37,6 +37,7 @@ export function toggleDark() {
   darkMode.value = !darkMode.value
   document.documentElement.classList.toggle('dark', darkMode.value)
   localStorage.setItem('darkMode', String(darkMode.value))
+  document.cookie = `fw_theme=${darkMode.value ? 'dark' : 'light'}; path=/; max-age=31536000; SameSite=Lax`
 }
 
 // ── Auth ───────────────────────────────────────────────────────────────────
