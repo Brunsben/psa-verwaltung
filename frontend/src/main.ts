@@ -15,7 +15,8 @@ createApp(App).mount('#app')
 // Service Worker registrieren (PWA Offline-Support)
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/service-worker.js').catch(() => {
+    const base = import.meta.env.BASE_URL || '/';
+    navigator.serviceWorker.register(`${base}service-worker.js`).catch(() => {
       // Kein Fehler werfen – App funktioniert auch ohne SW
     })
   })
