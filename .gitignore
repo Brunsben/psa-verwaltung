@@ -18,6 +18,7 @@ node_modules/
 frontend/dist/
 frontend/public/*
 !frontend/public/theme-init.js
+!frontend/public/favicon.svg
 
 # Editor
 .vscode/
