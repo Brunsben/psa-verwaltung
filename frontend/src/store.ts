@@ -49,6 +49,31 @@ function safeJsonParse<T>(key: string, fallback: T): T {
 
 export const loggedIn    = ref(!!localStorage.getItem('psa_jwt'))
 export const currentUser = ref<AppUser | null>(safeJsonParse('psa_user', null))
+export const portalMode  = ref(false)
+
+/** Portal-SSO: Prüft ob der Benutzer über das Portal eingeloggt ist (fw_jwt Cookie) */
+export async function tryPortalSSO(): Promise<boolean> {
+  // Nur wenn kein eigenes PSA-JWT vorhanden
+  if (loggedIn.value) return true
+  try {
+    const resp = await fetch('/api/auth/me', { credentials: 'include' })
+    if (resp.status !== 200) return false
+    const data = await resp.json()
+    if (!data.Benutzername) return false
+    currentUser.value = {
+      Benutzername: data.Benutzername,
+      Rolle: data.Rolle || 'Admin',
+      KameradId: data.KameradId ?? null,
+    } as AppUser
+    localStorage.setItem('psa_user', JSON.stringify(currentUser.value))
+    loggedIn.value  = true
+    portalMode.value = true
+    page.value = (data.Rolle || '').toLowerCase() === 'user' ? 'mein-dashboard' : 'dashboard'
+    return true
+  } catch {
+    return false
+  }
+}
 
 // Bei abgelaufenem JWT automatisch ausloggen
 window.addEventListener('psa:unauthorized', () => {

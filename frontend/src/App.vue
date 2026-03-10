@@ -115,7 +115,7 @@
 import { ref, computed, nextTick, onMounted } from 'vue'
 import { page, loggedIn, loginForm, loading, doLogin,
          needsSetup, setupForm, doSetup,
-         modal, fetchAll, feuerwehrName } from './store.js'
+         modal, fetchAll, feuerwehrName, tryPortalSSO } from './store.js'
 
 // Layout
 import Sidebar from './components/layout/Sidebar.vue'
@@ -186,5 +186,8 @@ function onPageEnter() {
   // StatistikenPage und WarnungenPage haben eigene onMounted/watch – nichts nötig
 }
 
-onMounted(fetchAll)
+onMounted(async () => {
+  await tryPortalSSO()
+  await fetchAll()
+})
 </script>
