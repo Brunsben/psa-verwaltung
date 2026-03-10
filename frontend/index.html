@@ -12,12 +12,7 @@
   <title>PSA-Verwaltung – FF Wietmarschen</title>
 
   <!-- Dark-mode sofort anwenden (vor Vue-Mount, verhindert Flicker) -->
-  <script>
-    (function(){var c=(document.cookie.match(/(?:^|;\s*)fw_theme=(\w+)/)||[])[1];
-    var d=c?c==='dark':localStorage.getItem('darkMode')==='true';
-    if(d)document.documentElement.classList.add('dark');
-    })();
-  </script>
+  <script src="theme-init.js"></script>
 
   <!-- Vendor-Libs: werden als window.* Globals genutzt (nicht von Vite gebundled) -->
   <link rel="stylesheet" href="vendor/phosphor/style.css">

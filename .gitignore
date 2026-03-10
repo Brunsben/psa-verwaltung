@@ -16,7 +16,8 @@ Thumbs.db
 # Node.js / Vite
 node_modules/
 frontend/dist/
-frontend/public/
+frontend/public/*
+!frontend/public/theme-init.js
 
 # Editor
 .vscode/

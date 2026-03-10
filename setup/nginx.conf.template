@@ -38,6 +38,10 @@ server {
         add_header Cache-Control "no-cache, must-revalidate";
         expires 0;
     }
+    location = /theme-init.js {
+        add_header Cache-Control "no-cache, must-revalidate";
+        expires 0;
+    }
 
     # ── Statische Assets (JS/CSS/Icons) cachen ────────────
     location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff2?)$ {
