@@ -5,12 +5,15 @@
         <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Kameraden</h1>
         <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">{{ kameraden.length }} gesamt &nbsp;·&nbsp; {{ stats.kameraden }} aktiv</p>
       </div>
-      <div class="flex gap-2">
-        <button @click="openCsvImport" class="btn-secondary flex items-center gap-1.5 text-sm">
-          <i class="ph ph-upload-simple"></i> CSV Import
-        </button>
-        <button @click="openKameradenForm()" class="btn-primary">+ Neu</button>
-      </div>
+    </div>
+
+    <!-- Hinweis: Zentrale Verwaltung im Portal -->
+    <div class="mb-4 flex items-center gap-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl px-4 py-3">
+      <i class="ph ph-info text-blue-500 text-lg shrink-0"></i>
+      <p class="text-sm text-blue-700 dark:text-blue-300">
+        Mitglieder werden zentral im <a href="/" class="font-semibold underline hover:text-blue-800 dark:hover:text-blue-200">Portal</a> verwaltet.
+        Hier kannst du Kleidergrößen einsehen und die Ausrüstungs-Details öffnen.
+      </p>
     </div>
 
     <div class="flex gap-3 mb-4 flex-wrap items-center">
@@ -43,14 +46,6 @@
               </span>
             </div>
           </div>
-          <div class="flex shrink-0 gap-0.5">
-            <button @click.stop="openKameradenForm(k)" title="Bearbeiten" class="icon-btn hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 dark:hover:text-blue-400">
-              <i class="ph ph-pencil-simple text-base"></i>
-            </button>
-            <button @click.stop="deleteKamerad(k)" title="Löschen" class="icon-btn hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 dark:hover:text-red-400">
-              <i class="ph ph-trash text-base"></i>
-            </button>
-          </div>
         </div>
         <dl class="mt-2.5 grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
           <div v-if="k.Jacke_Groesse"><dt class="text-gray-400 dark:text-gray-500">Jacke</dt><dd class="text-gray-700 dark:text-gray-300">{{ k.Jacke_Groesse }}</dd></div>
@@ -79,7 +74,6 @@
             <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Poloshirt</th>
             <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Fleece</th>
             <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Status</th>
-            <th class="px-4 py-2"></th>
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-50 dark:divide-gray-700">
@@ -103,19 +97,9 @@
                 {{ k.Aktiv ? 'Aktiv' : 'Inaktiv' }}
               </span>
             </td>
-            <td class="px-4 py-2">
-              <div class="flex items-center justify-end gap-1 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
-                <button @click.stop="openKameradenForm(k)" title="Bearbeiten" class="icon-btn hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 dark:hover:text-blue-400">
-                  <i class="ph ph-pencil-simple text-base"></i>
-                </button>
-                <button @click.stop="deleteKamerad(k)" title="Löschen" class="icon-btn hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 dark:hover:text-red-400">
-                  <i class="ph ph-trash text-base"></i>
-                </button>
-              </div>
-            </td>
           </tr>
           <tr v-if="!kameraden.length">
-            <td colspan="11" class="px-4 py-10 text-center text-gray-400 dark:text-gray-500 text-sm">Noch keine Kameraden eingetragen</td>
+            <td colspan="10" class="px-4 py-10 text-center text-gray-400 dark:text-gray-500 text-sm">Noch keine Kameraden eingetragen</td>
           </tr>
         </tbody>
       </table>
@@ -126,6 +110,6 @@
 <script setup>
 import {
   kameraden, kameradenFiltered, filterKameraden, filterKameradenNurAktiv, stats,
-  openKameradenForm, openKameradenDetail, deleteKamerad, openCsvImport,
+  openKameradenDetail,
 } from '../store.js'
 </script>

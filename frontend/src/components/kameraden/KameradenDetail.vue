@@ -100,10 +100,7 @@
           </div>
         </div>
 
-        <div class="flex justify-between gap-3 mt-6 pt-4 border-t border-gray-100 dark:border-gray-700 no-print">
-          <button @click="openKameradenForm(selectedKamerad); modal.kameradenDetail = false" class="btn-secondary">
-            Bearbeiten
-          </button>
+        <div class="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-100 dark:border-gray-700 no-print">
           <button @click="modal.kameradenDetail = false" class="btn-primary">Schließen</button>
         </div>
       </div>
@@ -115,7 +112,7 @@
 import {
   modal, selectedKamerad, typen,
   ausruestungFuerKamerad, kameradenGroessen, letzteAktion, waeschenInfo,
-  openAusruestungDetail, openKameradenForm, showToast, pruefungen, ausruestung,
+  openAusruestungDetail, showToast, pruefungen, ausruestung,
 } from '../../store.js'
 import { fmtDate, fmtDateRel, typLabel, statusBadge } from '../../utils/formatters.js'
 import { exportPDF } from '../../utils/pdf.js'

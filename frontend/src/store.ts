@@ -128,7 +128,6 @@ export const pages = [
   { id: 'warnungen',       label: 'Warnungen',       iconClass: 'ph ph-bell-ringing',            roles: ['Admin','Kleiderwart'] },
   { id: 'statistiken',     label: 'Statistiken',     iconClass: 'ph ph-chart-bar',               roles: ['Admin','Kleiderwart'] },
   { id: 'changelog',       label: 'Changelog',       iconClass: 'ph ph-clock-counter-clockwise', roles: ['Admin','Kleiderwart'] },
-  { id: 'benutzer',        label: 'Benutzer',        iconClass: 'ph ph-user-gear',               roles: ['Admin'] },
 ]
 export const visiblePages = computed(() => {
   const role = (currentUser.value?.Rolle || '').toLowerCase()

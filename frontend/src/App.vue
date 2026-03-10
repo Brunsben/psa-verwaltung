@@ -99,7 +99,6 @@
       <MassenPruefung />
       <TypenForm />
       <NormenForm />
-      <BenutzerForm />
       <PasswortForm />
       <SchadensForm />
       <QrScanner ref="qrScannerRef" />
@@ -140,7 +139,6 @@ import MassenWaesche from './components/ausruestung/MassenWaesche.vue'
 import MassenPruefung from './components/ausruestung/MassenPruefung.vue'
 import TypenForm from './components/typen/TypenForm.vue'
 import NormenForm from './components/normen/NormenForm.vue'
-import BenutzerForm from './components/benutzer/BenutzerForm.vue'
 import PasswortForm from './components/benutzer/PasswortForm.vue'
 import SchadensForm from './components/ausruestung/SchadensForm.vue'
 import QrScanner from './components/qr/QrScanner.vue'
@@ -156,8 +154,6 @@ import VerlaufPage from './pages/VerlaufPage.vue'
 import NormenPage from './pages/NormenPage.vue'
 import StatistikenPage from './pages/StatistikenPage.vue'
 import ChangelogPage from './pages/ChangelogPage.vue'
-import BenutzerPage from './pages/BenutzerPage.vue'
-
 const pageComponents = {
   dashboard: DashboardPage,
   'mein-dashboard': UserDashboardPage,
@@ -169,7 +165,6 @@ const pageComponents = {
   normen: NormenPage,
   statistiken: StatistikenPage,
   changelog: ChangelogPage,
-  benutzer: BenutzerPage,
 }
 
 const currentPageComponent = computed(() => pageComponents[page.value] || DashboardPage)
