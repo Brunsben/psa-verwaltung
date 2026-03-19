@@ -118,13 +118,23 @@ async function start() {
     qrError.value = 'QR-Scanner-Bibliothek nicht geladen.'
     return
   }
-  scanner = new Html5Qrcode('qr-reader')
+  scanner = new Html5Qrcode('qr-reader', {
+    formatsToSupport: [
+      Html5QrcodeSupportedFormats.QR_CODE,
+      Html5QrcodeSupportedFormats.CODE_128,
+      Html5QrcodeSupportedFormats.EAN_13,
+      Html5QrcodeSupportedFormats.DATA_MATRIX,
+    ],
+  })
   scanner.start(
     { facingMode: 'environment' },
     { fps: 10, qrbox: { width: 250, height: 250 } },
     (decodedText) => {
-      // GS1-128 Barcodes enthalten Steuerzeichen (FNC1/GS) → entfernen
-      const cleaned = decodedText.replace(/[\x00-\x1F\x7F]/g, '').trim()
+      // GS1-128: Symbology-Identifier (]C1, ]d2 etc.) + Steuerzeichen entfernen
+      const cleaned = decodedText
+        .replace(/^][A-Za-z]\d/, '')   // AIM Symbology Identifier
+        .replace(/[\x00-\x1F\x7F\uFFFD]/g, '')  // Steuerzeichen + Replacement Char
+        .trim()
       qrResult.value = cleaned
       // Feld-Modus: Wert in Formularfeld schreiben und schließen
       if (qrScanTarget.value) {

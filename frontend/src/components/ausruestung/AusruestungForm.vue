@@ -3,8 +3,8 @@
     <div v-if="modal.ausruestungForm" class="modal-backdrop">
       <div class="modal-box">
         <h2 class="text-lg font-bold mb-5">{{ form.ausruestung.Id ? 'Ausrüstung bearbeiten' : 'Neues Ausrüstungsstück' }}</h2>
-        <div class="grid grid-cols-2 gap-3">
-          <div class="col-span-2">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div class="sm:col-span-2">
             <label class="label">Typ</label>
             <select v-model="form.ausruestung.Ausruestungstyp" class="input" @change="autoFillAusruestungDaten">
               <option value="">– Typ wählen –</option>
@@ -13,7 +13,7 @@
               </option>
             </select>
           </div>
-          <div class="col-span-2">
+          <div class="sm:col-span-2">
             <label class="label">Kamerad</label>
             <select v-model="form.ausruestung.Kamerad" class="input">
               <option value="">– (kein / Lager) –</option>
@@ -68,7 +68,7 @@
               <option>Ausgesondert</option>
             </select>
           </div>
-          <div class="col-span-2">
+          <div class="sm:col-span-2">
             <label class="label">Notizen</label>
             <textarea v-model="form.ausruestung.Notizen" rows="2" class="input resize-none"></textarea>
           </div>
