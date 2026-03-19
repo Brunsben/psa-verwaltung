@@ -179,7 +179,7 @@ const currentPageComponent = computed(() => pageComponents[page.value] || Dashbo
 const qrScannerRef = ref(null)
 function openQrScanner() {
   modal.qrScanner = true
-  nextTick(() => qrScannerRef.value?.start())
+  // start() wird automatisch via watcher in QrScanner.vue aufgerufen
 }
 
 // Page-Transition callback (Charts rendern nach Transition)

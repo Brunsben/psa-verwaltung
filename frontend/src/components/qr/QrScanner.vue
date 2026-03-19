@@ -87,7 +87,7 @@
 </template>
 
 <script setup>
-import { computed, nextTick } from 'vue'
+import { computed, nextTick, watch } from 'vue'
 import {
   modal, qrResult, qrError, qrScanTarget, form, ausruestung, typen,
   showToast, canEdit,
@@ -97,6 +97,11 @@ import {
 import { typLabel, statusBadge } from '../../utils/formatters.js'
 
 let scanner = null
+
+// Auto-Start wenn Modal geöffnet wird (z.B. aus Formular via openQrForField)
+watch(() => modal.qrScanner, (isOpen) => {
+  if (isOpen) nextTick(() => start())
+})
 
 // Alle Ausrüstungsstücke die den gescannten Code (QR oder Seriennummer) tragen
 const scanResults = computed(() => {
@@ -118,10 +123,12 @@ async function start() {
     { facingMode: 'environment' },
     { fps: 10, qrbox: { width: 250, height: 250 } },
     (decodedText) => {
-      qrResult.value = decodedText
+      // GS1-128 Barcodes enthalten Steuerzeichen (FNC1/GS) → entfernen
+      const cleaned = decodedText.replace(/[\x00-\x1F\x7F]/g, '').trim()
+      qrResult.value = cleaned
       // Feld-Modus: Wert in Formularfeld schreiben und schließen
       if (qrScanTarget.value) {
-        form.ausruestung[qrScanTarget.value] = decodedText
+        form.ausruestung[qrScanTarget.value] = cleaned
         showToast(`${qrScanTarget.value === 'QR_Code' ? 'QR-Code' : 'Seriennummer'} übernommen`)
         close()
         return
