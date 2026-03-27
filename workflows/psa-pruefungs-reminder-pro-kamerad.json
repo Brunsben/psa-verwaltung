@@ -1,1 +1,552 @@
-{"updatedAt":"2026-03-03T13:53:35.003Z","createdAt":"2026-03-02T11:28:22.465Z","id":"pyOXC7esbjlrhG68","name":"PSA: Prüfungs-Reminder pro Kamerad","description":null,"active":true,"isArchived":false,"nodes":[{"parameters":{"rule":{"interval":[{"field":"weeks","triggerAtDay":[1],"triggerAtHour":7,"triggerAtMinute":30}]}},"id":"pk-sched","name":"Montag 07:30 Uhr","type":"n8n-nodes-base.scheduleTrigger","typeVersion":1.2,"position":[208,304]},{"parameters":{"url":"http://10.10.1.238:8182/api/Ausruestungstuecke","sendQuery":true,"queryParameters":{"parameters":[{"name":"limit","value":"500"}]},"options":{}},"id":"pk-http-ast","name":"PostgREST: Ausrüstungsstücke laden","type":"n8n-nodes-base.httpRequest","typeVersion":4.2,"position":[432,304]},{"parameters":{"url":"http://10.10.1.238:8182/api/Kameraden","sendQuery":true,"queryParameters":{"parameters":[{"name":"limit","value":"200"}]},"options":{}},"id":"pk-http-kam","name":"PostgREST: Kameraden laden","type":"n8n-nodes-base.httpRequest","typeVersion":4.2,"position":[656,304]},{"parameters":{"jsCode":"const stuecke = $('PostgREST: Ausrüstungsstücke laden').first().json;\nconst kameraden = $input.first().json;\n\nconst today = new Date();\ntoday.setHours(0, 0, 0, 0);\nconst horizon = new Date(today);\nhorizon.setDate(horizon.getDate() + 30);\n\nconst emailMap = {};\nfor (const k of kameraden) {\n  if (!k.Email) continue;\n  emailMap[(k.Vorname + ' ' + k.Name).trim()] = k.Email;\n  emailMap[(k.Name + ' ' + k.Vorname).trim()] = k.Email;\n}\n\nconst faellig = stuecke.filter(a => {\n  if (!a.Naechste_Pruefung || !a.Kamerad) return false;\n  const d = new Date(a.Naechste_Pruefung);\n  return d <= horizon;\n}).map(a => {\n  const d = new Date(a.Naechste_Pruefung);\n  const days = Math.round((d - today) / 86400000);\n  return { ...a, _days: days };\n});\n\nconst grouped = {};\nfor (const a of faellig) {\n  const name = a.Kamerad;\n  if (!grouped[name]) grouped[name] = { name, email: emailMap[name] || null, items: [] };\n  grouped[name].items.push(a);\n}\n\nconst result = Object.values(grouped).filter(g => g.email);\nif (!result.length) return [{ json: { anzahl: 0 } }];\n\nreturn result.map(g => ({ json: g }));"},"id":"pk-code-group","name":"Gruppiere nach Kamerad & prüfe Email","type":"n8n-nodes-base.code","typeVersion":2,"position":[880,304]},{"parameters":{"conditions":{"options":{"caseSensitive":true,"leftValue":"","typeValidation":"strict","version":2},"combinator":"and","conditions":[{"id":"chk-email","leftValue":"={{ $json.anzahl }}","rightValue":0,"operator":{"type":"number","operation":"gt"}}]},"options":{}},"id":"pk-if","name":"Kameraden mit E-Mail vorhanden?","type":"n8n-nodes-base.if","typeVersion":2.2,"position":[1104,304]},{"parameters":{"jsCode":"const { name, email, items } = $json;\nif (!items || !items.length) return [];\n\nconst rows = [...items].sort((a, b) => a._days - b._days).map(a => {\n  const color = a._days < 0 ? '#ef4444' : a._days <= 7 ? '#f97316' : '#eab308';\n  const dayLabel = a._days < 0\n    ? (Math.abs(a._days) === 1 ? '1 Tag ueberfaellig' : Math.abs(a._days) + ' Tage ueberfaellig')\n    : a._days === 0 ? 'Heute faellig' : 'in ' + a._days + (a._days === 1 ? ' Tag' : ' Tagen');\n  const datum = new Date(a.Naechste_Pruefung).toLocaleDateString('de-DE');\n  return '<tr>'\n    + '<td style=\"padding:8px;border-bottom:1px solid #e5e7eb\">' + (a.Ausruestungstyp || '-') + '</td>'\n    + '<td style=\"padding:8px;border-bottom:1px solid #e5e7eb\">' + (a.Seriennummer || '-') + '</td>'\n    + '<td style=\"padding:8px;border-bottom:1px solid #e5e7eb\">' + datum + '</td>'\n    + '<td style=\"padding:8px;border-bottom:1px solid #e5e7eb;color:' + color + ';font-weight:600\">' + dayLabel + '</td>'\n    + '</tr>';\n}).join('');\n\nconst subject = 'PSA-Pruefung: ' + items.length + ' Stueck zur Kontrolle';\nconst html = '<html><body style=\"font-family:sans-serif;max-width:600px;margin:0 auto;padding:20px;color:#111827\">'\n  + '<h2 style=\"margin-top:0;color:#1e3a5f\">Hallo ' + name.split(' ')[0] + ',</h2>'\n  + '<p>folgende deiner PSA-Ausruestungsstuecke haben in den naechsten 30 Tagen eine faellige oder ueberfaellige Pruefung:</p>'\n  + '<table style=\"width:100%;border-collapse:collapse;font-size:14px\">'\n  + '<thead><tr style=\"background:#f3f4f6;text-align:left\">'\n  + '<th style=\"padding:8px\">Typ</th><th style=\"padding:8px\">Seriennummer</th>'\n  + '<th style=\"padding:8px\">Prueftermin</th><th style=\"padding:8px\">Faelligkeit</th>'\n  + '</tr></thead>'\n  + '<tbody>' + rows + '</tbody>'\n  + '</table>'\n  + '<p style=\"margin-top:16px\">Bitte melde dich beim Geraetwart, damit die Pruefung zeitnah durchgefuehrt werden kann.</p>'\n  + '<p style=\"margin-top:24px;font-size:12px;color:#6b7280\">Automatischer PSA-Pruefungs-Reminder – jeden Montag</p>'\n  + '</body></html>';\n\nreturn [{ json: { toEmail: email, subject, html } }];"},"id":"pk-code-fmt","name":"E-Mail pro Kamerad formatieren","type":"n8n-nodes-base.code","typeVersion":2,"position":[1328,224]},{"parameters":{"fromEmail":"absender@ihre-feuerwehr.de","toEmail":"={{ $json.toEmail }}","subject":"={{ $json.subject }}","html":"={{ $json.html }}","options":{}},"id":"pk-email","name":"Reminder an Kamerad senden","type":"n8n-nodes-base.emailSend","typeVersion":2.1,"position":[1552,224],"credentials":{"smtp":{"id":"WODz1zMPZi3WItkA","name":"SMTP account"}}}],"connections":{"Montag 07:30 Uhr":{"main":[[{"node":"PostgREST: Ausrüstungsstücke laden","type":"main","index":0}]]},"PostgREST: Ausrüstungsstücke laden":{"main":[[{"node":"PostgREST: Kameraden laden","type":"main","index":0}]]},"PostgREST: Kameraden laden":{"main":[[{"node":"Gruppiere nach Kamerad & prüfe Email","type":"main","index":0}]]},"Gruppiere nach Kamerad & prüfe Email":{"main":[[{"node":"Kameraden mit E-Mail vorhanden?","type":"main","index":0}]]},"Kameraden mit E-Mail vorhanden?":{"main":[[{"node":"E-Mail pro Kamerad formatieren","type":"main","index":0}],[]]},"E-Mail pro Kamerad formatieren":{"main":[[{"node":"Reminder an Kamerad senden","type":"main","index":0}]]}},"settings":{"executionOrder":"v1","timezone":"Europe/Berlin","callerPolicy":"workflowsFromSameOwner","availableInMCP":false},"staticData":{"node:Montag 07:30 Uhr":{"recurrenceRules":[]}},"meta":null,"pinData":null,"versionId":"334db867-81e5-4638-bb3a-f632bd099243","activeVersionId":"334db867-81e5-4638-bb3a-f632bd099243","versionCounter":8,"triggerCount":1}
+{
+  "updatedAt": "2026-03-27T18:01:12.191Z",
+  "createdAt": "2026-03-02T11:28:22.465Z",
+  "id": "pyOXC7esbjlrhG68",
+  "name": "PSA: Prüfungs-Reminder pro Kamerad",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "weeks",
+              "triggerAtDay": [
+                1
+              ],
+              "triggerAtHour": 7,
+              "triggerAtMinute": 30
+            }
+          ]
+        }
+      },
+      "id": "pk-sched",
+      "name": "Montag 07:30 Uhr",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        208,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://portal.ofwietmarschen.org/n8n/b0C03PYxEVkFDuJXbqXdVKntDaowEaZeDq70eQKjfUo/postgrest/Ausruestungstuecke",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "limit",
+              "value": "500"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "pk-http-ast",
+      "name": "PostgREST: Ausrüstungsstücke laden",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        432,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://portal.ofwietmarschen.org/n8n/b0C03PYxEVkFDuJXbqXdVKntDaowEaZeDq70eQKjfUo/postgrest/Kameraden",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "limit",
+              "value": "200"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "pk-http-kam",
+      "name": "PostgREST: Kameraden laden",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        656,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const stuecke = $('PostgREST: Ausrüstungsstücke laden').all().map(i => i.json);\nconst kameraden = $input.all().map(i => i.json);\n\nconst today = new Date();\ntoday.setHours(0, 0, 0, 0);\nconst horizon = new Date(today);\nhorizon.setDate(horizon.getDate() + 30);\n\n// E-Mail-Lookup: 'Vorname Name' und 'Name Vorname' → email\nconst emailMap = {};\nfor (const k of kameraden) {\n  if (!k.Email) continue;\n  emailMap[(k.Vorname + ' ' + k.Name).trim()] = k.Email;\n  emailMap[(k.Name + ' ' + k.Vorname).trim()] = k.Email;\n}\n\n// Fällige Stücke (nur mit Kamerad-Zuweisung)\nconst faellig = stuecke.filter(a => {\n  if (!a.Naechste_Pruefung || !a.Kamerad) return false;\n  const d = new Date(a.Naechste_Pruefung);\n  return d <= horizon;\n}).map(a => {\n  const d = new Date(a.Naechste_Pruefung);\n  const days = Math.round((d - today) / 86400000);\n  return { ...a, _days: days };\n});\n\n// Gruppiere nach Kamerad\nconst grouped = {};\nfor (const a of faellig) {\n  const name = a.Kamerad;\n  if (!grouped[name]) grouped[name] = { name, email: emailMap[name] || null, items: [] };\n  grouped[name].items.push(a);\n}\n\n// Nur Kameraden mit E-Mail-Adresse\nconst result = Object.values(grouped).filter(g => g.email);\nif (!result.length) return [{ json: { anzahl: 0 } }];\n\nreturn result.map(g => ({ json: g }));"
+      },
+      "id": "pk-code-group",
+      "name": "Gruppiere nach Kamerad & prüfe Email",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        880,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "chk-email",
+              "leftValue": "={{ $json.anzahl }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "pk-if",
+      "name": "Kameraden mit E-Mail vorhanden?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1104,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const { name, email, items } = $json;\nif (!items || !items.length) return [];\n\nconst rows = [...items].sort((a, b) => a._days - b._days).map(a => {\n  const color = a._days < 0 ? '#ef4444' : a._days <= 7 ? '#f97316' : '#eab308';\n  const dayLabel = a._days < 0\n    ? (Math.abs(a._days) === 1 ? '1 Tag ueberfaellig' : Math.abs(a._days) + ' Tage ueberfaellig')\n    : a._days === 0 ? 'Heute faellig' : 'in ' + a._days + (a._days === 1 ? ' Tag' : ' Tagen');\n  const datum = new Date(a.Naechste_Pruefung).toLocaleDateString('de-DE');\n  return '<tr>'\n    + '<td style=\"padding:8px;border-bottom:1px solid #e5e7eb\">' + (a.Ausruestungstyp || '-') + '</td>'\n    + '<td style=\"padding:8px;border-bottom:1px solid #e5e7eb\">' + (a.Seriennummer || '-') + '</td>'\n    + '<td style=\"padding:8px;border-bottom:1px solid #e5e7eb\">' + datum + '</td>'\n    + '<td style=\"padding:8px;border-bottom:1px solid #e5e7eb;color:' + color + ';font-weight:600\">' + dayLabel + '</td>'\n    + '</tr>';\n}).join('');\n\nconst subject = 'PSA-Pruefung: ' + items.length + ' Stueck zur Kontrolle';\nconst html = '<html><body style=\"font-family:sans-serif;max-width:600px;margin:0 auto;padding:20px;color:#111827\">'\n  + '<h2 style=\"margin-top:0;color:#1e3a5f\">Hallo ' + name.split(' ')[0] + ',</h2>'\n  + '<p>folgende deiner PSA-Ausruestungsstuecke haben in den naechsten 30 Tagen eine faellige oder ueberfaellige Pruefung:</p>'\n  + '<table style=\"width:100%;border-collapse:collapse;font-size:14px\">'\n  + '<thead><tr style=\"background:#f3f4f6;text-align:left\">'\n  + '<th style=\"padding:8px\">Typ</th><th style=\"padding:8px\">Seriennummer</th>'\n  + '<th style=\"padding:8px\">Prueftermin</th><th style=\"padding:8px\">Faelligkeit</th>'\n  + '</tr></thead>'\n  + '<tbody>' + rows + '</tbody>'\n  + '</table>'\n  + '<p style=\"margin-top:16px\">Bitte melde dich beim Geraetwart, damit die Pruefung zeitnah durchgefuehrt werden kann.</p>'\n  + '<p style=\"margin-top:24px;font-size:12px;color:#6b7280\">Automatischer PSA-Pruefungs-Reminder – jeden Montag</p>'\n  + '</body></html>';\n\nreturn [{ json: { toEmail: email, subject, html } }];"
+      },
+      "id": "pk-code-fmt",
+      "name": "E-Mail pro Kamerad formatieren",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1328,
+        224
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "benjamin.bruns@feuerwehr-wietmarschen.de",
+        "toEmail": "={{ $json.toEmail }}",
+        "subject": "={{ $json.subject }}",
+        "html": "={{ $json.html }}",
+        "options": {}
+      },
+      "id": "pk-email",
+      "name": "Reminder an Kamerad senden",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        1552,
+        224
+      ],
+      "credentials": {
+        "smtp": {
+          "id": "WODz1zMPZi3WItkA",
+          "name": "SMTP account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Montag 07:30 Uhr": {
+      "main": [
+        [
+          {
+            "node": "PostgREST: Ausrüstungsstücke laden",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PostgREST: Ausrüstungsstücke laden": {
+      "main": [
+        [
+          {
+            "node": "PostgREST: Kameraden laden",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PostgREST: Kameraden laden": {
+      "main": [
+        [
+          {
+            "node": "Gruppiere nach Kamerad & prüfe Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gruppiere nach Kamerad & prüfe Email": {
+      "main": [
+        [
+          {
+            "node": "Kameraden mit E-Mail vorhanden?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Kameraden mit E-Mail vorhanden?": {
+      "main": [
+        [
+          {
+            "node": "E-Mail pro Kamerad formatieren",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "E-Mail pro Kamerad formatieren": {
+      "main": [
+        [
+          {
+            "node": "Reminder an Kamerad senden",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Europe/Berlin",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "staticData": {
+    "node:Montag 07:30 Uhr": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": null,
+  "pinData": null,
+  "versionId": "14647731-2cfe-4276-8b61-7a1a269e921c",
+  "activeVersionId": "14647731-2cfe-4276-8b61-7a1a269e921c",
+  "versionCounter": 18,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-03-02T11:28:22.468Z",
+      "createdAt": "2026-03-02T11:28:22.468Z",
+      "role": "workflow:owner",
+      "workflowId": "pyOXC7esbjlrhG68",
+      "projectId": "viwO0kwkZrPZoBTS",
+      "project": {
+        "updatedAt": "2025-07-21T14:22:06.251Z",
+        "createdAt": "2025-07-21T13:41:35.644Z",
+        "id": "viwO0kwkZrPZoBTS",
+        "name": "Benjamin Bruns <brunsben@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "66a4add3-c9f0-4325-be74-03a9d867281f",
+        "projectRelations": [
+          {
+            "updatedAt": "2025-07-21T13:41:35.645Z",
+            "createdAt": "2025-07-21T13:41:35.645Z",
+            "userId": "66a4add3-c9f0-4325-be74-03a9d867281f",
+            "projectId": "viwO0kwkZrPZoBTS",
+            "user": {
+              "updatedAt": "2026-03-27T08:10:16.000Z",
+              "createdAt": "2025-07-21T13:41:35.391Z",
+              "id": "66a4add3-c9f0-4325-be74-03a9d867281f",
+              "email": "brunsben@gmail.com",
+              "firstName": "Benjamin",
+              "lastName": "Bruns",
+              "personalizationAnswers": {
+                "version": "v4",
+                "personalization_survey_submitted_at": "2025-07-21T14:22:13.098Z",
+                "personalization_survey_n8n_version": "1.103.1",
+                "companyType": "personal",
+                "reportedSource": "google"
+              },
+              "settings": {
+                "userActivated": true,
+                "easyAIWorkflowOnboarded": true,
+                "firstSuccessfulWorkflowId": "mMpEy8pu6OpUsHVU",
+                "userActivatedAt": 1753134014106,
+                "npsSurvey": {
+                  "responded": true,
+                  "lastShownAt": 1771619236876
+                },
+                "dismissedCallouts": {
+                  "preBuiltAgentsModalCallout": true
+                }
+              },
+              "disabled": false,
+              "mfaEnabled": false,
+              "lastActiveAt": "2026-03-26",
+              "isPending": false
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": {
+    "updatedAt": "2026-03-27T18:01:12.192Z",
+    "createdAt": "2026-03-27T18:01:12.192Z",
+    "versionId": "14647731-2cfe-4276-8b61-7a1a269e921c",
+    "workflowId": "pyOXC7esbjlrhG68",
+    "nodes": [
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "weeks",
+                "triggerAtDay": [
+                  1
+                ],
+                "triggerAtHour": 7,
+                "triggerAtMinute": 30
+              }
+            ]
+          }
+        },
+        "id": "pk-sched",
+        "name": "Montag 07:30 Uhr",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.2,
+        "position": [
+          208,
+          304
+        ]
+      },
+      {
+        "parameters": {
+          "url": "https://portal.ofwietmarschen.org/n8n/b0C03PYxEVkFDuJXbqXdVKntDaowEaZeDq70eQKjfUo/postgrest/Ausruestungstuecke",
+          "sendQuery": true,
+          "queryParameters": {
+            "parameters": [
+              {
+                "name": "limit",
+                "value": "500"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "pk-http-ast",
+        "name": "PostgREST: Ausrüstungsstücke laden",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          432,
+          304
+        ]
+      },
+      {
+        "parameters": {
+          "url": "https://portal.ofwietmarschen.org/n8n/b0C03PYxEVkFDuJXbqXdVKntDaowEaZeDq70eQKjfUo/postgrest/Kameraden",
+          "sendQuery": true,
+          "queryParameters": {
+            "parameters": [
+              {
+                "name": "limit",
+                "value": "200"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "pk-http-kam",
+        "name": "PostgREST: Kameraden laden",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          656,
+          304
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const stuecke = $('PostgREST: Ausrüstungsstücke laden').all().map(i => i.json);\nconst kameraden = $input.all().map(i => i.json);\n\nconst today = new Date();\ntoday.setHours(0, 0, 0, 0);\nconst horizon = new Date(today);\nhorizon.setDate(horizon.getDate() + 30);\n\n// E-Mail-Lookup: 'Vorname Name' und 'Name Vorname' → email\nconst emailMap = {};\nfor (const k of kameraden) {\n  if (!k.Email) continue;\n  emailMap[(k.Vorname + ' ' + k.Name).trim()] = k.Email;\n  emailMap[(k.Name + ' ' + k.Vorname).trim()] = k.Email;\n}\n\n// Fällige Stücke (nur mit Kamerad-Zuweisung)\nconst faellig = stuecke.filter(a => {\n  if (!a.Naechste_Pruefung || !a.Kamerad) return false;\n  const d = new Date(a.Naechste_Pruefung);\n  return d <= horizon;\n}).map(a => {\n  const d = new Date(a.Naechste_Pruefung);\n  const days = Math.round((d - today) / 86400000);\n  return { ...a, _days: days };\n});\n\n// Gruppiere nach Kamerad\nconst grouped = {};\nfor (const a of faellig) {\n  const name = a.Kamerad;\n  if (!grouped[name]) grouped[name] = { name, email: emailMap[name] || null, items: [] };\n  grouped[name].items.push(a);\n}\n\n// Nur Kameraden mit E-Mail-Adresse\nconst result = Object.values(grouped).filter(g => g.email);\nif (!result.length) return [{ json: { anzahl: 0 } }];\n\nreturn result.map(g => ({ json: g }));"
+        },
+        "id": "pk-code-group",
+        "name": "Gruppiere nach Kamerad & prüfe Email",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          880,
+          304
+        ]
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "combinator": "and",
+            "conditions": [
+              {
+                "id": "chk-email",
+                "leftValue": "={{ $json.anzahl }}",
+                "rightValue": 0,
+                "operator": {
+                  "type": "number",
+                  "operation": "gt"
+                }
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "pk-if",
+        "name": "Kameraden mit E-Mail vorhanden?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          1104,
+          304
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const { name, email, items } = $json;\nif (!items || !items.length) return [];\n\nconst rows = [...items].sort((a, b) => a._days - b._days).map(a => {\n  const color = a._days < 0 ? '#ef4444' : a._days <= 7 ? '#f97316' : '#eab308';\n  const dayLabel = a._days < 0\n    ? (Math.abs(a._days) === 1 ? '1 Tag ueberfaellig' : Math.abs(a._days) + ' Tage ueberfaellig')\n    : a._days === 0 ? 'Heute faellig' : 'in ' + a._days + (a._days === 1 ? ' Tag' : ' Tagen');\n  const datum = new Date(a.Naechste_Pruefung).toLocaleDateString('de-DE');\n  return '<tr>'\n    + '<td style=\"padding:8px;border-bottom:1px solid #e5e7eb\">' + (a.Ausruestungstyp || '-') + '</td>'\n    + '<td style=\"padding:8px;border-bottom:1px solid #e5e7eb\">' + (a.Seriennummer || '-') + '</td>'\n    + '<td style=\"padding:8px;border-bottom:1px solid #e5e7eb\">' + datum + '</td>'\n    + '<td style=\"padding:8px;border-bottom:1px solid #e5e7eb;color:' + color + ';font-weight:600\">' + dayLabel + '</td>'\n    + '</tr>';\n}).join('');\n\nconst subject = 'PSA-Pruefung: ' + items.length + ' Stueck zur Kontrolle';\nconst html = '<html><body style=\"font-family:sans-serif;max-width:600px;margin:0 auto;padding:20px;color:#111827\">'\n  + '<h2 style=\"margin-top:0;color:#1e3a5f\">Hallo ' + name.split(' ')[0] + ',</h2>'\n  + '<p>folgende deiner PSA-Ausruestungsstuecke haben in den naechsten 30 Tagen eine faellige oder ueberfaellige Pruefung:</p>'\n  + '<table style=\"width:100%;border-collapse:collapse;font-size:14px\">'\n  + '<thead><tr style=\"background:#f3f4f6;text-align:left\">'\n  + '<th style=\"padding:8px\">Typ</th><th style=\"padding:8px\">Seriennummer</th>'\n  + '<th style=\"padding:8px\">Prueftermin</th><th style=\"padding:8px\">Faelligkeit</th>'\n  + '</tr></thead>'\n  + '<tbody>' + rows + '</tbody>'\n  + '</table>'\n  + '<p style=\"margin-top:16px\">Bitte melde dich beim Geraetwart, damit die Pruefung zeitnah durchgefuehrt werden kann.</p>'\n  + '<p style=\"margin-top:24px;font-size:12px;color:#6b7280\">Automatischer PSA-Pruefungs-Reminder – jeden Montag</p>'\n  + '</body></html>';\n\nreturn [{ json: { toEmail: email, subject, html } }];"
+        },
+        "id": "pk-code-fmt",
+        "name": "E-Mail pro Kamerad formatieren",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1328,
+          224
+        ]
+      },
+      {
+        "parameters": {
+          "fromEmail": "benjamin.bruns@feuerwehr-wietmarschen.de",
+          "toEmail": "={{ $json.toEmail }}",
+          "subject": "={{ $json.subject }}",
+          "html": "={{ $json.html }}",
+          "options": {}
+        },
+        "id": "pk-email",
+        "name": "Reminder an Kamerad senden",
+        "type": "n8n-nodes-base.emailSend",
+        "typeVersion": 2.1,
+        "position": [
+          1552,
+          224
+        ],
+        "credentials": {
+          "smtp": {
+            "id": "WODz1zMPZi3WItkA",
+            "name": "SMTP account"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "Montag 07:30 Uhr": {
+        "main": [
+          [
+            {
+              "node": "PostgREST: Ausrüstungsstücke laden",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "PostgREST: Ausrüstungsstücke laden": {
+        "main": [
+          [
+            {
+              "node": "PostgREST: Kameraden laden",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "PostgREST: Kameraden laden": {
+        "main": [
+          [
+            {
+              "node": "Gruppiere nach Kamerad & prüfe Email",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Gruppiere nach Kamerad & prüfe Email": {
+        "main": [
+          [
+            {
+              "node": "Kameraden mit E-Mail vorhanden?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Kameraden mit E-Mail vorhanden?": {
+        "main": [
+          [
+            {
+              "node": "E-Mail pro Kamerad formatieren",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          []
+        ]
+      },
+      "E-Mail pro Kamerad formatieren": {
+        "main": [
+          [
+            {
+              "node": "Reminder an Kamerad senden",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Benjamin Bruns",
+    "name": null,
+    "description": null,
+    "autosaved": false,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-03-27T18:01:12.235Z",
+        "id": 44,
+        "workflowId": "pyOXC7esbjlrhG68",
+        "versionId": "14647731-2cfe-4276-8b61-7a1a269e921c",
+        "event": "activated",
+        "userId": "66a4add3-c9f0-4325-be74-03a9d867281f"
+      }
+    ]
+  }
+}
