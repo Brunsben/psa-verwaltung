@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-03-27T18:47:18.916Z",
+  "updatedAt": "2026-03-27T18:59:48.519Z",
   "createdAt": "2026-02-24T21:19:25.375Z",
   "id": "gHwdz3BnBnlpiWjA",
   "name": "PSA: NocoDB → MySQL Backup",
@@ -73,7 +73,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const list = $input.all().map(i => i.json);\nif (!list.length) return [{ json: { query: 'SELECT 1' } }];\nfunction esc(v) {\n  if (v === null || v === undefined) return 'NULL';\n  if (typeof v === 'boolean') return v ? 1 : 0;\n  if (typeof v === 'number') return v;\n  return \"'\" + String(v).replace(/\\\\/g, '\\\\\\\\').replace(/'/g, \"\\\\'\") + \"'\";\n}\nconst cols = 'Id,CreatedAt,UpdatedAt,Name,Vorname,Email,Jacke_Groesse,Hose_Groesse,Stiefel_Groesse,Handschuh_Groesse,Aktiv,Hemd_Groesse,Poloshirt_Groesse,Fleece_Groesse,Dienstgrad';\nconst rows = list.map(r => '(' + [esc(r.Id),esc(r.CreatedAt),esc(r.UpdatedAt),esc(r.Name),esc(r.Vorname),esc(r.Email),esc(r.Jacke_Groesse),esc(r.Hose_Groesse),esc(r.Stiefel_Groesse),esc(r.Handschuh_Groesse),(r.Aktiv?1:0),esc(r.Hemd_Groesse),esc(r.Poloshirt_Groesse),esc(r.Fleece_Groesse),esc(r.Dienstgrad)].join(',') + ')');\nreturn [{ json: { query: 'INSERT INTO kameraden (' + cols + ') VALUES ' + rows.join(',') } }];"
+        "jsCode": "const list = $input.all().map(i => i.json);\nif (!list.length) return [{ json: { query: 'SELECT 1' } }];\nfunction esc(v) {\n  if (v === null || v === undefined) return 'NULL';\n  if (typeof v === 'boolean') return v ? 1 : 0;\n  if (typeof v === 'number') return v;\n  return \"'\" + String(v).replace(/\\\\/g, '\\\\\\\\').replace(/'/g, \"\\\\'\") + \"'\";\n}\nconst cols = 'Id,CreatedAt,UpdatedAt,Name,Vorname,Email,Jacke_Groesse,Hose_Groesse,Stiefel_Groesse,Handschuh_Groesse,Aktiv,Hemd_Groesse,Poloshirt_Groesse,Fleece_Groesse,Dienstgrad';\nconst rows = list.map(r => '(' + [esc(r.id),esc(r.created_at),esc(r.updated_at),esc(r.Name),esc(r.Vorname),esc(r.Email),esc(r.Jacke_Groesse),esc(r.Hose_Groesse),esc(r.Stiefel_Groesse),esc(r.Handschuh_Groesse),(r.Aktiv?1:0),esc(r.Hemd_Groesse),esc(r.Poloshirt_Groesse),esc(r.Fleece_Groesse),esc(r.Dienstgrad)].join(',') + ')');\nreturn [{ json: { query: 'INSERT INTO kameraden (' + cols + ') VALUES ' + rows.join(',') } }];"
       },
       "id": "code-k",
       "name": "Transform Kameraden",
@@ -151,7 +151,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const list = $input.all().map(i => i.json);\nif (!list.length) return [{ json: { query: 'SELECT 1' } }];\nfunction esc(v) {\n  if (v === null || v === undefined) return 'NULL';\n  if (typeof v === 'boolean') return v ? 1 : 0;\n  if (typeof v === 'number') return v;\n  var s = String(v);\n  var r = [39];\n  for (var i = 0; i < s.length; i++) {\n    var c = s.charCodeAt(i);\n    if (c === 39) { r.push(92, 39); } else if (c === 92) { r.push(92, 92); } else { r.push(c); }\n  }\n  r.push(39);\n  return String.fromCharCode.apply(null, r);\n}\nconst cols = 'Id,CreatedAt,UpdatedAt,Bezeichnung,Norm,Max_Lebensdauer_Jahre,Max_Waeschen,Pruefintervall_Monate,Beschreibung,Typ,Hersteller';\nconst rows = list.map(row => '(' + [esc(row.Id),esc(row.CreatedAt),esc(row.UpdatedAt),esc(row.Bezeichnung),esc(row.Norm),esc(row.Max_Lebensdauer_Jahre),esc(row.Max_Waeschen),esc(row.Pruefintervall_Monate),esc(row.Beschreibung),esc(row.Typ),esc(row.Hersteller)].join(',') + ')');\nreturn [{ json: { query: 'INSERT INTO ausruestungstypen (' + cols + ') VALUES ' + rows.join(',') } }];"
+        "jsCode": "const list = $input.all().map(i => i.json);\nif (!list.length) return [{ json: { query: 'SELECT 1' } }];\nfunction esc(v) {\n  if (v === null || v === undefined) return 'NULL';\n  if (typeof v === 'boolean') return v ? 1 : 0;\n  if (typeof v === 'number') return v;\n  var s = String(v);\n  var r = [39];\n  for (var i = 0; i < s.length; i++) {\n    var c = s.charCodeAt(i);\n    if (c === 39) { r.push(92, 39); } else if (c === 92) { r.push(92, 92); } else { r.push(c); }\n  }\n  r.push(39);\n  return String.fromCharCode.apply(null, r);\n}\nconst cols = 'Id,CreatedAt,UpdatedAt,Bezeichnung,Norm,Max_Lebensdauer_Jahre,Max_Waeschen,Pruefintervall_Monate,Beschreibung,Typ,Hersteller';\nconst rows = list.map(row => '(' + [esc(row.id),esc(row.created_at),esc(row.updated_at),esc(row.Bezeichnung),esc(row.Norm),esc(row.Max_Lebensdauer_Jahre),esc(row.Max_Waeschen),esc(row.Pruefintervall_Monate),esc(row.Beschreibung),esc(row.Typ),esc(row.Hersteller)].join(',') + ')');\nreturn [{ json: { query: 'INSERT INTO ausruestungstypen (' + cols + ') VALUES ' + rows.join(',') } }];"
       },
       "id": "code-at",
       "name": "Transform Ausruestungstypen",
@@ -229,7 +229,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const list = $input.all().map(i => i.json);\nif (!list.length) return [{ json: { query: 'SELECT 1' } }];\nfunction esc(v) {\n  if (v === null || v === undefined) return 'NULL';\n  if (typeof v === 'boolean') return v ? 1 : 0;\n  if (typeof v === 'number') return v;\n  return \"'\" + String(v).replace(/\\\\/g, '\\\\\\\\').replace(/'/g, \"\\\\'\") + \"'\";\n}\nconst cols = 'Id,CreatedAt,UpdatedAt,Seriennummer,QR_Code,Groesse,Herstellungsdatum,Lebensende_Datum,Status,Notizen,Kamerad,Naechste_Pruefung,Ausruestungstyp';\nconst rows = list.map(r => '(' + [esc(r.Id),esc(r.CreatedAt),esc(r.UpdatedAt),esc(r.Seriennummer),esc(r.QR_Code),esc(r.Groesse),esc(r.Herstellungsdatum),esc(r.Lebensende_Datum),esc(r.Status),esc(r.Notizen),esc(r.Kamerad),esc(r.Naechste_Pruefung),esc(r.Ausruestungstyp)].join(',') + ')');\nreturn [{ json: { query: 'INSERT INTO ausruestungstuecke (' + cols + ') VALUES ' + rows.join(',') } }];"
+        "jsCode": "const list = $input.all().map(i => i.json);\nif (!list.length) return [{ json: { query: 'SELECT 1' } }];\nfunction esc(v) {\n  if (v === null || v === undefined) return 'NULL';\n  if (typeof v === 'boolean') return v ? 1 : 0;\n  if (typeof v === 'number') return v;\n  return \"'\" + String(v).replace(/\\\\/g, '\\\\\\\\').replace(/'/g, \"\\\\'\") + \"'\";\n}\nconst cols = 'Id,CreatedAt,UpdatedAt,Seriennummer,QR_Code,Groesse,Herstellungsdatum,Lebensende_Datum,Status,Notizen,Kamerad,Naechste_Pruefung,Ausruestungstyp';\nconst rows = list.map(r => '(' + [esc(r.id),esc(r.created_at),esc(r.updated_at),esc(r.Seriennummer),esc(r.QR_Code),esc(r.Groesse),esc(r.Herstellungsdatum),esc(r.Lebensende_Datum),esc(r.Status),esc(r.Notizen),esc(r.Kamerad),esc(r.Naechste_Pruefung),esc(r.Ausruestungstyp)].join(',') + ')');\nreturn [{ json: { query: 'INSERT INTO ausruestungstuecke (' + cols + ') VALUES ' + rows.join(',') } }];"
       },
       "id": "code-ast",
       "name": "Transform Ausruestungstuecke",
@@ -307,7 +307,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const list = $input.all().map(i => i.json);\nif (!list.length) return [{ json: { query: 'SELECT 1' } }];\nfunction esc(v) {\n  if (v === null || v === undefined) return 'NULL';\n  if (typeof v === 'boolean') return v ? 1 : 0;\n  if (typeof v === 'number') return v;\n  var s = String(v);\n  var r = [39];\n  for (var i = 0; i < s.length; i++) {\n    var c = s.charCodeAt(i);\n    if (c === 39) { r.push(92, 39); } else if (c === 92) { r.push(92, 92); } else { r.push(c); }\n  }\n  r.push(39);\n  return String.fromCharCode.apply(null, r);\n}\nconst cols = 'Id,CreatedAt,UpdatedAt,Ausgabedatum,Rueckgabedatum,Notizen,Ausruestungstueck_Id,Kamerad,Ausruestungstyp,Seriennummer';\nconst rows = list.map(row => '(' + [esc(row.Id),esc(row.CreatedAt),esc(row.UpdatedAt),esc(row.Ausgabedatum),esc(row.Rueckgabedatum),esc(row.Notizen),esc(row.Ausruestungstueck_Id),esc(row.Kamerad),esc(row.Ausruestungstyp),esc(row.Seriennummer)].join(',') + ')');\nreturn [{ json: { query: 'INSERT INTO ausgaben (' + cols + ') VALUES ' + rows.join(',') } }];"
+        "jsCode": "const list = $input.all().map(i => i.json);\nif (!list.length) return [{ json: { query: 'SELECT 1' } }];\nfunction esc(v) {\n  if (v === null || v === undefined) return 'NULL';\n  if (typeof v === 'boolean') return v ? 1 : 0;\n  if (typeof v === 'number') return v;\n  var s = String(v);\n  var r = [39];\n  for (var i = 0; i < s.length; i++) {\n    var c = s.charCodeAt(i);\n    if (c === 39) { r.push(92, 39); } else if (c === 92) { r.push(92, 92); } else { r.push(c); }\n  }\n  r.push(39);\n  return String.fromCharCode.apply(null, r);\n}\nconst cols = 'Id,CreatedAt,UpdatedAt,Ausgabedatum,Rueckgabedatum,Notizen,Ausruestungstueck_Id,Kamerad,Ausruestungstyp,Seriennummer';\nconst rows = list.map(row => '(' + [esc(row.id),esc(row.created_at),esc(row.updated_at),esc(row.Ausgabedatum),esc(row.Rueckgabedatum),esc(row.Notizen),esc(row.Ausruestungstueck_Id),esc(row.Kamerad),esc(row.Ausruestungstyp),esc(row.Seriennummer)].join(',') + ')');\nreturn [{ json: { query: 'INSERT INTO ausgaben (' + cols + ') VALUES ' + rows.join(',') } }];"
       },
       "id": "code-aug",
       "name": "Transform Ausgaben",
@@ -385,7 +385,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const list = $input.all().map(i => i.json);\nif (!list.length) return [{ json: { query: 'SELECT 1' } }];\nfunction esc(v) {\n  if (v === null || v === undefined) return 'NULL';\n  if (typeof v === 'boolean') return v ? 1 : 0;\n  if (typeof v === 'number') return v;\n  return \"'\" + String(v).replace(/\\\\/g, '\\\\\\\\').replace(/'/g, \"\\\\'\") + \"'\";\n}\nconst cols = 'Id,CreatedAt,UpdatedAt,Datum,Ergebnis,Pruefer,Naechste_Pruefung,Notizen,Ausruestungstueck_Id,Kamerad,Ausruestungstyp,Seriennummer';\nconst rows = list.map(r => '(' + [esc(r.Id),esc(r.CreatedAt),esc(r.UpdatedAt),esc(r.Datum),esc(r.Ergebnis),esc(r.Pruefer),esc(r.Naechste_Pruefung),esc(r.Notizen),esc(r.Ausruestungstueck_Id),esc(r.Kamerad),esc(r.Ausruestungstyp),esc(r.Seriennummer)].join(',') + ')');\nreturn [{ json: { query: 'INSERT INTO pruefungen (' + cols + ') VALUES ' + rows.join(',') } }];"
+        "jsCode": "const list = $input.all().map(i => i.json);\nif (!list.length) return [{ json: { query: 'SELECT 1' } }];\nfunction esc(v) {\n  if (v === null || v === undefined) return 'NULL';\n  if (typeof v === 'boolean') return v ? 1 : 0;\n  if (typeof v === 'number') return v;\n  return \"'\" + String(v).replace(/\\\\/g, '\\\\\\\\').replace(/'/g, \"\\\\'\") + \"'\";\n}\nconst cols = 'Id,CreatedAt,UpdatedAt,Datum,Ergebnis,Pruefer,Naechste_Pruefung,Notizen,Ausruestungstueck_Id,Kamerad,Ausruestungstyp,Seriennummer';\nconst rows = list.map(r => '(' + [esc(r.id),esc(r.created_at),esc(r.updated_at),esc(r.Datum),esc(r.Ergebnis),esc(r.Pruefer),esc(r.Naechste_Pruefung),esc(r.Notizen),esc(r.Ausruestungstueck_Id),esc(r.Kamerad),esc(r.Ausruestungstyp),esc(r.Seriennummer)].join(',') + ')');\nreturn [{ json: { query: 'INSERT INTO pruefungen (' + cols + ') VALUES ' + rows.join(',') } }];"
       },
       "id": "code-p",
       "name": "Transform Pruefungen",
@@ -463,7 +463,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const list = $input.all().map(i => i.json);\nif (!list.length) return [{ json: { query: 'SELECT 1' } }];\nfunction esc(v) {\n  if (v === null || v === undefined) return 'NULL';\n  if (typeof v === 'boolean') return v ? 1 : 0;\n  if (typeof v === 'number') return v;\n  return \"'\" + String(v).replace(/\\\\/g, '\\\\\\\\').replace(/'/g, \"\\\\'\") + \"'\";\n}\nconst cols = 'Id,CreatedAt,UpdatedAt,Datum,Waescheart,Notizen,Ausruestungstueck_Id,Kamerad,Ausruestungstyp,Seriennummer';\nconst rows = list.map(r => '(' + [esc(r.Id),esc(r.CreatedAt),esc(r.UpdatedAt),esc(r.Datum),esc(r.Waescheart),esc(r.Notizen),esc(r.Ausruestungstueck_Id),esc(r.Kamerad),esc(r.Ausruestungstyp),esc(r.Seriennummer)].join(',') + ')');\nreturn [{ json: { query: 'INSERT INTO waesche (' + cols + ') VALUES ' + rows.join(',') } }];"
+        "jsCode": "const list = $input.all().map(i => i.json);\nif (!list.length) return [{ json: { query: 'SELECT 1' } }];\nfunction esc(v) {\n  if (v === null || v === undefined) return 'NULL';\n  if (typeof v === 'boolean') return v ? 1 : 0;\n  if (typeof v === 'number') return v;\n  return \"'\" + String(v).replace(/\\\\/g, '\\\\\\\\').replace(/'/g, \"\\\\'\") + \"'\";\n}\nconst cols = 'Id,CreatedAt,UpdatedAt,Datum,Waescheart,Notizen,Ausruestungstueck_Id,Kamerad,Ausruestungstyp,Seriennummer';\nconst rows = list.map(r => '(' + [esc(r.id),esc(r.created_at),esc(r.updated_at),esc(r.Datum),esc(r.Waescheart),esc(r.Notizen),esc(r.Ausruestungstueck_Id),esc(r.Kamerad),esc(r.Ausruestungstyp),esc(r.Seriennummer)].join(',') + ')');\nreturn [{ json: { query: 'INSERT INTO waesche (' + cols + ') VALUES ' + rows.join(',') } }];"
       },
       "id": "code-w",
       "name": "Transform Waesche",
@@ -541,7 +541,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const list = $input.all().map(i => i.json);\nif (!list.length) return [{ json: { query: 'SELECT 1' } }];\nfunction esc(v) {\n  if (v === null || v === undefined) return 'NULL';\n  if (typeof v === 'boolean') return v ? 1 : 0;\n  if (typeof v === 'number') return v;\n  var s = String(v);\n  var r = [39];\n  for (var i = 0; i < s.length; i++) {\n    var c = s.charCodeAt(i);\n    if (c === 39) { r.push(92, 39); } else if (c === 92) { r.push(92, 92); } else { r.push(c); }\n  }\n  r.push(39);\n  return String.fromCharCode.apply(null, r);\n}\nconst cols = 'Id,CreatedAt,UpdatedAt,Bezeichnung,Beschreibung,Pruefintervall_Monate,Max_Lebensdauer_Jahre,Max_Waeschen,Ausruestungstyp_Kategorie';\nconst rows = list.map(row => '(' + [esc(row.Id),esc(row.CreatedAt),esc(row.UpdatedAt),esc(row.Bezeichnung),esc(row.Beschreibung),esc(row.Pruefintervall_Monate),esc(row.Max_Lebensdauer_Jahre),esc(row.Max_Waeschen),esc(row.Ausruestungstyp_Kategorie)].join(',') + ')');\nreturn [{ json: { query: 'INSERT INTO normen (' + cols + ') VALUES ' + rows.join(',') } }];"
+        "jsCode": "const list = $input.all().map(i => i.json);\nif (!list.length) return [{ json: { query: 'SELECT 1' } }];\nfunction esc(v) {\n  if (v === null || v === undefined) return 'NULL';\n  if (typeof v === 'boolean') return v ? 1 : 0;\n  if (typeof v === 'number') return v;\n  var s = String(v);\n  var r = [39];\n  for (var i = 0; i < s.length; i++) {\n    var c = s.charCodeAt(i);\n    if (c === 39) { r.push(92, 39); } else if (c === 92) { r.push(92, 92); } else { r.push(c); }\n  }\n  r.push(39);\n  return String.fromCharCode.apply(null, r);\n}\nconst cols = 'Id,CreatedAt,UpdatedAt,Bezeichnung,Beschreibung,Pruefintervall_Monate,Max_Lebensdauer_Jahre,Max_Waeschen,Ausruestungstyp_Kategorie';\nconst rows = list.map(row => '(' + [esc(row.id),esc(row.created_at),esc(row.updated_at),esc(row.Bezeichnung),esc(row.Beschreibung),esc(row.Pruefintervall_Monate),esc(row.Max_Lebensdauer_Jahre),esc(row.Max_Waeschen),esc(row.Ausruestungstyp_Kategorie)].join(',') + ')');\nreturn [{ json: { query: 'INSERT INTO normen (' + cols + ') VALUES ' + rows.join(',') } }];"
       },
       "id": "code-n",
       "name": "Transform Normen",
@@ -619,7 +619,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const list = $input.all().map(i => i.json);\nif (!list.length) return [{ json: { query: 'SELECT 1' } }];\nfunction esc(v) {\n  if (v === null || v === undefined) return 'NULL';\n  if (typeof v === 'boolean') return v ? 1 : 0;\n  if (typeof v === 'number') return v;\n  return \"'\" + String(v).replace(/\\\\/g, '\\\\\\\\').replace(/'/g, \"\\\\'\") + \"'\";\n}\nconst cols = 'Id,CreatedAt,UpdatedAt,Benutzername,PIN,Rolle,Aktiv';\nconst rows = list.map(r => '(' + [esc(r.Id),esc(r.CreatedAt),esc(r.UpdatedAt),esc(r.Benutzername),esc(r.PIN),esc(r.Rolle),(r.Aktiv?1:0)].join(',') + ')');\nreturn [{ json: { query: 'INSERT INTO benutzer (' + cols + ') VALUES ' + rows.join(',') } }];"
+        "jsCode": "const list = $input.all().map(i => i.json);\nif (!list.length) return [{ json: { query: 'SELECT 1' } }];\nfunction esc(v) {\n  if (v === null || v === undefined) return 'NULL';\n  if (typeof v === 'boolean') return v ? 1 : 0;\n  if (typeof v === 'number') return v;\n  return \"'\" + String(v).replace(/\\\\/g, '\\\\\\\\').replace(/'/g, \"\\\\'\") + \"'\";\n}\nconst cols = 'Id,CreatedAt,UpdatedAt,Benutzername,PIN,Rolle,Aktiv';\nconst rows = list.map(r => '(' + [esc(r.id),esc(r.created_at),esc(r.updated_at),esc(r.Benutzername),esc(r.PIN),esc(r.Rolle),(r.Aktiv?1:0)].join(',') + ')');\nreturn [{ json: { query: 'INSERT INTO benutzer (' + cols + ') VALUES ' + rows.join(',') } }];"
       },
       "id": "code-b",
       "name": "Transform Benutzer",
@@ -697,7 +697,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const list = $input.all().map(i => i.json);\nif (!list.length) return [{ json: { query: 'SELECT 1' } }];\nfunction esc(v) {\n  if (v === null || v === undefined) return 'NULL';\n  if (typeof v === 'boolean') return v ? 1 : 0;\n  if (typeof v === 'number') return v;\n  var s = String(v);\n  var r = [39];\n  for (var i = 0; i < s.length; i++) {\n    var c = s.charCodeAt(i);\n    if (c === 39) { r.push(92, 39); } else if (c === 92) { r.push(92, 92); } else { r.push(c); }\n  }\n  r.push(39);\n  return String.fromCharCode.apply(null, r);\n}\nconst cols = 'Id,CreatedAt,UpdatedAt,Zeitpunkt,Benutzer,Tabelle,Aktion,Details,Datensatz_Id';\nconst rows = list.map(r => '(' + [esc(r.Id),esc(r.CreatedAt),esc(r.UpdatedAt),esc(r.Zeitpunkt),esc(r.Benutzer),esc(r.Tabelle),esc(r.Aktion),esc(r.Details),esc(r.Datensatz_Id)].join(',') + ')');\nreturn [{ json: { query: 'INSERT INTO changelog (' + cols + ') VALUES ' + rows.join(',') } }];"
+        "jsCode": "const list = $input.all().map(i => i.json);\nif (!list.length) return [{ json: { query: 'SELECT 1' } }];\nfunction esc(v) {\n  if (v === null || v === undefined) return 'NULL';\n  if (typeof v === 'boolean') return v ? 1 : 0;\n  if (typeof v === 'number') return v;\n  var s = String(v);\n  var r = [39];\n  for (var i = 0; i < s.length; i++) {\n    var c = s.charCodeAt(i);\n    if (c === 39) { r.push(92, 39); } else if (c === 92) { r.push(92, 92); } else { r.push(c); }\n  }\n  r.push(39);\n  return String.fromCharCode.apply(null, r);\n}\nconst cols = 'Id,CreatedAt,UpdatedAt,Zeitpunkt,Benutzer,Tabelle,Aktion,Details,Datensatz_Id';\nconst rows = list.map(r => '(' + [esc(r.id),esc(r.created_at),esc(r.updated_at),esc(r.Zeitpunkt),esc(r.Benutzer),esc(r.Tabelle),esc(r.Aktion),esc(r.Details),esc(r.Datensatz_Id)].join(',') + ')');\nreturn [{ json: { query: 'INSERT INTO changelog (' + cols + ') VALUES ' + rows.join(',') } }];"
       },
       "id": "code-cl",
       "name": "Transform Changelog",
@@ -1185,9 +1185,9 @@
     "templateCredsSetupCompleted": true
   },
   "pinData": {},
-  "versionId": "8ad8cca2-de85-4464-921d-a77b79f7e5ca",
-  "activeVersionId": "8ad8cca2-de85-4464-921d-a77b79f7e5ca",
-  "versionCounter": 58,
+  "versionId": "1eb302a7-f5ee-4f3f-ac4d-a1144b71cd3a",
+  "activeVersionId": "1eb302a7-f5ee-4f3f-ac4d-a1144b71cd3a",
+  "versionCounter": 61,
   "triggerCount": 1,
   "shared": [
     {
@@ -1250,9 +1250,9 @@
   ],
   "tags": [],
   "activeVersion": {
-    "updatedAt": "2026-03-27T18:47:18.920Z",
-    "createdAt": "2026-03-27T18:47:18.920Z",
-    "versionId": "8ad8cca2-de85-4464-921d-a77b79f7e5ca",
+    "updatedAt": "2026-03-27T18:59:48.521Z",
+    "createdAt": "2026-03-27T18:59:48.521Z",
+    "versionId": "1eb302a7-f5ee-4f3f-ac4d-a1144b71cd3a",
     "workflowId": "gHwdz3BnBnlpiWjA",
     "nodes": [
       {
@@ -1321,7 +1321,7 @@
       },
       {
         "parameters": {
-          "jsCode": "const list = $input.all().map(i => i.json);\nif (!list.length) return [{ json: { query: 'SELECT 1' } }];\nfunction esc(v) {\n  if (v === null || v === undefined) return 'NULL';\n  if (typeof v === 'boolean') return v ? 1 : 0;\n  if (typeof v === 'number') return v;\n  return \"'\" + String(v).replace(/\\\\/g, '\\\\\\\\').replace(/'/g, \"\\\\'\") + \"'\";\n}\nconst cols = 'Id,CreatedAt,UpdatedAt,Name,Vorname,Email,Jacke_Groesse,Hose_Groesse,Stiefel_Groesse,Handschuh_Groesse,Aktiv,Hemd_Groesse,Poloshirt_Groesse,Fleece_Groesse,Dienstgrad';\nconst rows = list.map(r => '(' + [esc(r.Id),esc(r.CreatedAt),esc(r.UpdatedAt),esc(r.Name),esc(r.Vorname),esc(r.Email),esc(r.Jacke_Groesse),esc(r.Hose_Groesse),esc(r.Stiefel_Groesse),esc(r.Handschuh_Groesse),(r.Aktiv?1:0),esc(r.Hemd_Groesse),esc(r.Poloshirt_Groesse),esc(r.Fleece_Groesse),esc(r.Dienstgrad)].join(',') + ')');\nreturn [{ json: { query: 'INSERT INTO kameraden (' + cols + ') VALUES ' + rows.join(',') } }];"
+          "jsCode": "const list = $input.all().map(i => i.json);\nif (!list.length) return [{ json: { query: 'SELECT 1' } }];\nfunction esc(v) {\n  if (v === null || v === undefined) return 'NULL';\n  if (typeof v === 'boolean') return v ? 1 : 0;\n  if (typeof v === 'number') return v;\n  return \"'\" + String(v).replace(/\\\\/g, '\\\\\\\\').replace(/'/g, \"\\\\'\") + \"'\";\n}\nconst cols = 'Id,CreatedAt,UpdatedAt,Name,Vorname,Email,Jacke_Groesse,Hose_Groesse,Stiefel_Groesse,Handschuh_Groesse,Aktiv,Hemd_Groesse,Poloshirt_Groesse,Fleece_Groesse,Dienstgrad';\nconst rows = list.map(r => '(' + [esc(r.id),esc(r.created_at),esc(r.updated_at),esc(r.Name),esc(r.Vorname),esc(r.Email),esc(r.Jacke_Groesse),esc(r.Hose_Groesse),esc(r.Stiefel_Groesse),esc(r.Handschuh_Groesse),(r.Aktiv?1:0),esc(r.Hemd_Groesse),esc(r.Poloshirt_Groesse),esc(r.Fleece_Groesse),esc(r.Dienstgrad)].join(',') + ')');\nreturn [{ json: { query: 'INSERT INTO kameraden (' + cols + ') VALUES ' + rows.join(',') } }];"
         },
         "id": "code-k",
         "name": "Transform Kameraden",
@@ -1399,7 +1399,7 @@
       },
       {
         "parameters": {
-          "jsCode": "const list = $input.all().map(i => i.json);\nif (!list.length) return [{ json: { query: 'SELECT 1' } }];\nfunction esc(v) {\n  if (v === null || v === undefined) return 'NULL';\n  if (typeof v === 'boolean') return v ? 1 : 0;\n  if (typeof v === 'number') return v;\n  var s = String(v);\n  var r = [39];\n  for (var i = 0; i < s.length; i++) {\n    var c = s.charCodeAt(i);\n    if (c === 39) { r.push(92, 39); } else if (c === 92) { r.push(92, 92); } else { r.push(c); }\n  }\n  r.push(39);\n  return String.fromCharCode.apply(null, r);\n}\nconst cols = 'Id,CreatedAt,UpdatedAt,Bezeichnung,Norm,Max_Lebensdauer_Jahre,Max_Waeschen,Pruefintervall_Monate,Beschreibung,Typ,Hersteller';\nconst rows = list.map(row => '(' + [esc(row.Id),esc(row.CreatedAt),esc(row.UpdatedAt),esc(row.Bezeichnung),esc(row.Norm),esc(row.Max_Lebensdauer_Jahre),esc(row.Max_Waeschen),esc(row.Pruefintervall_Monate),esc(row.Beschreibung),esc(row.Typ),esc(row.Hersteller)].join(',') + ')');\nreturn [{ json: { query: 'INSERT INTO ausruestungstypen (' + cols + ') VALUES ' + rows.join(',') } }];"
+          "jsCode": "const list = $input.all().map(i => i.json);\nif (!list.length) return [{ json: { query: 'SELECT 1' } }];\nfunction esc(v) {\n  if (v === null || v === undefined) return 'NULL';\n  if (typeof v === 'boolean') return v ? 1 : 0;\n  if (typeof v === 'number') return v;\n  var s = String(v);\n  var r = [39];\n  for (var i = 0; i < s.length; i++) {\n    var c = s.charCodeAt(i);\n    if (c === 39) { r.push(92, 39); } else if (c === 92) { r.push(92, 92); } else { r.push(c); }\n  }\n  r.push(39);\n  return String.fromCharCode.apply(null, r);\n}\nconst cols = 'Id,CreatedAt,UpdatedAt,Bezeichnung,Norm,Max_Lebensdauer_Jahre,Max_Waeschen,Pruefintervall_Monate,Beschreibung,Typ,Hersteller';\nconst rows = list.map(row => '(' + [esc(row.id),esc(row.created_at),esc(row.updated_at),esc(row.Bezeichnung),esc(row.Norm),esc(row.Max_Lebensdauer_Jahre),esc(row.Max_Waeschen),esc(row.Pruefintervall_Monate),esc(row.Beschreibung),esc(row.Typ),esc(row.Hersteller)].join(',') + ')');\nreturn [{ json: { query: 'INSERT INTO ausruestungstypen (' + cols + ') VALUES ' + rows.join(',') } }];"
         },
         "id": "code-at",
         "name": "Transform Ausruestungstypen",
@@ -1477,7 +1477,7 @@
       },
       {
         "parameters": {
-          "jsCode": "const list = $input.all().map(i => i.json);\nif (!list.length) return [{ json: { query: 'SELECT 1' } }];\nfunction esc(v) {\n  if (v === null || v === undefined) return 'NULL';\n  if (typeof v === 'boolean') return v ? 1 : 0;\n  if (typeof v === 'number') return v;\n  return \"'\" + String(v).replace(/\\\\/g, '\\\\\\\\').replace(/'/g, \"\\\\'\") + \"'\";\n}\nconst cols = 'Id,CreatedAt,UpdatedAt,Seriennummer,QR_Code,Groesse,Herstellungsdatum,Lebensende_Datum,Status,Notizen,Kamerad,Naechste_Pruefung,Ausruestungstyp';\nconst rows = list.map(r => '(' + [esc(r.Id),esc(r.CreatedAt),esc(r.UpdatedAt),esc(r.Seriennummer),esc(r.QR_Code),esc(r.Groesse),esc(r.Herstellungsdatum),esc(r.Lebensende_Datum),esc(r.Status),esc(r.Notizen),esc(r.Kamerad),esc(r.Naechste_Pruefung),esc(r.Ausruestungstyp)].join(',') + ')');\nreturn [{ json: { query: 'INSERT INTO ausruestungstuecke (' + cols + ') VALUES ' + rows.join(',') } }];"
+          "jsCode": "const list = $input.all().map(i => i.json);\nif (!list.length) return [{ json: { query: 'SELECT 1' } }];\nfunction esc(v) {\n  if (v === null || v === undefined) return 'NULL';\n  if (typeof v === 'boolean') return v ? 1 : 0;\n  if (typeof v === 'number') return v;\n  return \"'\" + String(v).replace(/\\\\/g, '\\\\\\\\').replace(/'/g, \"\\\\'\") + \"'\";\n}\nconst cols = 'Id,CreatedAt,UpdatedAt,Seriennummer,QR_Code,Groesse,Herstellungsdatum,Lebensende_Datum,Status,Notizen,Kamerad,Naechste_Pruefung,Ausruestungstyp';\nconst rows = list.map(r => '(' + [esc(r.id),esc(r.created_at),esc(r.updated_at),esc(r.Seriennummer),esc(r.QR_Code),esc(r.Groesse),esc(r.Herstellungsdatum),esc(r.Lebensende_Datum),esc(r.Status),esc(r.Notizen),esc(r.Kamerad),esc(r.Naechste_Pruefung),esc(r.Ausruestungstyp)].join(',') + ')');\nreturn [{ json: { query: 'INSERT INTO ausruestungstuecke (' + cols + ') VALUES ' + rows.join(',') } }];"
         },
         "id": "code-ast",
         "name": "Transform Ausruestungstuecke",
@@ -1555,7 +1555,7 @@
       },
       {
         "parameters": {
-          "jsCode": "const list = $input.all().map(i => i.json);\nif (!list.length) return [{ json: { query: 'SELECT 1' } }];\nfunction esc(v) {\n  if (v === null || v === undefined) return 'NULL';\n  if (typeof v === 'boolean') return v ? 1 : 0;\n  if (typeof v === 'number') return v;\n  var s = String(v);\n  var r = [39];\n  for (var i = 0; i < s.length; i++) {\n    var c = s.charCodeAt(i);\n    if (c === 39) { r.push(92, 39); } else if (c === 92) { r.push(92, 92); } else { r.push(c); }\n  }\n  r.push(39);\n  return String.fromCharCode.apply(null, r);\n}\nconst cols = 'Id,CreatedAt,UpdatedAt,Ausgabedatum,Rueckgabedatum,Notizen,Ausruestungstueck_Id,Kamerad,Ausruestungstyp,Seriennummer';\nconst rows = list.map(row => '(' + [esc(row.Id),esc(row.CreatedAt),esc(row.UpdatedAt),esc(row.Ausgabedatum),esc(row.Rueckgabedatum),esc(row.Notizen),esc(row.Ausruestungstueck_Id),esc(row.Kamerad),esc(row.Ausruestungstyp),esc(row.Seriennummer)].join(',') + ')');\nreturn [{ json: { query: 'INSERT INTO ausgaben (' + cols + ') VALUES ' + rows.join(',') } }];"
+          "jsCode": "const list = $input.all().map(i => i.json);\nif (!list.length) return [{ json: { query: 'SELECT 1' } }];\nfunction esc(v) {\n  if (v === null || v === undefined) return 'NULL';\n  if (typeof v === 'boolean') return v ? 1 : 0;\n  if (typeof v === 'number') return v;\n  var s = String(v);\n  var r = [39];\n  for (var i = 0; i < s.length; i++) {\n    var c = s.charCodeAt(i);\n    if (c === 39) { r.push(92, 39); } else if (c === 92) { r.push(92, 92); } else { r.push(c); }\n  }\n  r.push(39);\n  return String.fromCharCode.apply(null, r);\n}\nconst cols = 'Id,CreatedAt,UpdatedAt,Ausgabedatum,Rueckgabedatum,Notizen,Ausruestungstueck_Id,Kamerad,Ausruestungstyp,Seriennummer';\nconst rows = list.map(row => '(' + [esc(row.id),esc(row.created_at),esc(row.updated_at),esc(row.Ausgabedatum),esc(row.Rueckgabedatum),esc(row.Notizen),esc(row.Ausruestungstueck_Id),esc(row.Kamerad),esc(row.Ausruestungstyp),esc(row.Seriennummer)].join(',') + ')');\nreturn [{ json: { query: 'INSERT INTO ausgaben (' + cols + ') VALUES ' + rows.join(',') } }];"
         },
         "id": "code-aug",
         "name": "Transform Ausgaben",
@@ -1633,7 +1633,7 @@
       },
       {
         "parameters": {
-          "jsCode": "const list = $input.all().map(i => i.json);\nif (!list.length) return [{ json: { query: 'SELECT 1' } }];\nfunction esc(v) {\n  if (v === null || v === undefined) return 'NULL';\n  if (typeof v === 'boolean') return v ? 1 : 0;\n  if (typeof v === 'number') return v;\n  return \"'\" + String(v).replace(/\\\\/g, '\\\\\\\\').replace(/'/g, \"\\\\'\") + \"'\";\n}\nconst cols = 'Id,CreatedAt,UpdatedAt,Datum,Ergebnis,Pruefer,Naechste_Pruefung,Notizen,Ausruestungstueck_Id,Kamerad,Ausruestungstyp,Seriennummer';\nconst rows = list.map(r => '(' + [esc(r.Id),esc(r.CreatedAt),esc(r.UpdatedAt),esc(r.Datum),esc(r.Ergebnis),esc(r.Pruefer),esc(r.Naechste_Pruefung),esc(r.Notizen),esc(r.Ausruestungstueck_Id),esc(r.Kamerad),esc(r.Ausruestungstyp),esc(r.Seriennummer)].join(',') + ')');\nreturn [{ json: { query: 'INSERT INTO pruefungen (' + cols + ') VALUES ' + rows.join(',') } }];"
+          "jsCode": "const list = $input.all().map(i => i.json);\nif (!list.length) return [{ json: { query: 'SELECT 1' } }];\nfunction esc(v) {\n  if (v === null || v === undefined) return 'NULL';\n  if (typeof v === 'boolean') return v ? 1 : 0;\n  if (typeof v === 'number') return v;\n  return \"'\" + String(v).replace(/\\\\/g, '\\\\\\\\').replace(/'/g, \"\\\\'\") + \"'\";\n}\nconst cols = 'Id,CreatedAt,UpdatedAt,Datum,Ergebnis,Pruefer,Naechste_Pruefung,Notizen,Ausruestungstueck_Id,Kamerad,Ausruestungstyp,Seriennummer';\nconst rows = list.map(r => '(' + [esc(r.id),esc(r.created_at),esc(r.updated_at),esc(r.Datum),esc(r.Ergebnis),esc(r.Pruefer),esc(r.Naechste_Pruefung),esc(r.Notizen),esc(r.Ausruestungstueck_Id),esc(r.Kamerad),esc(r.Ausruestungstyp),esc(r.Seriennummer)].join(',') + ')');\nreturn [{ json: { query: 'INSERT INTO pruefungen (' + cols + ') VALUES ' + rows.join(',') } }];"
         },
         "id": "code-p",
         "name": "Transform Pruefungen",
@@ -1711,7 +1711,7 @@
       },
       {
         "parameters": {
-          "jsCode": "const list = $input.all().map(i => i.json);\nif (!list.length) return [{ json: { query: 'SELECT 1' } }];\nfunction esc(v) {\n  if (v === null || v === undefined) return 'NULL';\n  if (typeof v === 'boolean') return v ? 1 : 0;\n  if (typeof v === 'number') return v;\n  return \"'\" + String(v).replace(/\\\\/g, '\\\\\\\\').replace(/'/g, \"\\\\'\") + \"'\";\n}\nconst cols = 'Id,CreatedAt,UpdatedAt,Datum,Waescheart,Notizen,Ausruestungstueck_Id,Kamerad,Ausruestungstyp,Seriennummer';\nconst rows = list.map(r => '(' + [esc(r.Id),esc(r.CreatedAt),esc(r.UpdatedAt),esc(r.Datum),esc(r.Waescheart),esc(r.Notizen),esc(r.Ausruestungstueck_Id),esc(r.Kamerad),esc(r.Ausruestungstyp),esc(r.Seriennummer)].join(',') + ')');\nreturn [{ json: { query: 'INSERT INTO waesche (' + cols + ') VALUES ' + rows.join(',') } }];"
+          "jsCode": "const list = $input.all().map(i => i.json);\nif (!list.length) return [{ json: { query: 'SELECT 1' } }];\nfunction esc(v) {\n  if (v === null || v === undefined) return 'NULL';\n  if (typeof v === 'boolean') return v ? 1 : 0;\n  if (typeof v === 'number') return v;\n  return \"'\" + String(v).replace(/\\\\/g, '\\\\\\\\').replace(/'/g, \"\\\\'\") + \"'\";\n}\nconst cols = 'Id,CreatedAt,UpdatedAt,Datum,Waescheart,Notizen,Ausruestungstueck_Id,Kamerad,Ausruestungstyp,Seriennummer';\nconst rows = list.map(r => '(' + [esc(r.id),esc(r.created_at),esc(r.updated_at),esc(r.Datum),esc(r.Waescheart),esc(r.Notizen),esc(r.Ausruestungstueck_Id),esc(r.Kamerad),esc(r.Ausruestungstyp),esc(r.Seriennummer)].join(',') + ')');\nreturn [{ json: { query: 'INSERT INTO waesche (' + cols + ') VALUES ' + rows.join(',') } }];"
         },
         "id": "code-w",
         "name": "Transform Waesche",
@@ -1789,7 +1789,7 @@
       },
       {
         "parameters": {
-          "jsCode": "const list = $input.all().map(i => i.json);\nif (!list.length) return [{ json: { query: 'SELECT 1' } }];\nfunction esc(v) {\n  if (v === null || v === undefined) return 'NULL';\n  if (typeof v === 'boolean') return v ? 1 : 0;\n  if (typeof v === 'number') return v;\n  var s = String(v);\n  var r = [39];\n  for (var i = 0; i < s.length; i++) {\n    var c = s.charCodeAt(i);\n    if (c === 39) { r.push(92, 39); } else if (c === 92) { r.push(92, 92); } else { r.push(c); }\n  }\n  r.push(39);\n  return String.fromCharCode.apply(null, r);\n}\nconst cols = 'Id,CreatedAt,UpdatedAt,Bezeichnung,Beschreibung,Pruefintervall_Monate,Max_Lebensdauer_Jahre,Max_Waeschen,Ausruestungstyp_Kategorie';\nconst rows = list.map(row => '(' + [esc(row.Id),esc(row.CreatedAt),esc(row.UpdatedAt),esc(row.Bezeichnung),esc(row.Beschreibung),esc(row.Pruefintervall_Monate),esc(row.Max_Lebensdauer_Jahre),esc(row.Max_Waeschen),esc(row.Ausruestungstyp_Kategorie)].join(',') + ')');\nreturn [{ json: { query: 'INSERT INTO normen (' + cols + ') VALUES ' + rows.join(',') } }];"
+          "jsCode": "const list = $input.all().map(i => i.json);\nif (!list.length) return [{ json: { query: 'SELECT 1' } }];\nfunction esc(v) {\n  if (v === null || v === undefined) return 'NULL';\n  if (typeof v === 'boolean') return v ? 1 : 0;\n  if (typeof v === 'number') return v;\n  var s = String(v);\n  var r = [39];\n  for (var i = 0; i < s.length; i++) {\n    var c = s.charCodeAt(i);\n    if (c === 39) { r.push(92, 39); } else if (c === 92) { r.push(92, 92); } else { r.push(c); }\n  }\n  r.push(39);\n  return String.fromCharCode.apply(null, r);\n}\nconst cols = 'Id,CreatedAt,UpdatedAt,Bezeichnung,Beschreibung,Pruefintervall_Monate,Max_Lebensdauer_Jahre,Max_Waeschen,Ausruestungstyp_Kategorie';\nconst rows = list.map(row => '(' + [esc(row.id),esc(row.created_at),esc(row.updated_at),esc(row.Bezeichnung),esc(row.Beschreibung),esc(row.Pruefintervall_Monate),esc(row.Max_Lebensdauer_Jahre),esc(row.Max_Waeschen),esc(row.Ausruestungstyp_Kategorie)].join(',') + ')');\nreturn [{ json: { query: 'INSERT INTO normen (' + cols + ') VALUES ' + rows.join(',') } }];"
         },
         "id": "code-n",
         "name": "Transform Normen",
@@ -1867,7 +1867,7 @@
       },
       {
         "parameters": {
-          "jsCode": "const list = $input.all().map(i => i.json);\nif (!list.length) return [{ json: { query: 'SELECT 1' } }];\nfunction esc(v) {\n  if (v === null || v === undefined) return 'NULL';\n  if (typeof v === 'boolean') return v ? 1 : 0;\n  if (typeof v === 'number') return v;\n  return \"'\" + String(v).replace(/\\\\/g, '\\\\\\\\').replace(/'/g, \"\\\\'\") + \"'\";\n}\nconst cols = 'Id,CreatedAt,UpdatedAt,Benutzername,PIN,Rolle,Aktiv';\nconst rows = list.map(r => '(' + [esc(r.Id),esc(r.CreatedAt),esc(r.UpdatedAt),esc(r.Benutzername),esc(r.PIN),esc(r.Rolle),(r.Aktiv?1:0)].join(',') + ')');\nreturn [{ json: { query: 'INSERT INTO benutzer (' + cols + ') VALUES ' + rows.join(',') } }];"
+          "jsCode": "const list = $input.all().map(i => i.json);\nif (!list.length) return [{ json: { query: 'SELECT 1' } }];\nfunction esc(v) {\n  if (v === null || v === undefined) return 'NULL';\n  if (typeof v === 'boolean') return v ? 1 : 0;\n  if (typeof v === 'number') return v;\n  return \"'\" + String(v).replace(/\\\\/g, '\\\\\\\\').replace(/'/g, \"\\\\'\") + \"'\";\n}\nconst cols = 'Id,CreatedAt,UpdatedAt,Benutzername,PIN,Rolle,Aktiv';\nconst rows = list.map(r => '(' + [esc(r.id),esc(r.created_at),esc(r.updated_at),esc(r.Benutzername),esc(r.PIN),esc(r.Rolle),(r.Aktiv?1:0)].join(',') + ')');\nreturn [{ json: { query: 'INSERT INTO benutzer (' + cols + ') VALUES ' + rows.join(',') } }];"
         },
         "id": "code-b",
         "name": "Transform Benutzer",
@@ -1945,7 +1945,7 @@
       },
       {
         "parameters": {
-          "jsCode": "const list = $input.all().map(i => i.json);\nif (!list.length) return [{ json: { query: 'SELECT 1' } }];\nfunction esc(v) {\n  if (v === null || v === undefined) return 'NULL';\n  if (typeof v === 'boolean') return v ? 1 : 0;\n  if (typeof v === 'number') return v;\n  var s = String(v);\n  var r = [39];\n  for (var i = 0; i < s.length; i++) {\n    var c = s.charCodeAt(i);\n    if (c === 39) { r.push(92, 39); } else if (c === 92) { r.push(92, 92); } else { r.push(c); }\n  }\n  r.push(39);\n  return String.fromCharCode.apply(null, r);\n}\nconst cols = 'Id,CreatedAt,UpdatedAt,Zeitpunkt,Benutzer,Tabelle,Aktion,Details,Datensatz_Id';\nconst rows = list.map(r => '(' + [esc(r.Id),esc(r.CreatedAt),esc(r.UpdatedAt),esc(r.Zeitpunkt),esc(r.Benutzer),esc(r.Tabelle),esc(r.Aktion),esc(r.Details),esc(r.Datensatz_Id)].join(',') + ')');\nreturn [{ json: { query: 'INSERT INTO changelog (' + cols + ') VALUES ' + rows.join(',') } }];"
+          "jsCode": "const list = $input.all().map(i => i.json);\nif (!list.length) return [{ json: { query: 'SELECT 1' } }];\nfunction esc(v) {\n  if (v === null || v === undefined) return 'NULL';\n  if (typeof v === 'boolean') return v ? 1 : 0;\n  if (typeof v === 'number') return v;\n  var s = String(v);\n  var r = [39];\n  for (var i = 0; i < s.length; i++) {\n    var c = s.charCodeAt(i);\n    if (c === 39) { r.push(92, 39); } else if (c === 92) { r.push(92, 92); } else { r.push(c); }\n  }\n  r.push(39);\n  return String.fromCharCode.apply(null, r);\n}\nconst cols = 'Id,CreatedAt,UpdatedAt,Zeitpunkt,Benutzer,Tabelle,Aktion,Details,Datensatz_Id';\nconst rows = list.map(r => '(' + [esc(r.id),esc(r.created_at),esc(r.updated_at),esc(r.Zeitpunkt),esc(r.Benutzer),esc(r.Tabelle),esc(r.Aktion),esc(r.Details),esc(r.Datensatz_Id)].join(',') + ')');\nreturn [{ json: { query: 'INSERT INTO changelog (' + cols + ') VALUES ' + rows.join(',') } }];"
         },
         "id": "code-cl",
         "name": "Transform Changelog",
@@ -2420,10 +2420,10 @@
     "autosaved": false,
     "workflowPublishHistory": [
       {
-        "createdAt": "2026-03-27T18:47:19.051Z",
-        "id": 51,
+        "createdAt": "2026-03-27T18:59:48.589Z",
+        "id": 54,
         "workflowId": "gHwdz3BnBnlpiWjA",
-        "versionId": "8ad8cca2-de85-4464-921d-a77b79f7e5ca",
+        "versionId": "1eb302a7-f5ee-4f3f-ac4d-a1144b71cd3a",
         "event": "activated",
         "userId": "66a4add3-c9f0-4325-be74-03a9d867281f"
       }
