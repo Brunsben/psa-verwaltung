@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-03-27T18:01:12.564Z",
+  "updatedAt": "2026-03-27T18:47:18.520Z",
   "createdAt": "2026-02-25T17:59:58.757Z",
   "id": "bCkD55OsoZh0oBA7",
   "name": "PSA: Prüfungs-Reminder (wöchentlich)",
@@ -32,7 +32,7 @@
     },
     {
       "parameters": {
-        "url": "https://portal.ofwietmarschen.org/n8n/b0C03PYxEVkFDuJXbqXdVKntDaowEaZeDq70eQKjfUo/postgrest/Ausruestungstuecke",
+        "url": "https://portal.ofwietmarschen.org/n8n/ddb8e2802f6f8fb9382a5e2fb01f48a6654e1eb33279792aee2c242160fd66e7/postgrest/Ausruestungstuecke",
         "sendQuery": true,
         "queryParameters": {
           "parameters": [
@@ -184,9 +184,9 @@
     "templateCredsSetupCompleted": true
   },
   "pinData": {},
-  "versionId": "6468d3ba-8943-42dc-83a2-497064f4791d",
-  "activeVersionId": "6468d3ba-8943-42dc-83a2-497064f4791d",
-  "versionCounter": 30,
+  "versionId": "eb71e1b3-e401-46ff-8708-99c15f9f2cf2",
+  "activeVersionId": "eb71e1b3-e401-46ff-8708-99c15f9f2cf2",
+  "versionCounter": 33,
   "triggerCount": 1,
   "shared": [
     {
@@ -249,9 +249,9 @@
   ],
   "tags": [],
   "activeVersion": {
-    "updatedAt": "2026-03-27T18:01:12.568Z",
-    "createdAt": "2026-03-27T18:01:12.568Z",
-    "versionId": "6468d3ba-8943-42dc-83a2-497064f4791d",
+    "updatedAt": "2026-03-27T18:47:18.522Z",
+    "createdAt": "2026-03-27T18:47:18.522Z",
+    "versionId": "eb71e1b3-e401-46ff-8708-99c15f9f2cf2",
     "workflowId": "bCkD55OsoZh0oBA7",
     "nodes": [
       {
@@ -279,7 +279,7 @@
       },
       {
         "parameters": {
-          "url": "https://portal.ofwietmarschen.org/n8n/b0C03PYxEVkFDuJXbqXdVKntDaowEaZeDq70eQKjfUo/postgrest/Ausruestungstuecke",
+          "url": "https://portal.ofwietmarschen.org/n8n/ddb8e2802f6f8fb9382a5e2fb01f48a6654e1eb33279792aee2c242160fd66e7/postgrest/Ausruestungstuecke",
           "sendQuery": true,
           "queryParameters": {
             "parameters": [
@@ -423,10 +423,10 @@
     "autosaved": false,
     "workflowPublishHistory": [
       {
-        "createdAt": "2026-03-27T18:01:12.608Z",
-        "id": 45,
+        "createdAt": "2026-03-27T18:47:18.572Z",
+        "id": 50,
         "workflowId": "bCkD55OsoZh0oBA7",
-        "versionId": "6468d3ba-8943-42dc-83a2-497064f4791d",
+        "versionId": "eb71e1b3-e401-46ff-8708-99c15f9f2cf2",
         "event": "activated",
         "userId": "66a4add3-c9f0-4325-be74-03a9d867281f"
       }

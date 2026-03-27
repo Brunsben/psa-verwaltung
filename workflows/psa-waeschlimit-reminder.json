@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-03-27T18:01:11.741Z",
+  "updatedAt": "2026-03-27T18:47:19.379Z",
   "createdAt": "2026-02-25T18:07:55.055Z",
   "id": "iNblp4tnPG4BHSna",
   "name": "PSA: Wäschlimit-Reminder (wöchentlich)",
@@ -32,7 +32,7 @@
     },
     {
       "parameters": {
-        "url": "https://portal.ofwietmarschen.org/n8n/b0C03PYxEVkFDuJXbqXdVKntDaowEaZeDq70eQKjfUo/postgrest/Ausruestungstuecke",
+        "url": "https://portal.ofwietmarschen.org/n8n/ddb8e2802f6f8fb9382a5e2fb01f48a6654e1eb33279792aee2c242160fd66e7/postgrest/Ausruestungstuecke",
         "sendQuery": true,
         "queryParameters": {
           "parameters": [
@@ -55,7 +55,7 @@
     },
     {
       "parameters": {
-        "url": "https://portal.ofwietmarschen.org/n8n/b0C03PYxEVkFDuJXbqXdVKntDaowEaZeDq70eQKjfUo/postgrest/Ausruestungstypen",
+        "url": "https://portal.ofwietmarschen.org/n8n/ddb8e2802f6f8fb9382a5e2fb01f48a6654e1eb33279792aee2c242160fd66e7/postgrest/Ausruestungstypen",
         "sendQuery": true,
         "queryParameters": {
           "parameters": [
@@ -78,7 +78,7 @@
     },
     {
       "parameters": {
-        "url": "https://portal.ofwietmarschen.org/n8n/b0C03PYxEVkFDuJXbqXdVKntDaowEaZeDq70eQKjfUo/postgrest/Waesche",
+        "url": "https://portal.ofwietmarschen.org/n8n/ddb8e2802f6f8fb9382a5e2fb01f48a6654e1eb33279792aee2c242160fd66e7/postgrest/Waesche",
         "sendQuery": true,
         "queryParameters": {
           "parameters": [
@@ -252,9 +252,9 @@
     "templateCredsSetupCompleted": true
   },
   "pinData": {},
-  "versionId": "c8839784-6c36-4252-9101-1f1b17847d21",
-  "activeVersionId": "c8839784-6c36-4252-9101-1f1b17847d21",
-  "versionCounter": 22,
+  "versionId": "47db6201-864b-4211-8c0e-67cb798ce9e5",
+  "activeVersionId": "47db6201-864b-4211-8c0e-67cb798ce9e5",
+  "versionCounter": 25,
   "triggerCount": 1,
   "shared": [
     {
@@ -317,9 +317,9 @@
   ],
   "tags": [],
   "activeVersion": {
-    "updatedAt": "2026-03-27T18:01:11.743Z",
-    "createdAt": "2026-03-27T18:01:11.743Z",
-    "versionId": "c8839784-6c36-4252-9101-1f1b17847d21",
+    "updatedAt": "2026-03-27T18:47:19.380Z",
+    "createdAt": "2026-03-27T18:47:19.380Z",
+    "versionId": "47db6201-864b-4211-8c0e-67cb798ce9e5",
     "workflowId": "iNblp4tnPG4BHSna",
     "nodes": [
       {
@@ -347,7 +347,7 @@
       },
       {
         "parameters": {
-          "url": "https://portal.ofwietmarschen.org/n8n/b0C03PYxEVkFDuJXbqXdVKntDaowEaZeDq70eQKjfUo/postgrest/Ausruestungstuecke",
+          "url": "https://portal.ofwietmarschen.org/n8n/ddb8e2802f6f8fb9382a5e2fb01f48a6654e1eb33279792aee2c242160fd66e7/postgrest/Ausruestungstuecke",
           "sendQuery": true,
           "queryParameters": {
             "parameters": [
@@ -370,7 +370,7 @@
       },
       {
         "parameters": {
-          "url": "https://portal.ofwietmarschen.org/n8n/b0C03PYxEVkFDuJXbqXdVKntDaowEaZeDq70eQKjfUo/postgrest/Ausruestungstypen",
+          "url": "https://portal.ofwietmarschen.org/n8n/ddb8e2802f6f8fb9382a5e2fb01f48a6654e1eb33279792aee2c242160fd66e7/postgrest/Ausruestungstypen",
           "sendQuery": true,
           "queryParameters": {
             "parameters": [
@@ -393,7 +393,7 @@
       },
       {
         "parameters": {
-          "url": "https://portal.ofwietmarschen.org/n8n/b0C03PYxEVkFDuJXbqXdVKntDaowEaZeDq70eQKjfUo/postgrest/Waesche",
+          "url": "https://portal.ofwietmarschen.org/n8n/ddb8e2802f6f8fb9382a5e2fb01f48a6654e1eb33279792aee2c242160fd66e7/postgrest/Waesche",
           "sendQuery": true,
           "queryParameters": {
             "parameters": [
@@ -559,10 +559,10 @@
     "autosaved": false,
     "workflowPublishHistory": [
       {
-        "createdAt": "2026-03-27T18:01:11.811Z",
-        "id": 43,
+        "createdAt": "2026-03-27T18:47:19.430Z",
+        "id": 52,
         "workflowId": "iNblp4tnPG4BHSna",
-        "versionId": "c8839784-6c36-4252-9101-1f1b17847d21",
+        "versionId": "47db6201-864b-4211-8c0e-67cb798ce9e5",
         "event": "activated",
         "userId": "66a4add3-c9f0-4325-be74-03a9d867281f"
       }

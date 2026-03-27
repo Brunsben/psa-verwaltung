@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-03-21T16:02:16.784Z",
+  "updatedAt": "2026-03-27T18:47:18.206Z",
   "createdAt": "2026-02-20T20:19:31.129Z",
   "id": "VBFv9Vg4F5dZwmqI",
   "name": "PSA: Lebensende-Warnung",
@@ -32,7 +32,7 @@
     },
     {
       "parameters": {
-        "url": "https://portal.ofwietmarschen.org/n8n/b0C03PYxEVkFDuJXbqXdVKntDaowEaZeDq70eQKjfUo/postgrest/Ausruestungstuecke",
+        "url": "https://portal.ofwietmarschen.org/n8n/ddb8e2802f6f8fb9382a5e2fb01f48a6654e1eb33279792aee2c242160fd66e7/postgrest/Ausruestungstuecke",
         "sendQuery": true,
         "queryParameters": {
           "parameters": [
@@ -193,9 +193,9 @@
   },
   "meta": null,
   "pinData": {},
-  "versionId": "8e403980-8b10-4547-a149-8c90776f3a88",
-  "activeVersionId": "8e403980-8b10-4547-a149-8c90776f3a88",
-  "versionCounter": 20,
+  "versionId": "17da1f44-84c1-4478-8061-096d1ee3cb09",
+  "activeVersionId": "17da1f44-84c1-4478-8061-096d1ee3cb09",
+  "versionCounter": 23,
   "triggerCount": 1,
   "shared": [
     {
@@ -258,9 +258,9 @@
   ],
   "tags": [],
   "activeVersion": {
-    "updatedAt": "2026-03-21T16:02:16.785Z",
-    "createdAt": "2026-03-21T16:02:16.785Z",
-    "versionId": "8e403980-8b10-4547-a149-8c90776f3a88",
+    "updatedAt": "2026-03-27T18:47:18.207Z",
+    "createdAt": "2026-03-27T18:47:18.207Z",
+    "versionId": "17da1f44-84c1-4478-8061-096d1ee3cb09",
     "workflowId": "VBFv9Vg4F5dZwmqI",
     "nodes": [
       {
@@ -288,7 +288,7 @@
       },
       {
         "parameters": {
-          "url": "https://portal.ofwietmarschen.org/n8n/b0C03PYxEVkFDuJXbqXdVKntDaowEaZeDq70eQKjfUo/postgrest/Ausruestungstuecke",
+          "url": "https://portal.ofwietmarschen.org/n8n/ddb8e2802f6f8fb9382a5e2fb01f48a6654e1eb33279792aee2c242160fd66e7/postgrest/Ausruestungstuecke",
           "sendQuery": true,
           "queryParameters": {
             "parameters": [
@@ -439,10 +439,10 @@
     "autosaved": false,
     "workflowPublishHistory": [
       {
-        "createdAt": "2026-03-21T16:02:16.824Z",
-        "id": 42,
+        "createdAt": "2026-03-27T18:47:18.252Z",
+        "id": 49,
         "workflowId": "VBFv9Vg4F5dZwmqI",
-        "versionId": "8e403980-8b10-4547-a149-8c90776f3a88",
+        "versionId": "17da1f44-84c1-4478-8061-096d1ee3cb09",
         "event": "activated",
         "userId": "66a4add3-c9f0-4325-be74-03a9d867281f"
       }

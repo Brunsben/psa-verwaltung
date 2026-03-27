@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-03-27T18:01:12.191Z",
+  "updatedAt": "2026-03-27T18:47:19.794Z",
   "createdAt": "2026-03-02T11:28:22.465Z",
   "id": "pyOXC7esbjlrhG68",
   "name": "PSA: Prüfungs-Reminder pro Kamerad",
@@ -33,7 +33,7 @@
     },
     {
       "parameters": {
-        "url": "https://portal.ofwietmarschen.org/n8n/b0C03PYxEVkFDuJXbqXdVKntDaowEaZeDq70eQKjfUo/postgrest/Ausruestungstuecke",
+        "url": "https://portal.ofwietmarschen.org/n8n/ddb8e2802f6f8fb9382a5e2fb01f48a6654e1eb33279792aee2c242160fd66e7/postgrest/Ausruestungstuecke",
         "sendQuery": true,
         "queryParameters": {
           "parameters": [
@@ -56,7 +56,7 @@
     },
     {
       "parameters": {
-        "url": "https://portal.ofwietmarschen.org/n8n/b0C03PYxEVkFDuJXbqXdVKntDaowEaZeDq70eQKjfUo/postgrest/Kameraden",
+        "url": "https://portal.ofwietmarschen.org/n8n/ddb8e2802f6f8fb9382a5e2fb01f48a6654e1eb33279792aee2c242160fd66e7/postgrest/Kameraden",
         "sendQuery": true,
         "queryParameters": {
           "parameters": [
@@ -242,9 +242,9 @@
   },
   "meta": null,
   "pinData": null,
-  "versionId": "14647731-2cfe-4276-8b61-7a1a269e921c",
-  "activeVersionId": "14647731-2cfe-4276-8b61-7a1a269e921c",
-  "versionCounter": 18,
+  "versionId": "5b37d637-3d1c-4725-85fc-a7c823e02b30",
+  "activeVersionId": "5b37d637-3d1c-4725-85fc-a7c823e02b30",
+  "versionCounter": 21,
   "triggerCount": 1,
   "shared": [
     {
@@ -307,9 +307,9 @@
   ],
   "tags": [],
   "activeVersion": {
-    "updatedAt": "2026-03-27T18:01:12.192Z",
-    "createdAt": "2026-03-27T18:01:12.192Z",
-    "versionId": "14647731-2cfe-4276-8b61-7a1a269e921c",
+    "updatedAt": "2026-03-27T18:47:19.794Z",
+    "createdAt": "2026-03-27T18:47:19.794Z",
+    "versionId": "5b37d637-3d1c-4725-85fc-a7c823e02b30",
     "workflowId": "pyOXC7esbjlrhG68",
     "nodes": [
       {
@@ -338,7 +338,7 @@
       },
       {
         "parameters": {
-          "url": "https://portal.ofwietmarschen.org/n8n/b0C03PYxEVkFDuJXbqXdVKntDaowEaZeDq70eQKjfUo/postgrest/Ausruestungstuecke",
+          "url": "https://portal.ofwietmarschen.org/n8n/ddb8e2802f6f8fb9382a5e2fb01f48a6654e1eb33279792aee2c242160fd66e7/postgrest/Ausruestungstuecke",
           "sendQuery": true,
           "queryParameters": {
             "parameters": [
@@ -361,7 +361,7 @@
       },
       {
         "parameters": {
-          "url": "https://portal.ofwietmarschen.org/n8n/b0C03PYxEVkFDuJXbqXdVKntDaowEaZeDq70eQKjfUo/postgrest/Kameraden",
+          "url": "https://portal.ofwietmarschen.org/n8n/ddb8e2802f6f8fb9382a5e2fb01f48a6654e1eb33279792aee2c242160fd66e7/postgrest/Kameraden",
           "sendQuery": true,
           "queryParameters": {
             "parameters": [
@@ -540,10 +540,10 @@
     "autosaved": false,
     "workflowPublishHistory": [
       {
-        "createdAt": "2026-03-27T18:01:12.235Z",
-        "id": 44,
+        "createdAt": "2026-03-27T18:47:19.859Z",
+        "id": 53,
         "workflowId": "pyOXC7esbjlrhG68",
-        "versionId": "14647731-2cfe-4276-8b61-7a1a269e921c",
+        "versionId": "5b37d637-3d1c-4725-85fc-a7c823e02b30",
         "event": "activated",
         "userId": "66a4add3-c9f0-4325-be74-03a9d867281f"
       }
