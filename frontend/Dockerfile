@@ -1,5 +1,5 @@
 # ── Stage 1: Build ───────────────────────────────────────────────────────────
-FROM node:22-alpine AS build
+FROM node:25-alpine AS build
 WORKDIR /app
 
 # Dependencies
@@ -20,6 +20,6 @@ RUN mkdir -p public && \
 RUN npm run build
 
 # ── Stage 2: Serve ───────────────────────────────────────────────────────────
-FROM nginx:1.28-alpine
+FROM nginx:1.29-alpine
 COPY --from=build /app/dist /usr/share/nginx/html
 # nginx.conf + config.js werden per docker-compose Volume gemountet
