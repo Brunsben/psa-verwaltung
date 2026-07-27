@@ -7,9 +7,6 @@ updates:
       interval: weekly
       day: monday
     open-pull-requests-limit: 5
-    labels:
-      - dependencies
-      - security
     commit-message:
       prefix: "deps"
 
@@ -19,9 +16,6 @@ updates:
     schedule:
       interval: weekly
       day: monday
-    labels:
-      - dependencies
-      - docker
 
   # GitHub Actions
   - package-ecosystem: github-actions
@@ -29,6 +23,3 @@ updates:
     schedule:
       interval: weekly
       day: monday
-    labels:
-      - dependencies
-      - ci
